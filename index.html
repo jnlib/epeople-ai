@@ -506,13 +506,6 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(14px);background:rgba(7,33,58,.95);border:1.5px solid rgba(0,207,192,.28);border-radius:999px;padding:12px 24px;display:flex;align-items:center;gap:9px;font-size:.9em;font-weight:700;font-family:'Share Tech Mono',monospace;opacity:0;pointer-events:none;z-index:9999;color:#fff;box-shadow:0 8px 28px rgba(7,33,58,.25);transition:opacity .22s,transform .32s cubic-bezier(.34,1.56,.64,1);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ━━━ 추천 법령 카드 ━━━ */
-.law-card{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--white);border:1.5px solid rgba(49,130,255,.14);box-shadow:0 1px 6px rgba(7,33,58,.04);cursor:pointer;transition:all .2s;text-decoration:none;color:inherit;}
-.law-card:hover{border-color:rgba(49,130,255,.35);background:rgba(49,130,255,.04);transform:translateY(-1px);box-shadow:0 3px 12px rgba(49,130,255,.1);}
-.law-ico{width:28px;height:28px;border-radius:8px;background:rgba(49,130,255,.1);border:1px solid rgba(49,130,255,.2);display:flex;align-items:center;justify-content:center;font-size:.85em;flex-shrink:0;}
-.law-name{font-size:.88em;font-weight:700;color:var(--navy);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.law-link{font-size:.68em;color:var(--blue);font-family:'Share Tech Mono',monospace;flex-shrink:0;}
-.law-loading{text-align:center;padding:16px;font-size:.85em;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -840,14 +833,6 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
     <div style="font-size:.8em;color:var(--muted);margin-bottom:8px;flex-shrink:0;font-family:'Share Tech Mono',monospace;">✏️ 직접 클릭해서 수정 가능</div>
     <textarea class="resbox" id="resBox" oninput="onEdit()" spellcheck="false" placeholder="서식이 여기에 생성됩니다..."></textarea>
     <div class="resfoot"><span class="resct" id="resCt">0자</span></div>
-    <!-- 관련 추천 법령 -->
-    <div id="lawSection" style="display:none;margin-top:12px;flex-shrink:0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <span style="font-size:.9em;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:6px;">⚖️ 관련 추천 법령</span>
-        <span style="font-size:.68em;color:var(--muted);font-family:'Share Tech Mono',monospace;">법제처 API 검증</span>
-      </div>
-      <div id="lawList" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
-    </div>
   </div>
 </div>
 
@@ -859,8 +844,8 @@ const WORKER='https://icy-art-4e14.hdh1231.workers.dev';
 const AI_EP=WORKER+'/api/generate';
 const MASCOT='';
 
-let isPublic=null,mType='normal',wSurvey=null,aiSum='',aiDraft='',aiLaws=[],curResult='',curScr='s0',inSplit=false;
-let prefetchPromise=null; // AI 프리페치 결과
+let isPublic=null,mType='normal',wSurvey=null,aiSum='',aiDraft='',curResult='',curScr='s0',inSplit=false;
+let prefetchPromise=null;
 
 (function(){
   if(!MASCOT)return;
@@ -976,8 +961,8 @@ async function runAnalysis(){
       if(!res.ok)throw new Error('서버오류');d=await res.json();
     }
     if(d.error)throw new Error(d.error);
-    await pp;aiSum=d.summary||'';aiDraft=d.draft||'';aiLaws=d.laws||[];
-  }catch(e){await pp.catch(()=>{});aiSum='';aiDraft='';aiLaws=[];toast('AI 실패 → 빈 초안으로 진행','⚠️');}
+    await pp;aiSum=d.summary||'';aiDraft=typeof d.draft==='string'?d.draft:'';
+  }catch(e){await pp.catch(()=>{});aiSum='';aiDraft='';toast('AI 실패 → 빈 초안으로 진행','⚠️');}
   showScore();await delay(200);await runScoreShow();
 }
 
@@ -1044,8 +1029,6 @@ async function runScoreShow(){
   syncMini(sc);updateHint(sc);await delay(300);$('liveDot').style.display='inline-block';await typeIn($('resBox'),tpl);$('liveDot').style.display='none';
   /* ★ 입력될 때까지 지속 깜빡이기 */
   blinkFailsPersistent(sc);
-  /* ★ 추천 법령 렌더링 */
-  renderLaws(aiLaws);
 }
 
 function animBig(v){$('bRing').style.strokeDashoffset=376-(376*(v/100));$('bRing').style.stroke=v>=80?'#00cfc0':v>=60?'url(#sg)':'#f5a000';cntUp('bNum',parseInt($('bNum').textContent)||0,v,400);}
@@ -1223,7 +1206,7 @@ async function typeIn(el,tpl){el.value='';$('resCt').textContent='0자';const ch
 function cntUp(id,from,to,dur){const el=$(id);if(!el)return;let t=0;const iv=16;const tid=setInterval(()=>{t+=iv;el.textContent=Math.min(Math.round(from+(to-from)*(t/dur)),to);if(t>=dur){el.textContent=to;clearInterval(tid);}},iv);}
 
 function restart(){
-  isPublic=null;mType='normal';wSurvey=null;aiSum='';aiDraft='';aiLaws=[];curResult='';inSplit=false;prefetchPromise=null;
+  isPublic=null;mType='normal';wSurvey=null;aiSum='';aiDraft='';curResult='';inSplit=false;prefetchPromise=null;
   $('rawTxt').value='';
   ['dCase','dOrg','dDept','dName','dPhone','rCase','rOrg','rDept','rName','rPhone'].forEach(id=>{const e=$(id);if(e)e.value='';});
   /* 깜빡임 클래스 전부 제거 */
@@ -1238,32 +1221,9 @@ function restart(){
   const mg=$('mGr');if(mg)mg.textContent='-';
   const ms=$('mSub');if(ms)ms.textContent='';
   $('resBox').value='';$('resCt').textContent='0자';
-  const ls=$('lawSection');if(ls)ls.style.display='none';
-  const ll=$('lawList');if(ll)ll.innerHTML='';
   $('s-result').classList.remove('show');$('s-result').classList.add('out');
   setTimeout(()=>{$('s-result').classList.remove('out');$('s0').classList.add('show');curScr='s0';setStep(0);},340);
 }
-/* ★ 추천 법령 렌더링 */
-function renderLaws(laws){
-  const sec=$('lawSection'),list=$('lawList');
-  if(!sec||!list)return;
-  list.innerHTML='';
-  if(!laws||laws.length===0){sec.style.display='none';return;}
-  sec.style.display='block';
-  laws.forEach((law,i)=>{
-    const a=document.createElement('a');
-    a.className='law-card';
-    a.href=law.url;
-    a.target='_blank';
-    a.rel='noopener noreferrer';
-    a.style.opacity='0';a.style.transform='translateY(8px)';
-    a.innerHTML=`<div class="law-ico">📜</div><div class="law-name">${esc(law.name)}</div><div class="law-link">law.go.kr →</div>`;
-    list.appendChild(a);
-    setTimeout(()=>{a.style.transition='opacity .3s,transform .3s';a.style.opacity='1';a.style.transform='none';},80*i);
-  });
-}
-function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 </script>
 </body>
