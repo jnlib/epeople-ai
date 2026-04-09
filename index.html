@@ -860,6 +860,7 @@ const AI_EP=WORKER+'/api/generate';
 const MASCOT='';
 
 let isPublic=null,mType='normal',wSurvey=null,aiSum='',aiDraft='',aiLaws=[],curResult='',curScr='s0',inSplit=false;
+let prefetchPromise=null; // AI 프리페치 결과
 
 (function(){
   if(!MASCOT)return;
@@ -897,6 +898,11 @@ function goTo(n){
   if(n===3&&isPublic===null){toast('공개/비공개를 선택해주세요','⚠️');return;}
   if(n===5&&wSurvey===null){toast('만족도 여부를 선택해주세요','⚠️');return;}
   if(n===6){startAnalysis();return;}
+  /* ★ 원문 넘어갈 때 AI 프리페치 시작 */
+  if(n===2&&!prefetchPromise){
+    const raw=$('rawTxt').value.trim();
+    if(raw) prefetchPromise=fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw})}).then(r=>r.ok?r.json():null).catch(()=>null);
+  }
   const m={0:'s0',1:'s1',2:'s2',3:'s3',4:'s4',5:'s5'};if(m[n])trans(curScr,m[n],n);
 }
 function showScore(){trans(curScr,'s-score',6);}
@@ -959,8 +965,17 @@ async function runAnalysis(){
   const pp=runProg();
   try{
     if(!raw)throw new Error('no raw');
-    const res=await fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw,dept:'담당부서',mode:'both'})});
-    if(!res.ok)throw new Error('서버오류');const d=await res.json();if(d.error)throw new Error(d.error);
+    /* ★ 프리페치가 있으면 재사용, 없으면 새로 호출 */
+    let d;
+    if(prefetchPromise){
+      d=await prefetchPromise;
+      prefetchPromise=null;
+      if(!d)throw new Error('프리페치 실패');
+    }else{
+      const res=await fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw})});
+      if(!res.ok)throw new Error('서버오류');d=await res.json();
+    }
+    if(d.error)throw new Error(d.error);
     await pp;aiSum=d.summary||'';aiDraft=d.draft||'';aiLaws=d.laws||[];
   }catch(e){await pp.catch(()=>{});aiSum='';aiDraft='';aiLaws=[];toast('AI 실패 → 빈 초안으로 진행','⚠️');}
   showScore();await delay(200);await runScoreShow();
@@ -1208,7 +1223,7 @@ async function typeIn(el,tpl){el.value='';$('resCt').textContent='0자';const ch
 function cntUp(id,from,to,dur){const el=$(id);if(!el)return;let t=0;const iv=16;const tid=setInterval(()=>{t+=iv;el.textContent=Math.min(Math.round(from+(to-from)*(t/dur)),to);if(t>=dur){el.textContent=to;clearInterval(tid);}},iv);}
 
 function restart(){
-  isPublic=null;mType='normal';wSurvey=null;aiSum='';aiDraft='';aiLaws=[];curResult='';inSplit=false;
+  isPublic=null;mType='normal';wSurvey=null;aiSum='';aiDraft='';aiLaws=[];curResult='';inSplit=false;prefetchPromise=null;
   $('rawTxt').value='';
   ['dCase','dOrg','dDept','dName','dPhone','rCase','rOrg','rDept','rName','rPhone'].forEach(id=>{const e=$(id);if(e)e.value='';});
   /* 깜빡임 클래스 전부 제거 */

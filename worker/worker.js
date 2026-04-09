@@ -1,6 +1,5 @@
 export default {
   async fetch(request, env) {
-    // CORS headers
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -15,16 +14,16 @@ export default {
 
     if (url.pathname === '/api/generate' && request.method === 'POST') {
       try {
-        const { text, dept, mode } = await request.json();
+        const { text } = await request.json();
         if (!text) {
           return json({ error: '원문이 없습니다.' }, 400, corsHeaders);
         }
 
-        // 1) Workers AI: 요약 + 초안 생성
-        const aiResult = await generateDraft(env.AI, text, dept);
-
-        // 2) Workers AI: 법령 키워드 추출 → 법제처 API 검증
-        const laws = await findRelatedLaws(env.AI, text);
+        // AI 분석 + 법령 검색을 병렬로 실행
+        const [aiResult, laws] = await Promise.all([
+          generateDraft(env.AI, text),
+          findRelatedLaws(env.AI, text),
+        ]);
 
         return json({
           summary: aiResult.summary,
@@ -48,31 +47,33 @@ function json(data, status, corsHeaders) {
 }
 
 // ─── Workers AI: 민원 요약 + 답변 초안 ───
-async function generateDraft(ai, text, dept) {
-  const prompt = `당신은 대한민국 서울시교육청 민원 답변 전문가입니다.
-아래 민원 원문을 분석하여 JSON으로 답변하세요.
+async function generateDraft(ai, text) {
+  const prompt = `너는 대한민국 서울특별시교육청 민원 답변을 작성하는 공무원이다.
+아래 민원 원문을 정확히 읽고, 반드시 원문 내용에 기반하여 답변하라.
 
-민원 원문:
-"""
+[민원 원문]
 ${text.slice(0, 3000)}
-"""
 
-다음 JSON 형식으로만 답변하세요 (다른 텍스트 없이):
+[지시사항]
+아래 JSON 형식으로만 응답하라. JSON 외 텍스트는 절대 출력하지 마라.
 {
-  "summary": "민원 핵심 요지를 1~2문장으로 요약",
-  "draft": "가. 첫째 답변 내용\\n나. 둘째 답변 내용\\n다. 셋째 답변 내용"
+  "summary": "민원 핵심 내용을 15자 이내로 요약 (예: 학교급식 위생점검 요청)",
+  "draft": "가. 첫째 답변\\n나. 둘째 답변\\n다. 셋째 답변"
 }
 
-주의:
-- summary는 30자 이내로 간결하게
-- draft는 가.나.다. 형식으로 구체적이고 성실하게 작성
-- 실제 법령명을 언급할 때는 정확한 법령명만 사용
-- 추측성 답변은 하지 마세요`;
+[필수 규칙]
+- summary는 반드시 원문의 핵심 주제를 담아라. 원문과 무관한 내용 금지.
+- draft의 각 항목은 구체적으로 2~3문장씩 작성하라.
+- 확실하지 않은 법령명이나 조문번호는 쓰지 마라.
+- 원문에 없는 내용을 지어내지 마라.`;
 
   const response = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-    messages: [{ role: 'user', content: prompt }],
+    messages: [
+      { role: 'system', content: '너는 JSON만 출력하는 민원 답변 생성기다. JSON 외 어떤 텍스트도 출력하지 마라.' },
+      { role: 'user', content: prompt },
+    ],
     max_tokens: 1024,
-    temperature: 0.3,
+    temperature: 0.2,
   });
 
   try {
@@ -90,58 +91,72 @@ ${text.slice(0, 3000)}
   return { summary: '', draft: '' };
 }
 
-// ─── Workers AI: 법령 키워드 추출 → 법제처 API 검증 ───
+// ─── 법령 키워드 추출 + 법제처 API 검증 ───
 async function findRelatedLaws(ai, text) {
-  // Step 1: AI에게 법령 검색 키워드 추출 요청
-  const kwPrompt = `아래 민원 내용과 관련된 대한민국 법령을 찾기 위한 검색 키워드를 추출하세요.
+  // Step 1: AI에게 법령 키워드 추출
+  const kwPrompt = `아래 민원에서 관련 법령을 찾기 위한 검색 키워드를 추출하라.
 
-민원 내용:
-"""
+[민원]
 ${text.slice(0, 2000)}
-"""
 
-규칙:
-- 법령명으로 검색할 키워드 3~5개를 추출
-- 예: "학교급식", "식품위생", "교육공무원" 등
-- JSON 배열로만 답변: ["키워드1", "키워드2", "키워드3"]
-- 다른 텍스트 없이 JSON 배열만 출력`;
+[규칙]
+- 이 민원과 관련된 대한민국 법률/시행령 이름의 핵심 단어를 3~5개 추출
+- 반드시 JSON 배열로만 응답: ["키워드1","키워드2","키워드3"]
+- 예시: 급식 관련이면 ["학교급식","식품위생","교육시설"]
+- 예시: 교원 관련이면 ["교육공무원","교원지위","초중등교육"]
+- JSON 배열 외 다른 텍스트 절대 출력 금지`;
 
   let keywords = [];
   try {
     const kwRes = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [{ role: 'user', content: kwPrompt }],
-      max_tokens: 256,
-      temperature: 0.2,
+      messages: [
+        { role: 'system', content: 'JSON 배열만 출력하라. 다른 텍스트 금지.' },
+        { role: 'user', content: kwPrompt },
+      ],
+      max_tokens: 128,
+      temperature: 0.1,
     });
     const raw = kwRes.response || '';
     const arrMatch = raw.match(/\[[\s\S]*?\]/);
     if (arrMatch) {
-      keywords = JSON.parse(arrMatch[0]).filter(k => typeof k === 'string').slice(0, 5);
+      keywords = JSON.parse(arrMatch[0])
+        .filter(k => typeof k === 'string' && k.length >= 2)
+        .slice(0, 5);
     }
   } catch {}
 
+  // 키워드 추출 실패 시: 원문에서 직접 핵심 명사 추출 (폴백)
+  if (keywords.length === 0) {
+    const fallback = text.match(/[가-힣]{2,6}(법|령|규칙|조례)/g);
+    if (fallback) keywords = [...new Set(fallback)].slice(0, 3);
+  }
   if (keywords.length === 0) return [];
 
-  // Step 2: 키워드별 법제처 API 호출
+  // Step 2: 키워드별 법제처 API 병렬 호출
   const LAW_OC = 'hdh1231';
   const seen = new Set();
   const laws = [];
 
-  const fetches = keywords.map(async (kw) => {
+  await Promise.all(keywords.map(async (kw) => {
     try {
       const apiUrl = `https://www.law.go.kr/DRF/lawSearch.do?OC=${LAW_OC}&target=law&type=JSON&query=${encodeURIComponent(kw)}&display=3`;
       const res = await fetch(apiUrl, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) return;
-      const data = await res.json();
 
-      // 법제처 응답 구조: { LawSearch: { law: [...] } } 또는 배열
+      const raw = await res.text();
+      let data;
+      try { data = JSON.parse(raw); } catch { return; }
+
+      // 법제처 JSON 응답 파싱 — 구조가 다양할 수 있음
       let items = [];
       if (data?.LawSearch?.law) {
         items = Array.isArray(data.LawSearch.law) ? data.LawSearch.law : [data.LawSearch.law];
+      } else if (data?.law) {
+        items = Array.isArray(data.law) ? data.law : [data.law];
       }
 
       for (const item of items) {
-        const name = item['법령명한글'] || item['법령명'] || '';
+        const name = item['법령명한글'] || item['법령명'] || item.lawNameKorean || '';
         if (!name || seen.has(name)) continue;
         seen.add(name);
         laws.push({
@@ -150,8 +165,7 @@ ${text.slice(0, 2000)}
         });
       }
     } catch {}
-  });
+  }));
 
-  await Promise.all(fetches);
   return laws.slice(0, 8);
 }
