@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>국민신문고 민원답변 생성기</title>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css');
+
+    :root{
+      --bg: #f5f7fb;
+      --surface: rgba(255,255,255,.76);
+      --surface-solid: #ffffff;
+      --text: #0b1220;
+      --muted: rgba(11,18,32,.62);
+      --border: rgba(15,23,42,.10);
+      --border-strong: rgba(15,23,42,.16);
+      --primary: #2563eb;
+      --primary-600: #1d4ed8;
+      --success: #16a34a;
+      --success-600: #15803d;
+      --danger: #dc2626;
+      --shadow: 0 18px 60px rgba(2,6,23,.10);
+      --shadow-soft: 0 10px 28px rgba(2,6,23,.08);
+      --shadow-hover: 0 22px 70px rgba(2,6,23,.14);
+      --radius: 18px;
+      --focus: 0 0 0 4px rgba(37,99,235,.16);
+      --font: "Pretendard Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", "Malgun Gothic", "맑은 고딕", sans-serif;
+      --ease: cubic-bezier(.2,.8,.2,1);
+      --ease2: cubic-bezier(.22,1,.36,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.65;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    #scrollLine {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(90deg, var(--primary), #60a5fa);
+      z-index: 9999;
+      transition: width .1s linear;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(1100px 520px at 12% 12%, rgba(37,99,235,.12), transparent 60%),
+        radial-gradient(900px 440px at 88% 18%, rgba(22,163,74,.10), transparent 60%),
+        radial-gradient(760px 420px at 48% 98%, rgba(99,102,241,.10), transparent 62%),
+        linear-gradient(180deg, #f6f8fc, #f1f5fb);
+    }
+    .bg::before, .bg::after {
+      content: "";
+      position: absolute;
+      inset: -120px;
+      background:
+        radial-gradient(420px 420px at 18% 28%, rgba(99,102,241,.10), transparent 60%),
+        radial-gradient(500px 500px at 82% 22%, rgba(234,179,8,.08), transparent 62%),
+        radial-gradient(520px 520px at 58% 78%, rgba(37,99,235,.08), transparent 62%);
+      filter: blur(12px);
+      opacity: .9;
+      animation: floaty 18s var(--ease2) infinite alternate;
+    }
+    .bg::after {
+      opacity: .75;
+      animation-duration: 26s;
+      animation-direction: alternate-reverse;
+    }
+    @keyframes floaty {
+      0%   { transform: translate3d(-8px,-10px,0) scale(1.01); }
+      50%  { transform: translate3d(10px,6px,0) scale(1.02); }
+      100% { transform: translate3d(-6px,12px,0) scale(1.01); }
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: .05;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+      background-size: 220px 220px;
+      mix-blend-mode: multiply;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .header {
+      padding: 30px 34px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.88), rgba(255,255,255,.60));
+      position: relative;
+    }
+    .header::after {
+      content: "";
+      position: absolute;
+      left: 34px; right: 34px; bottom: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(37,99,235,.35), transparent);
+      opacity: .6;
+    }
+    .title {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+    }
+    .title-badge {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(37,99,235,.18), rgba(37,99,235,.06));
+      border: 1px solid rgba(37,99,235,.22);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13.5px;
+      font-weight: 650;
+      letter-spacing: -0.1px;
+    }
+
+    .content { padding: 24px 34px 34px; }
+
+    .grid { display: grid; gap: 18px; }
+
+    .section {
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      padding: 20px 20px 18px;
+      transform: translate3d(0,0,0);
+      transition: transform .22s var(--ease), box-shadow .22s var(--ease), border-color .22s var(--ease);
+      opacity: 0;
+      animation: cardIn .55s var(--ease2) both;
+      position: relative;
+      overflow: hidden;
+    }
+    .section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), #60a5fa, transparent);
+      opacity: 0;
+      transition: opacity .3s var(--ease);
+    }
+    .section:hover::before { opacity: 1; }
+    .section:nth-child(1){ animation-delay: .07s; }
+    .section:nth-child(2){ animation-delay: .15s; }
+    .section:nth-child(3){ animation-delay: .23s; }
+    .section:nth-child(4){ animation-delay: .31s; }
+    @keyframes cardIn {
+      from { opacity:0; transform: translate3d(0, 18px, 0); }
+      to   { opacity:1; transform: translate3d(0, 0, 0); }
+    }
+    .section:hover {
+      transform: translate3d(0,-4px,0);
+      box-shadow: var(--shadow-hover);
+      border-color: rgba(37,99,235,.18);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      font-size: 15.5px;
+      letter-spacing: -0.2px;
+      font-weight: 950;
+    }
+    .icon {
+      width: 30px; height: 30px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(37,99,235,.10);
+      border: 1px solid rgba(37,99,235,.18);
+      color: var(--primary);
+      font-weight: 900;
+      font-size: 13px;
+    }
+    .pill {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: rgba(15,23,42,.03);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 360px){
+      .info-grid, .form-row { grid-template-columns: 1fr; }
+    }
+
+    label {
+      display: block;
+      font-size: 12.8px;
+      font-weight: 900;
+      color: rgba(11,18,32,.84);
+      margin: 0 0 7px;
+      letter-spacing: -0.1px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-strong);
+      background: rgba(249,250,251,.95);
+      border-radius: 12px;
+      outline: none;
+      font-size: 14px;
+      font-family: var(--font);
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    input[type="text"]:hover, textarea:hover {
+      border-color: rgba(15,23,42,.22);
+    }
+    input[type="text"]:focus, textarea:focus {
+      border-color: rgba(37,99,235,.55);
+      background: #fff;
+      box-shadow: var(--focus);
+    }
+    textarea {
+      min-height: 128px;
+      resize: vertical;
+      line-height: 1.75;
+    }
+
+    .hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12.3px;
+      font-weight: 700;
+    }
+    .hint .danger { color: var(--danger); font-weight: 950; }
+
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 6px 0 0;
+    }
+    .choice {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(15,23,42,.03);
+      cursor: pointer;
+      user-select: none;
+      transition: transform .12s var(--ease), border-color .15s, background .15s, box-shadow .15s;
+      font-weight: 850;
+      color: rgba(11,18,32,.84);
+      font-size: 13.5px;
+    }
+    .choice:hover {
+      border-color: rgba(37,99,235,.28);
+      background: rgba(37,99,235,.06);
+      transform: translate3d(0,-1px,0);
+    }
+    .choice.selected {
+      border-color: rgba(37,99,235,.5);
+      background: rgba(37,99,235,.09);
+      color: var(--primary);
+      box-shadow: 0 3px 12px rgba(37,99,235,.12);
+      font-weight: 950;
+    }
+    .choice input {
+      width: 18px; height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      cursor: pointer;
+      user-select: none;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(22,163,74,.26);
+      background: rgba(22,163,74,.06);
+      transition: background .15s, border-color .15s, transform .12s var(--ease);
+    }
+    .toggle-row:hover {
+      background: rgba(22,163,74,.09);
+      border-color: rgba(22,163,74,.36);
+      transform: translate3d(0,-1px,0);
+    }
+    .toggle-wrap { position: relative; flex-shrink: 0; }
+    .toggle-wrap input[type="checkbox"] { display: none; }
+    .toggle-track {
+      display: block;
+      width: 42px; height: 24px;
+      background: #cbd5e1;
+      border-radius: 999px;
+      position: relative;
+      transition: background .25s var(--ease);
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,.18);
+      transition: transform .28s cubic-bezier(.34,1.56,.64,1);
+    }
+    .toggle-wrap input:checked ~ .toggle-track { background: var(--success); }
+    .toggle-wrap input:checked ~ .toggle-track::after { transform: translateX(18px); }
+    .toggle-label {
+      font-size: 13.5px;
+      font-weight: 900;
+      color: rgba(11,18,32,.86);
+      flex: 1;
+    }
+    .toggle-badge {
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: rgba(22,163,74,.12);
+      color: var(--success);
+      border: 1px solid rgba(22,163,74,.25);
+      letter-spacing: .02em;
+    }
+
+    .special {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .4s var(--ease2), opacity .3s var(--ease);
+      opacity: 0;
+    }
+    .special.active {
+      max-height: 220px;
+      opacity: 1;
+    }
+    .special-inner {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px dashed rgba(37,99,235,.40);
+      background: rgba(37,99,235,.06);
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-family: var(--font);
+      font-weight: 950;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform .12s var(--ease), filter .15s, box-shadow .15s;
+      box-shadow: 0 10px 18px rgba(2,6,23,.10);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      letter-spacing: -0.2px;
+      position: relative;
+      overflow: hidden;
+      will-change: transform;
+      width: 100%;
+    }
+    button:hover { transform: translate3d(0,-2px,0); box-shadow: 0 16px 30px rgba(2,6,23,.14); }
+    button:active { transform: translate3d(0,0,0); filter: brightness(.97); }
+
+    button::after {
+      content: "";
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.42);
+      transform: translate(-50%,-50%) scale(0);
+      opacity: 0;
+      pointer-events: none;
+    }
+    button.rippling::after {
+      animation: ripple .55s var(--ease) both;
+    }
+    @keyframes ripple {
+      0%   { opacity:0;   transform: translate(var(--rx), var(--ry)) scale(0); }
+      20%  { opacity:.55; }
+      100% { opacity:0;   transform: translate(var(--rx), var(--ry)) scale(24); }
+    }
+
+    .btn-primary { background: linear-gradient(180deg, var(--primary), var(--primary-600)); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.04); }
+    .btn-success { background: linear-gradient(180deg, var(--success), var(--success-600)); color: #fff; }
+    .btn-success:hover { filter: brightness(1.04); }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #fff;
+      box-shadow: var(--shadow-soft);
+      opacity: 0;
+      animation: cardIn .55s .31s var(--ease2) both;
+    }
+    .result-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15,18,42,.02);
+    }
+    .result-title {
+      margin: 0;
+      font-size: 13.5px;
+      font-weight: 950;
+      color: rgba(11,18,32,.86);
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .result-dot {
+      width: 8px; height: 8px;
+      background: #94a3b8;
+      border-radius: 50%;
+      transition: background .3s;
+    }
+    .result-dot.active {
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(22,163,74,.2);
+      animation: pulse-dot 2s ease infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100%{ opacity:1; transform:scale(1); }
+      50%{ opacity:.5; transform:scale(.7); }
+    }
+    .result-meta {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    #resultArea {
+      padding: 16px 16px 18px;
+      white-space: pre-wrap;
+      line-height: 1.85;
+      font-size: 14.5px;
+      color: #0b1220;
+      min-height: 230px;
+      outline: none;
+    }
+    #resultArea[contenteditable="true"]:focus {
+      box-shadow: inset 0 0 0 2px rgba(37,99,235,.18);
+      border-radius: 12px;
+    }
+
+    .char-count {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-weight: 700;
+      text-align: right;
+      margin-top: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .result-actions {
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      background: rgba(15,23,42,.015);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(8px);
+      background: rgba(11,18,32,.92);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 18px 50px rgba(2,6,23,.28);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s var(--ease), transform .3s cubic-bezier(.34,1.56,.64,1);
+      z-index: 9999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast .ticon {
+      width: 24px; height: 24px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.12);
+    }
+    .toast .tmsg {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: -0.1px;
+    }
+
+    @media (max-width: 860px){
+      body { padding: 14px; }
+      .content { padding: 18px 16px 22px; }
+      .header { padding: 22px 16px 14px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .bg::before, .bg::after, .section, .choice, .toggle-row, button, .toast, #resultArea {
+        animation: none !important; transition: none !important;
+      }
+      .section, .choice, button { transform: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scrollLine"></div>
+  <div class="bg" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <div class="container">
+    <div class="header">
+      <h1 class="title">
+        <span class="title-badge">🏛️</span>
+        국민신문고 민원답변 생성기
+      </h1>
+      <p class="subtitle">민원처리 답변 충실도 평가기준을 고려해, 표준 서식을 생성합니다.</p>
+    </div>
+
+    <div class="content">
+      <div class="grid">
+
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title"><span class="icon">01</span>기본 및 담당자 정보</h2>
+          </div>
+          <div class="info-grid">
+            <div>
+              <label for="caseNum">민원 신청번호</label>
+              <input type="text" id="caseNum" placeholder="예) 1AA-2504-0000000" />
+            </div>
+            <div>
+              <label for="dept">소속 기관 및 부서</label>
+              <input type="text" id="dept" placeholder="예) 서울특별시교육청 OOO과" />
+            </div>
+            <div>
+              <label for="staffName">담당 주무관 성함</label>
+              <input type="text" id="staffName" placeholder="예) 홍길동" />
+            </div>
+            <div>
+              <label for="phone">전화번호 <span class="hint">(☏ 기호 자동 삽입)</span></label>
+              <input type="text" id="phone" inputmode="tel" placeholder="예) 02-0000-0000" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title"><span class="icon">02</span>민원 유형 선택</h2>
+            <span class="pill">특수 유형 선택 시 추가 항목 표시</span>
+          </div>
+          <div class="radio-group" role="radiogroup" aria-label="민원 유형">
+            <label class="choice"><input type="radio" name="minwonType" value="normal" checked /> 일반 민원</label>
+            <label class="choice"><input type="radio" name="minwonType" value="transfer" /> 이첩 민원</label>
+            <label class="choice"><input type="radio" name="minwonType" value="avoid" /> 기피신청 민원</label>
+            <label class="choice"><input type="radio" name="minwonType" value="passive" /> 소극행정 신고 민원</label>
+          </div>
+
+          <div id="transferInput" class="special" aria-hidden="true">
+            <div class="special-inner">
+              <label for="fromOrg">이첩된 최초 기관명</label>
+              <input type="text" id="fromOrg" placeholder="예) 대통령비서실, 규제개혁신문고 등" />
+            </div>
+          </div>
+          <div id="avoidInput" class="special" aria-hidden="true">
+            <div class="special-inner">
+              <div class="form-row" style="margin-bottom:0;">
+                <div>
+                  <label for="avoidDept">기피 대상 부서</label>
+                  <input type="text" id="avoidDept" placeholder="예) OOO과" />
+                </div>
+                <div>
+                  <label for="avoidReason">기피신청 불수용 사유</label>
+                  <input type="text" id="avoidReason" placeholder="예) 업무 연속성 및 전문성 유지 등" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="passiveInput" class="special" aria-hidden="true">
+            <div class="special-inner">
+              <label for="passiveReason">감사부서 미처리 사유(현업부서 답변 사유)</label>
+              <input type="text" id="passiveReason" placeholder="예) 자체 종결 사안으로 분류됨 등" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title"><span class="icon">03</span>답변 내용 작성</h2>
+          </div>
+
+          <div class="form-row">
+            <div style="grid-column: 1 / -1;">
+              <label for="summary">민원 요지 <span class="hint">("~에 관한 것으로 이해됩니다" 문구 자동 결합)</span></label>
+              <input type="text" id="summary" placeholder="예) 학교 시설물 야간 개방 촉구" />
+            </div>
+          </div>
+
+          <div>
+            <label for="content">
+              답변 내용
+              <span class="hint"><span class="danger">※</span> 가독성 점수를 위해 '가. 나. 다.' 등을 직접 매겨 구조화해 주세요.</span>
+            </label>
+            <textarea id="content" placeholder="예시)
+가. 해당 학교는 현재 야간 보안 인력이 부족하여 개방이 어렵습니다.
+나. 추후 예산이 확보되면 긍정적으로 검토하겠습니다."></textarea>
+            <div class="char-count" id="charCount">0자</div>
+          </div>
+
+          <label class="toggle-row" for="surveyCheck">
+            <span class="toggle-wrap">
+              <input type="checkbox" id="surveyCheck" checked />
+              <span class="toggle-track"></span>
+            </span>
+            <span class="toggle-label">마지막 문구에 '만족도 평가 참여 유도' 문구 포함</span>
+            <span class="toggle-badge">＋ 가점</span>
+          </label>
+
+          <div class="btn-row">
+            <button class="btn-primary" id="btnGenerate" type="button">
+              <span id="btnText">⚙️ 서식에 맞춰 생성하기</span>
+              <span class="spinner" id="btnSpin"></span>
+            </button>
+          </div>
+        </section>
+
+        <section class="result" aria-live="polite">
+          <div class="result-head">
+            <h3 class="result-title">
+              <span class="result-dot" id="resultDot"></span>
+              생성 결과
+            </h3>
+            <div class="result-meta">Ctrl/⌘ + A → 복사</div>
+          </div>
+          <div id="resultArea" contenteditable="true">여기에 표준 규격에 맞춘 민원 답변이 생성됩니다.</div>
+          <div class="result-actions">
+            <button class="btn-success" id="btnCopy" type="button">📋 클립보드에 복사하기</button>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <span class="ticon" id="toastIcon">✅</span>
+    <span class="tmsg" id="toastMsg">복사되었습니다.</span>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    window.addEventListener('scroll', () => {
+      const s = document.documentElement;
+      $('scrollLine').style.width = (s.scrollTop / (s.scrollHeight - s.clientHeight) * 100) + '%';
+    });
+
+    $('content').addEventListener('input', () => {
+      $('charCount').textContent = $('content').value.length + '자';
+    });
+
+    function updateChips() {
+      document.querySelectorAll('.choice').forEach(label => {
+        const input = label.querySelector('input[type="radio"]');
+        label.classList.toggle('selected', input.checked);
+      });
+    }
+    document.querySelectorAll('input[name="minwonType"]').forEach(r => {
+      r.addEventListener('change', () => { updateChips(); toggleSpecial(); });
+    });
+    updateChips();
+
+    function getSelectedType() {
+      return document.querySelector('input[name="minwonType"]:checked')?.value || "normal";
+    }
+    function toggleSpecial() {
+      const type = getSelectedType();
+      const panels = { transfer: 'transferInput', avoid: 'avoidInput', passive: 'passiveInput' };
+      Object.entries(panels).forEach(([key, id]) => {
+        const el = $(id);
+        const open = type === key;
+        el.classList.toggle('active', open);
+        el.setAttribute('aria-hidden', String(!open));
+      });
+    }
+    toggleSpecial();
+
+    function ripple(btn, e) {
+      const rect = btn.getBoundingClientRect();
+      const x = (e?.clientX ?? rect.left + rect.width/2) - rect.left;
+      const y = (e?.clientY ?? rect.top + rect.height/2) - rect.top;
+      btn.style.setProperty('--rx', x + 'px');
+      btn.style.setProperty('--ry', y + 'px');
+      btn.classList.remove('rippling');
+      void btn.offsetWidth;
+      btn.classList.add('rippling');
+      setTimeout(() => btn.classList.remove('rippling'), 650);
+    }
+
+    let toastTimer;
+    function showToast(msg, icon = '✅') {
+      $('toastIcon').textContent = icon;
+      $('toastMsg').textContent = msg;
+      $('toast').classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2400);
+    }
+
+    function normalizePhone(raw) {
+      return String(raw || '').trim().replace(/^☏\s*/g, '');
+    }
+
+    async function generate() {
+      const btn = $('btnGenerate');
+      $('btnText').style.display = 'none';
+      $('btnSpin').style.display = 'inline-block';
+      btn.disabled = true;
+
+      await new Promise(r => setTimeout(r, 480));
+
+      const caseNum = $('caseNum').value.trim()  || '1AA-0000-0000000';
+      const dept    = $('dept').value.trim()      || 'OOO과';
+      const name    = $('staffName').value.trim() || 'OOO';
+      const phone   = normalizePhone($('phone').value) || '02-0000-0000';
+      const summary = $('summary').value.trim()   || 'OOO';
+      const type    = getSelectedType();
+
+      let paragraph2 = '';
+      if (type === 'normal') {
+        paragraph2 = `2. 귀하께서 국민신문고를 통해 신청하신 민원(신청번호: ${caseNum})에 대하여 다음과 같이 답변드립니다.`;
+      } else if (type === 'transfer') {
+        const fromOrg = $('fromOrg').value.trim() || '대통령비서실';
+        paragraph2 = `2. 귀하께서 ${fromOrg}에 제출하여 우리 교육청으로 이첩된 민원(${caseNum})에 대한 검토 결과를 다음과 같이 알려드립니다.`;
+      } else if (type === 'avoid') {
+        const avoidDept   = $('avoidDept').value.trim()   || '해당 부서';
+        const avoidReason = $('avoidReason').value.trim() || '업무 연속성 및 전문성 유지 등';
+        paragraph2 = `2. 귀하께서 민원을 제기하실 때 ${avoidDept}를 기피신청하셨으나, ${avoidReason} 등의 사정을 고려할 때 부득이 ${avoidDept}에서 답변드릴 수밖에 없음을 양해하여 주시기 바랍니다.`;
+      } else if (type === 'passive') {
+        const passiveReason = $('passiveReason').value.trim() || '규정상의 절차';
+        paragraph2 = `2. 귀하의 소극행정 신고민원에 대하여 ${passiveReason} 등의 사유로 부득이 감사부서가 아닌 ${dept}에서 답변드리는 것이 적절하다고 판단하였음을 양해하여 주시기 바랍니다.`;
+      }
+
+      let body = $('content').value.trim() || '가. \n나. ';
+
+      let closing =
+        `5. 귀하의 문의에 대하여 만족스러운 답변이 되었기를 바라며, 추가 설명이 필요한 경우 ` +
+        `${dept} ${name} 주무관(☏${phone})에게 연락주시면 친절히 안내해 드리겠습니다.`;
+
+      if ($('surveyCheck').checked) {
+        closing +=
+          ` 아울러 우리 교육청은 민원서비스 품질 향상을 위해 노력하고 있습니다. ` +
+          `답변 내용에 만족하셨다면 아래 만족도 평가에 참여해 주시기 바라며, ` +
+          `해당 의견은 향후 서비스 개선을 위한 자료로 활용하겠습니다.`;
+      }
+      closing += ` 감사합니다.`;
+
+      const template =
+`제목 : 민원(${caseNum}) 처리결과 안내
+
+1. 안녕하십니까? ${dept}에 근무하는 ${name} 주무관입니다. 먼저 교육행정에 관심을 가져주신 데에 깊은 감사의 말씀을 드립니다.
+
+${paragraph2}
+
+3. 귀하의 민원 내용은 "${summary}"에 관한 것으로 이해(또는 판단)됩니다.
+
+4. 귀하의 문의 사항에 대해 검토한 의견은 다음과 같습니다.
+${body}
+
+${closing}`;
+
+      const area = $('resultArea');
+      area.textContent = '';
+      const chars = [...template];
+      let i = 0;
+      const step = () => {
+        if (i < chars.length) {
+          area.textContent += chars[i++];
+          setTimeout(step, i < 80 ? 6 : 1);
+        } else {
+          $('resultDot').classList.add('active');
+          showToast('생성 완료 — 결과에서 바로 수정 가능', '✨');
+        }
+      };
+      step();
+
+      btn.disabled = false;
+      $('btnText').style.display = 'inline';
+      $('btnSpin').style.display = 'none';
+    }
+
+    async function copyText() {
+      const text = $('resultArea').innerText.trim();
+      if (!text || text.includes('여기에 표준 규격')) {
+        showToast('먼저 서식을 생성해 주세요.', '⚠️');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('클립보드에 복사되었습니다.', '📋');
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents($('resultArea'));
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        try {
+          document.execCommand('copy');
+          sel.removeAllRanges();
+          showToast('복사되었습니다. (대체 방식)', '📋');
+        } catch {
+          showToast('복사 실패 — 수동으로 복사해 주세요.', '❌');
+        }
+      }
+    }
+
+    $('btnGenerate').addEventListener('click', generate);
+    $('btnGenerate').addEventListener('pointerdown', e => ripple($('btnGenerate'), e));
+    $('btnCopy').addEventListener('click', copyText);
+    $('btnCopy').addEventListener('pointerdown', e => ripple($('btnCopy'), e));
+
+    document.addEventListener('keydown', e => {
+      const mod = navigator.platform.toUpperCase().includes('MAC') ? e.metaKey : e.ctrlKey;
+      if (mod && e.key === 'Enter') { e.preventDefault(); generate(); }
+    });
+
+    window.addEventListener('load', () => $('caseNum').focus());
+  </script>
+</body>
+</html>
