@@ -198,7 +198,7 @@ function safeParseLaw(text) {
 }
 
 // 법제처 fetch with retry — 빠른 실패 전략 (전체 요청 30초 제한 고려)
-async function lawFetchWithRetry(url, timeoutMs = 10000, maxRetries = 1) {
+async function lawFetchWithRetry(url, timeoutMs = 14000, maxRetries = 1) {
   let lastErr = null;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -433,7 +433,7 @@ async function handleGenerate(body, env, cors) {
   const cache = typeof caches !== 'undefined' ? caches.default : null;
   const complaint = text.slice(0, 3000);
 
-  // ═════ Gemini #1: 법령 제안 ═════
+  // ═════ Gemini #1: 민원요지 + 검색어 추출 (맥락 이해) ═════
   const proposal = await callGemini(
     env.GEMINI_API_KEY,
     buildProposalPrompt(complaint, mType),
@@ -441,44 +441,88 @@ async function handleGenerate(body, env, cors) {
     0.2,
   );
 
-  const proposedLaws = Array.isArray(proposal?.proposedLaws) ? proposal.proposedLaws : [];
+  const preSummary = (proposal?.summary || '').trim();
+  const queries = Array.isArray(proposal?.searchQueries)
+    ? proposal.searchQueries.filter((q) => typeof q === 'string' && q.trim().length > 0)
+    : [];
+  // 폴백: 요지도 추가 (중복 제거)
+  if (preSummary && !queries.includes(preSummary)) queries.push(preSummary);
   const isLawRelated = proposal?.isLawRelated !== false;
 
-  // ═════ 법령 검증 + 본문 조회 ═════
-  let verifiedLaws = [];
-  let unverifiedLaws = [];
+  // ═════ 법령 후보 검색 (Gemini가 준 검색어 순서대로 시도, 첫 성공 채택) ═════
+  let candidateLaws = [];
+  let usedQuery = '';
+  const unverifiedLaws = [];
 
-  if (isLawRelated && proposedLaws.length > 0) {
-    // 순차 처리 — 법제처 서버 부하 분산 (병렬 시 일부 타임아웃)
-    // 최대 4개 법령까지만 검증 (시간 예산 고려)
-    for (const p of proposedLaws.slice(0, 4)) {
-      try {
-        const matches = await verifyLawName(p.name, cache);
-        if (matches.length === 0) {
-          unverifiedLaws.push(p.name);
-          continue;
-        }
-        const primary = matches[0];
-        const detail = await fetchLawBody(primary.lawId, cache);
-        if (!detail) {
-          unverifiedLaws.push(p.name);
-          continue;
-        }
-        const topicArts = filterArticlesByTopics(detail.articles, p.topics || []);
-        verifiedLaws.push({ ...detail, mst: detail.mst || primary.mst, articles: topicArts });
-      } catch (e) {
-        unverifiedLaws.push(p.name);
-      }
+  async function tryFetch(q) {
+    try {
+      const r = await fetchAiSearch(q, cache);
+      const items = Array.isArray(r.법령조문) ? r.법령조문 : [r.법령조문].filter(Boolean);
+      return items;
+    } catch (e) {
+      console.log('aiSearch 실패:', q, e.message);
+      return [];
     }
   }
 
-  // ═════ Gemini #2: 답변 생성 ═════
+  if (isLawRelated && queries.length > 0) {
+    let items = [];
+    for (const q of queries) {
+      items = await tryFetch(q);
+      if (items.length > 0) {
+        usedQuery = q;
+        break;
+      }
+    }
+
+    // 법령ID별로 그룹화 — 순서 보존
+    const groups = new Map();
+    for (const it of items) {
+      const id = it.법령ID;
+      if (!id) continue;
+      if (!groups.has(id)) {
+        groups.set(id, {
+          lawId: id,
+          mst: it.법령일련번호,
+          name: it.법령명,
+          kind: it.법령종류명 || '',
+          ministry: it.소관부처명 || '',
+          effectiveDate: formatYmd(it.시행일자),
+          shortName: '',
+          articles: [],
+        });
+      }
+      const g = groups.get(id);
+      if (g && g.articles.length < 5) {
+        g.articles.push({
+          no: String(it.조문번호 || '').replace(/^0+/, '') || '0',
+          title: it.조문제목 || '',
+          content: it.조문내용 || '',
+        });
+      }
+    }
+    candidateLaws = [...groups.values()].slice(0, 8);
+  }
+
+  // ═════ Gemini #2: 후보 중 선별 + 답변 생성 ═════
   const generation = await callGemini(
     env.GEMINI_API_KEY,
-    buildGenerationPrompt(complaint, verifiedLaws, mType, !!cooperation?.enabled),
+    buildGenerationPrompt(complaint, candidateLaws, mType, !!cooperation?.enabled, preSummary),
     GENERATION_SCHEMA,
     0.3,
   );
+
+  // Gemini가 선별한 법령 ID만 verifiedLaws로 (없으면 상위 3개 기본)
+  const selected = Array.isArray(generation?.selectedLawIds) ? generation.selectedLawIds : [];
+  let verifiedLaws;
+  if (selected.length > 0) {
+    const byId = new Map(candidateLaws.map((l) => [String(l.lawId), l]));
+    verifiedLaws = selected
+      .map((id) => byId.get(String(id)))
+      .filter(Boolean);
+  } else {
+    verifiedLaws = candidateLaws.slice(0, 3);
+  }
 
   // ═════ 응답 조립 ═════
   const lawsForUi = verifiedLaws.map((l) => {
@@ -501,12 +545,13 @@ async function handleGenerate(body, env, cors) {
 
   return json(
     {
-      summary: generation?.summary || '',
+      summary: generation?.summary || preSummary || '',
       draft: generation?.draft || '',
       laws: lawsForUi,
       unverifiedLaws,
       isLawRelated,
-      mainIntent: proposal?.mainIntent || '',
+      searchQueries: queries,
+      usedQuery,
       source: `gemini:${GEMINI_MODEL}`,
     },
     200,
@@ -518,7 +563,7 @@ async function handleGenerate(body, env, cors) {
 // Gemini #1 프롬프트 — 법령 제안
 // ─────────────────────────────────────────────
 function buildProposalPrompt(text, mType) {
-  return `너는 대한민국 행정 법률 전문가다. 아래 국민신문고 민원을 읽고 관련 법령을 제안하라.
+  return `너는 대한민국 국민신문고 민원 전문가다. 아래 민원을 읽고 법제처 법령검색에 쓸 최적의 자연어 검색어를 여러 개 만들어라.
 
 [민원 원문]
 ${text}
@@ -527,27 +572,32 @@ ${text}
 ${mType || 'normal'}
 
 [너의 임무]
-1. 이 민원이 법령 근거가 필요한 행정 사안인지 판단 (isLawRelated)
-2. 관련될 수 있는 대한민국 현행 법령의 '정식 명칭' 1~5개 제안
-3. 각 법령에서 주로 참고할 주제(topics) 2~4개 함께 제안
+1. 민원의 핵심 요지 한 문장 (10~15자) — summary
+   - 답변 3번 "귀하의 민원 내용은 '(요지)'에 관한 것으로 이해됩니다"에 삽입
+   - 예: "학교급식 위생관리 개선 요청"
 
-[엄격 규칙]
-- 법령 '정식 명칭'만 사용하라. 약칭 금지.
-  예: ❌ "교원지위법"  ✅ "교원의 지위 향상 및 교육활동 보호를 위한 특별법"
-  예: ❌ "학교안전법"  ✅ "학교안전사고 예방 및 보상에 관한 법률"
-- 불확실한 법령은 절대 제안하지 마라. 존재 여부 불확실하면 생략.
-- 민원이 단순 감사·칭찬·개인적 의견 등 법령 무관이면 isLawRelated=false로 하고 proposedLaws는 빈 배열.
-- topics는 해당 법령에서 민원과 관련될 조문 주제 키워드 (조문 제목에 나올 만한 단어)
-  예: "학교급식법" → topics: ["위생", "안전관리", "운영"]
+2. 법제처 '지능형 검색(aiSearch)' 전용 검색어를 **서로 다른 관점에서 3개** 생성 (searchQueries)
+   - 각 3~6단어, 자연어 짧은 구
+   - 1번 쿼리가 0건 반환해도 다른 쿼리로 재시도할 수 있도록 **의미는 같되 표현 다변화**
+   - 첫 번째는 가장 구체적, 마지막은 가장 일반적 주제어
+   - 좋은 예 (교권침해 민원):
+     · ["교권 침해 상담 신청", "교원 교육활동 보호", "교원 지위 보호"]
+   - 좋은 예 (학교급식 위생):
+     · ["학교급식 위생 안전관리", "급식 위생 점검", "학교급식 운영"]
+   - 좋은 예 (체험학습 사고):
+     · ["체험학습 안전사고 보상", "학교 안전사고 공제", "학교안전 공제급여"]
+   - 나쁜 예: ["민원", "학교"] (너무 일반적), ["학교급식법"] (법령명 대신 주제어 사용)
+   - 주제어는 학술적·행정적 용어로 (법제처 문서 투 의식)
 
-반드시 아래 JSON 형식으로만 응답하라:
+3. 법령 근거가 필요한 사안인지 판단 (isLawRelated)
+   - 단순 감사·칭찬·개인 감정 표현은 false → searchQueries는 빈 배열
+
+[출력 형식]
+반드시 아래 JSON으로만 응답:
 {
   "isLawRelated": true,
-  "mainIntent": "민원의 핵심 의도 한 문장",
-  "proposedLaws": [
-    {"name": "학교급식법", "topics": ["위생", "안전관리"]},
-    {"name": "학교보건법", "topics": ["환경위생", "식품위생"]}
-  ]
+  "summary": "학교급식 위생관리 개선 요청",
+  "searchQueries": ["학교급식 위생 안전관리", "급식 위생 점검", "학교급식 운영"]
 }`;
 }
 
@@ -555,36 +605,26 @@ const PROPOSAL_SCHEMA = {
   type: 'object',
   properties: {
     isLawRelated: { type: 'boolean' },
-    mainIntent: { type: 'string' },
-    proposedLaws: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          name: { type: 'string' },
-          topics: { type: 'array', items: { type: 'string' } },
-        },
-        required: ['name'],
-      },
-    },
+    summary: { type: 'string' },
+    searchQueries: { type: 'array', items: { type: 'string' } },
   },
-  required: ['isLawRelated', 'proposedLaws'],
+  required: ['summary', 'searchQueries'],
 };
 
 // ─────────────────────────────────────────────
 // Gemini #2 프롬프트 — 답변 생성
 // ─────────────────────────────────────────────
-function buildGenerationPrompt(complaint, verifiedLaws, mType, hasCooperation) {
-  const lawsContext = verifiedLaws.length
-    ? verifiedLaws
+function buildGenerationPrompt(complaint, candidateLaws, mType, hasCooperation, preSummary) {
+  const lawsContext = candidateLaws.length
+    ? candidateLaws
         .map((l, i) => {
           const arts = l.articles
             .map((a) => `  - 제${a.no}조 (${a.title}): ${a.content}`)
             .join('\n');
-          return `[법령 ${i + 1}] ${l.name} (${l.kind}, ${l.ministry}) [ID:${l.lawId}]\n${arts}`;
+          return `[후보 ${i + 1}] ${l.name} (${l.kind}, ${l.ministry}) [ID:${l.lawId}]\n${arts}`;
         })
         .join('\n\n')
-    : '(관련 법령을 찾지 못했습니다. 법령 인용 없이 일반적 행정 답변을 작성하세요.)';
+    : '(관련 법령 후보가 없습니다. 법령 인용 없이 일반적 행정 답변을 작성하세요.)';
 
   const mTypeHint =
     mType === 'transfer'
@@ -599,12 +639,14 @@ function buildGenerationPrompt(complaint, verifiedLaws, mType, hasCooperation) {
     ? '※ 이 민원은 협조민원입니다. 답변 본문에 협조기관(부서)의 답변을 반영할 수 있도록 구조를 유연하게 구성하되, 단순 나열이 아닌 종합정리 형태로 자연스럽게 서술하세요.'
     : '';
 
-  return `너는 서울특별시교육청 공무원이다. 아래 민원에 대한 공식 답변의 "민원 요지"와 "검토 의견 본문"을 작성하라.
+  return `너는 서울특별시교육청 공무원이다. 아래 민원에 대한 답변을 작성하되, 아래 후보 법령 중 **진짜 관련 있는 것만 직접 선별**해서 그 법령만 근거로 인용하라.
 
 [민원 원문]
 ${complaint}
 
-[참고 법령 — 반드시 이 범위 내에서만 인용]
+${preSummary ? `[이미 추출된 민원 요지]\n${preSummary}\n` : ''}
+
+[법령 후보 목록 — 법제처 aiSearch 검색 결과 (순서상 1위가 반드시 가장 관련 높은 것은 아님)]
 ${lawsContext}
 
 [민원 유형]
@@ -613,33 +655,36 @@ ${mTypeHint}
 
 ${coopHint}
 
-[summary 작성 규칙 — 민원 요지]
-- 민원인이 무엇을 요청/건의/문의했는지를 한 문장(15자 이내)으로 요약
-- 예: "학교급식 위생관리 개선 요청", "교원 복무 관련 건의"
-- 큰따옴표나 따옴표 사용 금지 (UI에서 자동 래핑됨)
+[너의 임무]
+1. 후보 법령 중 **이 민원에 진짜 관련 있는 것만 1~3개 선별** (selectedLawIds에 법령ID 배열로 반환)
+   - 1위가 엉뚱하면 2위/3위를 골라라
+   - 관련성 전혀 없는 후보는 과감히 제외
+   - 관련 법령이 전혀 없으면 빈 배열 반환
+2. 선별한 법령만 근거로 본문 draft 작성
+
+[summary 작성 규칙]
+- 10~15자 한 문장 요약 (따옴표 사용 금지)
+- 예: "학교급식 위생관리 개선 요청"
+- 이미 추출된 민원 요지가 있으면 그대로 사용
 
 [draft 작성 규칙 — 검토 의견 본문]
 1. 반드시 "가. / 나. / 다." 구조화 (최소 2항목, 권장 3항목)
-2. 각 항목은 3~5문장의 충분한 분량으로 작성
+2. 각 항목은 3~5문장의 충분한 분량
 3. 법령 인용 시 「법령명」 제X조 형식으로 정확히 인용
-4. 위 참고 법령 목록에 없는 법령/조문번호는 절대 지어내지 마라 (감점 사유)
-5. 공문서 어투 ("~을 알려드립니다", "~하고 있습니다", "~조치하겠습니다")
-6. 정중한 표현, 민원인 입장 존중
-7. 금지 표현:
-   - "해당 부서로 문의" 같은 떠넘기기 금지
-   - "홈페이지 참고" 같은 회피성 안내 금지
-   - 제3자 개인정보·영업비밀 포함 금지
-   - 단순 이전 답변 참고 안내 금지
+4. **selectedLawIds로 선별한 법령만** 인용. 나머지 후보 인용 금지. 목록 외 법령/조문 지어내기 절대 금지
+5. 공문서 어투 ("~을 알려드립니다", "~조치하겠습니다")
+6. 금지 표현: "해당 부서로 문의", "홈페이지 참고", "이전 답변 참고" 등 떠넘기기·회피 표현
+7. 제3자 개인정보·영업비밀 포함 금지
 8. 구조 예시:
-   가. [현황 파악/확인 결과 — 구체적 사실]
-   나. [관련 제도·법령 설명 — 참고 법령 중에서만 인용]
+   가. [현황 파악/확인 결과]
+   나. [관련 제도·법령 설명 — 선별 법령만 인용]
    다. [향후 조치 계획·양해 요청]
 
-반드시 아래 JSON 형식으로만 응답하라:
+반드시 아래 JSON 형식으로만 응답:
 {
-  "summary": "민원 요지 (15자 이내, 따옴표 없이)",
+  "summary": "민원 요지 (따옴표 없이)",
   "draft": "가. ...\\n\\n나. ...\\n\\n다. ...",
-  "citedLawIds": ["000889", "000890"]
+  "selectedLawIds": ["000889"]
 }`;
 }
 
@@ -648,7 +693,7 @@ const GENERATION_SCHEMA = {
   properties: {
     summary: { type: 'string' },
     draft: { type: 'string' },
-    citedLawIds: { type: 'array', items: { type: 'string' } },
+    selectedLawIds: { type: 'array', items: { type: 'string' } },
   },
   required: ['summary', 'draft'],
 };
