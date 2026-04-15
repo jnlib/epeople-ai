@@ -293,16 +293,22 @@ async function verifyLawName(name, cache) {
 // 조문 필터링 (topics 힌트 기반)
 // ─────────────────────────────────────────────
 function filterArticlesByTopics(articles, topics) {
-  if (!topics || topics.length === 0) return articles.slice(0, 5);
+  if (!articles || articles.length === 0) return [];
+  if (!topics || topics.length === 0) return articles.slice(0, 10);
 
-  const matched = articles.filter((a) => {
-    const haystack = (a.title + ' ' + a.content.slice(0, 120)).toLowerCase();
-    return topics.some((t) => haystack.includes(String(t).toLowerCase()));
-  });
-
-  // 매칭이 2개 이상이면 그대로, 아니면 상위 5개 fallback
-  if (matched.length >= 2) return matched.slice(0, 8);
-  return articles.slice(0, 5);
+  const matched = [];
+  const unmatched = [];
+  for (const a of articles) {
+    const haystack = (a.title + ' ' + a.content.slice(0, 150)).toLowerCase();
+    if (topics.some((t) => haystack.includes(String(t).toLowerCase()))) {
+      matched.push(a);
+    } else {
+      unmatched.push(a);
+    }
+  }
+  // 매칭 조문 우선, 부족분은 순서상 앞쪽 조문으로 채움, 총 최대 10개
+  const combined = [...matched, ...unmatched.slice(0, Math.max(0, 10 - matched.length))];
+  return combined.slice(0, 10);
 }
 
 // ─────────────────────────────────────────────
