@@ -117,6 +117,56 @@ async function callGemini(apiKey, prompt, schema, temperature = 0.1) {
 // ─────────────────────────────────────────────
 // 법제처 API 호출
 // ─────────────────────────────────────────────
+// 법제처 응답이 JSON인지 안전하게 확인
+function safeParseLaw(text) {
+  if (!text) return null;
+  const trimmed = text.trim();
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return null;
+  try {
+    return JSON.parse(trimmed);
+  } catch (e) {
+    return null;
+  }
+}
+
+// 법제처 fetch with retry — Cloudflare → law.go.kr 간 525/타임아웃 대응
+async function lawFetchWithRetry(url, timeoutMs = 25000, maxRetries = 2) {
+  let lastErr = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; EpeopleBot/1.0)' },
+        signal: AbortSignal.timeout(timeoutMs),
+        cf: { cacheTtl: 300, cacheEverything: true },
+      });
+      const text = await res.text();
+      // 525/프레임/HTML 페이지 감지
+      if (
+        text.includes('error code: 525') ||
+        text.includes('<!DOCTYPE') ||
+        text.includes('error500') ||
+        text.includes('미신청')
+      ) {
+        lastErr = new Error('법제처 응답 오류: ' + text.slice(0, 100));
+        if (attempt < maxRetries) {
+          await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+          continue;
+        }
+        return null;
+      }
+      return text;
+    } catch (e) {
+      lastErr = e;
+      if (attempt < maxRetries) {
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+        continue;
+      }
+    }
+  }
+  console.log('lawFetch 최종 실패:', lastErr?.message);
+  return null;
+}
+
 async function fetchEflawByName(name, cache) {
   const cacheKey = `eflaw:${name}`;
   if (cache) {
@@ -128,15 +178,9 @@ async function fetchEflawByName(name, cache) {
     OC: LAW_OC, target: 'eflaw', type: 'JSON',
     query: name, search: '1', nw: '3', display: '5',
   });
-  const res = await fetch(`${LAW_BASE}/lawSearch.do?${qs}`, {
-    headers: { 'User-Agent': 'Mozilla/5.0' },
-    signal: AbortSignal.timeout(15000),
-  });
-  const text = await res.text();
-  if (text.includes('<!DOCTYPE') || text.includes('error500')) {
-    return { totalCnt: '0', law: [] };
-  }
-  const data = JSON.parse(text);
+  const text = await lawFetchWithRetry(`${LAW_BASE}/lawSearch.do?${qs}`);
+  const data = safeParseLaw(text);
+  if (!data) return { totalCnt: '0', law: [] };
   const result = data.LawSearch || { totalCnt: '0', law: [] };
 
   if (cache) {
@@ -159,15 +203,9 @@ async function fetchAiSearch(query, cache) {
     OC: LAW_OC, target: 'aiSearch', type: 'JSON',
     query, search: '0', display: '10',
   });
-  const res = await fetch(`${LAW_BASE}/lawSearch.do?${qs}`, {
-    headers: { 'User-Agent': 'Mozilla/5.0' },
-    signal: AbortSignal.timeout(15000),
-  });
-  const text = await res.text();
-  if (text.includes('<!DOCTYPE') || text.includes('error500')) {
-    return { 법령조문: [] };
-  }
-  const data = JSON.parse(text);
+  const text = await lawFetchWithRetry(`${LAW_BASE}/lawSearch.do?${qs}`);
+  const data = safeParseLaw(text);
+  if (!data) return { 법령조문: [] };
   const result = data.aiSearch || { 법령조문: [] };
 
   if (cache) {
@@ -189,15 +227,9 @@ async function fetchLawBody(lawId, cache) {
   const qs = new URLSearchParams({
     OC: LAW_OC, target: 'law', type: 'JSON', ID: lawId,
   });
-  const res = await fetch(`${LAW_BASE}/lawService.do?${qs}`, {
-    headers: { 'User-Agent': 'Mozilla/5.0' },
-    signal: AbortSignal.timeout(20000),
-  });
-  const text = await res.text();
-  if (text.includes('<!DOCTYPE') || text.includes('error500')) {
-    return null;
-  }
-  const data = JSON.parse(text);
+  const text = await lawFetchWithRetry(`${LAW_BASE}/lawService.do?${qs}`, 28000);
+  const data = safeParseLaw(text);
+  if (!data) return null;
   const law = data.법령 || null;
   if (!law) return null;
 
