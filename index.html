@@ -1221,26 +1221,32 @@ let candidateLawsAll = [];
 
 /* v2: 법령 카드 렌더링 — draft에 인용된 모든 조문을 개별 카드로 */
 function renderLaws(){
+  try {
   const list=$('lawList'); const cnt=$('lawCount');
   if(!list)return;
+
+  // 안전 보장
+  if(!Array.isArray(aiLaws)) aiLaws = [];
+  if(!Array.isArray(candidateLawsAll)) candidateLawsAll = [];
 
   // 1) draft에서 실제 인용된 법령-조문 추출
   const cited = extractCitedArticles(aiDraft || '');
 
   // 2) 각 인용에 대해 candidates에서 매칭되는 조문 찾기
   const matchedCards = [];
-  const unmatchedCards = [];
 
   for(const c of cited){
-    // candidateLawsAll에서 법령명이 포함되는 항목 찾기
+    if(!c || !c.law || !c.article) continue;
     let found = null;
     const candSrc = candidateLawsAll.length > 0 ? candidateLawsAll : aiLaws;
     for(const l of candSrc){
-      const nMatch = l.name && (l.name.includes(c.law) || c.law.includes(l.name.replace(/\s+/g,'')));
+      if(!l || !l.name) continue;
+      const lawNorm = String(l.name).replace(/\s+/g,'');
+      const citedNorm = String(c.law).replace(/\s+/g,'');
+      const nMatch = lawNorm.includes(citedNorm) || citedNorm.includes(lawNorm);
       if(!nMatch) continue;
-      // 조문 배열에서 매칭
       const arts = l.allArticles || l.articles || [];
-      const art = arts.find(a=>String(a.no)===String(c.article));
+      const art = arts.find(a=>a && String(a.no)===String(c.article));
       if(art){
         found = {law: l, article: art, mst: l.mst};
         break;
@@ -1248,18 +1254,17 @@ function renderLaws(){
     }
     if(found){
       matchedCards.push({...c, ...found});
-    } else {
-      unmatchedCards.push(c);
     }
   }
 
   // 3) aiLaws의 모든 조문도 추가 (인용 안 됐어도 보충 정보)
   const extraCards = [];
   for(const l of aiLaws){
+    if(!l || !l.name) continue;
     const arts = l.allArticles || (l.articleNo ? [{no:l.articleNo, title:l.articleTitle, content:l.content}] : []);
     for(const a of arts){
-      const key = l.name + ':' + a.no;
-      const alreadyCited = matchedCards.some(mc => mc.law.name === l.name && String(mc.article.no) === String(a.no));
+      if(!a || !a.no) continue;
+      const alreadyCited = matchedCards.some(mc => mc.law && mc.law.name === l.name && String(mc.article.no) === String(a.no));
       if(alreadyCited) continue;
       extraCards.push({
         law: l,
@@ -1324,6 +1329,11 @@ function renderLaws(){
     html = `<div class="lawempty" style="border-left:3px solid var(--amber);text-align:left;background:rgba(245,160,0,.06);margin-bottom:8px;">⚠️ 미검증: ${unverifiedLaws.map(escHtml).join(', ')}</div>` + html;
   }
   list.innerHTML = html;
+  } catch(err) {
+    console.error('renderLaws 오류:', err);
+    const list = $('lawList');
+    if(list) list.innerHTML = '<div class="lawempty">법령 렌더링 중 오류가 발생했어요. 콘솔을 확인해주세요.</div>';
+  }
 }
 
 function toggleLawCard(idx){
