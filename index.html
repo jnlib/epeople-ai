@@ -336,20 +336,21 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
 .mci.clickable:hover{border-color:var(--teal);transform:translateX(2px);box-shadow:0 3px 10px rgba(0,207,192,.12);}
 .mci.clickable:active{transform:translateX(0);}
 
-/* 성실답변 서브 칩 (하위 감점 항목 요약) */
-.mci-subs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
-.sub-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:9px;font-size:.64em;font-weight:700;font-family:'Share Tech Mono',monospace;border:1px solid transparent;line-height:1.3;}
-.sub-pill.ok{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.22);color:var(--green);}
-.sub-pill.bad{background:rgba(240,48,96,.12);border-color:rgba(240,48,96,.3);color:var(--red);}
-.sub-pill.pending{background:rgba(245,160,0,.1);border-color:rgba(245,160,0,.25);color:var(--amber);}
-.sub-pill.na{background:rgba(106,138,170,.1);border-color:rgba(106,138,170,.2);color:var(--muted);}
+/* 성실답변 감점 사유 — 감점 시에만 표시, 간결하게 */
+.mci-deduct{display:flex;flex-direction:column;gap:2px;margin-top:4px;}
+.mci-deduct-line{font-size:.72em;color:var(--red);font-weight:700;display:flex;align-items:center;gap:4px;}
+.mci-deduct-line::before{content:'⚠';font-size:.9em;}
 
-/* 섹션 헤더 — 감점식 표현 (크고 prominent) */
-.sbtitle{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;margin-bottom:9px;font-size:.96em;font-weight:900;color:var(--navy);background:linear-gradient(135deg,rgba(49,130,255,.06),rgba(0,207,192,.04));border-radius:11px;border:1.5px solid rgba(0,207,192,.15);}
-.sbtitle > span:first-child{display:flex;align-items:center;gap:7px;}
-.sbtitle .mcpts{font-family:'Orbitron',monospace;font-size:1em;font-weight:900;padding:4px 13px;border-radius:22px;letter-spacing:.03em;}
-.sbtitle .mcpts.full{background:linear-gradient(135deg,rgba(0,196,122,.22),rgba(0,207,192,.18));color:#00875a;box-shadow:0 2px 10px rgba(0,196,122,.22);}
-.sbtitle .mcpts.bad{background:rgba(240,48,96,.14);color:var(--red);box-shadow:0 2px 8px rgba(240,48,96,.15);}
+/* 섹션 헤더 — 큰 점수 표시 (프리미엄 느낌) */
+.sbtitle{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;margin-bottom:10px;font-size:1em;font-weight:900;color:var(--navy);background:linear-gradient(135deg,rgba(49,130,255,.07),rgba(0,207,192,.05));border-radius:12px;border:1.5px solid rgba(0,207,192,.18);}
+.sbtitle > span:first-child{display:flex;align-items:center;gap:8px;}
+.sbtitle .mcpts{display:inline-flex;align-items:baseline;gap:2px;font-family:'Orbitron',monospace;font-weight:900;padding:5px 14px;border-radius:22px;letter-spacing:0;line-height:1;}
+.sbtitle .mcpts .pts-num{font-size:1.32em;}
+.sbtitle .mcpts .pts-max{font-size:.88em;opacity:.72;margin-left:1px;}
+.sbtitle .mcpts .pts-unit{font-size:.76em;margin-left:3px;opacity:.85;}
+.sbtitle .mcpts .pts-ded{font-size:.72em;margin-left:8px;font-weight:800;opacity:.95;}
+.sbtitle .mcpts.full{background:linear-gradient(135deg,rgba(0,196,122,.24),rgba(0,207,192,.18));color:#00875a;box-shadow:0 3px 12px rgba(0,196,122,.24);}
+.sbtitle .mcpts.bad{background:rgba(240,48,96,.14);color:var(--red);box-shadow:0 3px 10px rgba(240,48,96,.18);}
 
 /* mci 스타일 — 개별 항목은 간소하게 */
 .mci .mcipts{font-family:'Orbitron',monospace;font-weight:900;font-size:.82em;padding:3px 10px;}
@@ -959,21 +960,21 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
     </div>
     <div class="sblock">
       <div class="sbtitle"><span>🏁 도입부</span><span class="mcpts" id="mp1">0/30점</span></div>
-      <div class="mci pass clickable" id="mi1" onclick="openItemPop('greeting', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">인사말</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
-      <div class="mci clickable" id="mi2" onclick="openItemPop('caseNumber', this)"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl" id="ml2">신청번호</div></div><div class="mcir"><div class="mcipts" id="mc2">—</div><div class="mna" id="mn2" style="display:none;">해당없음</div></div></div>
-      <div class="mci pass clickable" id="mi3" onclick="openItemPop('routing', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl" id="ml3">일반민원</div></div><div class="mcir"><div class="mcipts" id="mc3" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
+      <div class="mci pass clickable" id="mi1" onclick="openItemPop('greeting', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">인사말</div></div><div class="mcir"><div class="mcipts" id="mc1"></div></div></div>
+      <div class="mci clickable" id="mi2" onclick="openItemPop('caseNumber', this)"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl" id="ml2">신청번호</div></div><div class="mcir"><div class="mcipts" id="mc2"></div><div class="mna" id="mn2" style="display:none;">해당없음</div></div></div>
+      <div class="mci pass clickable" id="mi3" onclick="openItemPop('routing', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl" id="ml3">이첩/기피/소극 사유</div></div><div class="mcir"><div class="mcipts" id="mc3"></div></div></div>
     </div>
     <div class="sblock">
       <div class="sbtitle"><span>📋 전개부</span><span class="mcpts full" id="mp2">50/50점</span></div>
-      <div class="mci pass clickable" id="mi4" onclick="openItemPop('summary', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">민원 요지</div></div><div class="mcir"><div class="mcipts" id="mc4" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
-      <div class="mci pass clickable" id="mi5" onclick="openItemPop('readability', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">가독성</div></div><div class="mcir"><div class="mcipts" id="mc5" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+20점</div></div></div>
+      <div class="mci pass clickable" id="mi4" onclick="openItemPop('summary', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">민원 요지</div></div><div class="mcir"><div class="mcipts" id="mc4"></div></div></div>
+      <div class="mci pass clickable" id="mi5" onclick="openItemPop('readability', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">가독성 (구조화)</div></div><div class="mcir"><div class="mcipts" id="mc5"></div></div></div>
       <div class="mci pass clickable" id="mi6" onclick="openItemPop('sincerity', this)">
         <div class="mciic">✓</div>
         <div class="mcibody">
           <div class="mcilbl">성실 답변</div>
-          <div class="mci-subs" id="sincSubs"></div>
+          <div class="mci-deduct" id="sincDeduct"></div>
         </div>
-        <div class="mcir"><div class="mcipts" id="mc6">만점</div></div>
+        <div class="mcir"><div class="mcipts" id="mc6"></div></div>
       </div>
     </div>
     <div class="sblock">
@@ -1014,19 +1015,24 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
         <button class="rb copy" onclick="doCopy()">📋 복사</button>
       </div>
     </div>
-    <div style="font-size:.8em;color:var(--muted);margin-bottom:8px;flex-shrink:0;font-family:'Share Tech Mono',monospace;">🔒 자동 · <span style="color:var(--teal2);">✏️ 민원요지</span> · <span style="color:var(--blue2);">✏️ 본문</span> 2곳만 수정 가능</div>
+    <div style="font-size:.78em;color:var(--muted);margin-bottom:10px;flex-shrink:0;font-family:'Share Tech Mono',monospace;">✏️ 민원요지와 본문만 수정하세요. 나머지(제목·인사말·담당자 등)는 복사 시 자동 생성됩니다.</div>
     <div class="answer-doc" id="answerDoc">
-      <div class="ardoc-lock" id="arsTop"></div>
+      <!-- 숨김 자동 생성 영역 (복사/템플릿 저장용) -->
+      <div id="arsTop" style="display:none;"></div>
+      <div id="arsMid" style="display:none;">4. 귀하의 문의 사항에 대해 검토한 의견은 다음과 같습니다.</div>
+      <div id="arsBot" style="display:none;"></div>
+
+      <!-- 편집 영역 1: 민원 요지 -->
       <div class="ardoc-sum-wrap">
         <div class="ardoc-sum-line">
-          3. 귀하의 민원 내용은 "<span class="ardoc-edit-sum" id="sumEdit" contenteditable="true" spellcheck="false" oninput="onSumEdit()"></span>"에 관한 것으로 이해(또는 판단)됩니다.
+          <span style="color:var(--muted);font-size:.88em;">민원 요지:</span> "<span class="ardoc-edit-sum" id="sumEdit" contenteditable="true" spellcheck="false" oninput="onSumEdit()"></span>"
         </div>
       </div>
-      <div class="ardoc-lock" id="arsMid">4. 귀하의 문의 사항에 대해 검토한 의견은 다음과 같습니다.</div>
+
+      <!-- 편집 영역 2: 본문 -->
       <div class="ardoc-body-wrap">
         <textarea class="ardoc-body" id="bodyEdit" spellcheck="false" placeholder="가. (현황 파악 또는 확인 결과)&#10;나. (관련 제도·법령 설명)&#10;다. (향후 조치 계획)" oninput="onEdit()"></textarea>
       </div>
-      <div class="ardoc-lock" id="arsBot"></div>
     </div>
     <!-- 숨김 resBox (buildTpl 호환용, 미사용) -->
     <textarea id="resBox" style="display:none;"></textarea>
@@ -1421,19 +1427,20 @@ function openItemPop(key, anchor){
   if(!item) return;
 
   let html = '';
-  const badge = item.ok ? '<span class="rb-pop-sec-pts ok">✓ 만점</span>'
-               : item.na ? '<span class="rb-pop-sec-pts na">해당없음</span>'
-               : `<span class="rb-pop-sec-pts">${item.pts}/${item.max}</span>`;
+  const statusBadge = item.ok
+    ? '<span class="rb-pop-sec-pts ok">감점 없음</span>'
+    : item.na
+    ? '<span class="rb-pop-sec-pts na">해당없음</span>'
+    : `<span class="rb-pop-sec-pts">${item.pts}/${item.max}점</span>`;
 
   if(key==='caseNumber'){
     html = `
       <button class="rb-pop-close" onclick="closePop()">✕</button>
-      <div class="rb-pop-t">📝 민원신청번호 ${badge}</div>
-      <div class="rb-pop-d">빈칸이면 -10점 · 형식 제한 없음</div>
+      <div class="rb-pop-t">민원신청번호 ${statusBadge}</div>
+      <div class="rb-pop-d"><b>채점 기준</b><br/>답변 본문에 민원신청번호가 기재되어야 합니다. 누락 시 -10점 감점됩니다.</div>
       <div class="rb-pop-field">
         <label class="rb-pop-label">국민신문고 신청번호</label>
-        <input type="text" class="rb-pop-input" id="pop-rCase" value="${escHtml($('rCase').value)}" placeholder="예) 1AA-2504-1234567">
-        <div class="rb-pop-hint">입력만 하면 만점 +10점. 형식은 자유.</div>
+        <input type="text" class="rb-pop-input" id="pop-rCase" value="${escHtml($('rCase').value)}" placeholder="예) 1AA-2604-1234567">
       </div>
       <div class="rb-pop-btns">
         <button class="rb-pop-btn ghost" onclick="closePop()">취소</button>
@@ -1444,17 +1451,16 @@ function openItemPop(key, anchor){
     if(item.na){
       html = `
         <button class="rb-pop-close" onclick="closePop()">✕</button>
-        <div class="rb-pop-t">📝 이첩/기피/소극행정 사유 <span class="rb-pop-sec-pts na">해당없음</span></div>
-        <div class="rb-pop-d">일반민원이므로 사유 안내가 필요하지 않습니다. (+10점 고정)</div>
-        <div class="rb-pop-hint">민원 유형이 이첩/기피/소극행정이면 사유 필드가 나타납니다.</div>
+        <div class="rb-pop-t">이첩/기피/소극행정 사유 ${statusBadge}</div>
+        <div class="rb-pop-d"><b>채점 기준</b><br/>이첩민원은 '이첩 경로', 기피민원은 '불수용 사유', 소극행정은 '감사부서 미처리 사유'를 안내해야 합니다. 누락 시 -10점 감점됩니다.<br/><br/>일반민원의 경우 해당 사항이 없습니다.</div>
         <div class="rb-pop-btns">
           <button class="rb-pop-btn primary" onclick="closePop()">확인</button>
         </div>`;
     } else if(item.mType==='transfer'){
       html = `
         <button class="rb-pop-close" onclick="closePop()">✕</button>
-        <div class="rb-pop-t">📝 이첩민원 경로 안내 ${badge}</div>
-        <div class="rb-pop-d">이첩 경로 기재가 누락되면 -10점</div>
+        <div class="rb-pop-t">이첩민원 경로 안내 ${statusBadge}</div>
+        <div class="rb-pop-d"><b>채점 기준</b><br/>이첩민원은 이첩된 최초 기관을 반드시 안내해야 합니다. 누락 시 -10점 감점됩니다.</div>
         <div class="rb-pop-field">
           <label class="rb-pop-label">이첩된 최초 기관</label>
           <input type="text" class="rb-pop-input" id="pop-fromOrg" value="${escHtml($('fromOrg').value)}" placeholder="예) 대통령비서실">
@@ -1466,8 +1472,8 @@ function openItemPop(key, anchor){
     } else if(item.mType==='avoid'){
       html = `
         <button class="rb-pop-close" onclick="closePop()">✕</button>
-        <div class="rb-pop-t">📝 기피신청 불수용 사유 ${badge}</div>
-        <div class="rb-pop-d">기피 부서와 불수용 사유 미안내 시 -10점</div>
+        <div class="rb-pop-t">기피신청 불수용 사유 ${statusBadge}</div>
+        <div class="rb-pop-d"><b>채점 기준</b><br/>기피신청을 수용하지 못할 때 기피 대상 부서와 그 사유를 안내해야 합니다. 누락 시 -10점 감점됩니다.</div>
         <div class="rb-pop-field">
           <label class="rb-pop-label">기피 대상 부서</label>
           <input type="text" class="rb-pop-input" id="pop-avoidDept" value="${escHtml($('avoidDept').value)}" placeholder="예) 감사관실">
@@ -1483,8 +1489,8 @@ function openItemPop(key, anchor){
     } else if(item.mType==='passive'){
       html = `
         <button class="rb-pop-close" onclick="closePop()">✕</button>
-        <div class="rb-pop-t">📝 소극행정 감사부서 미처리 사유 ${badge}</div>
-        <div class="rb-pop-d">감사부서 미처리 사유가 누락되면 -10점</div>
+        <div class="rb-pop-t">소극행정 감사부서 미처리 사유 ${statusBadge}</div>
+        <div class="rb-pop-d"><b>채점 기준</b><br/>소극행정 신고 민원을 감사부서가 아닌 현업부서가 처리하는 경우 그 사유를 안내해야 합니다. 누락 시 -10점 감점됩니다.</div>
         <div class="rb-pop-field">
           <label class="rb-pop-label">현업부서 답변 사유</label>
           <input type="text" class="rb-pop-input" id="pop-passReason" value="${escHtml($('passReason').value)}" placeholder="예) 자체 종결 사안">
@@ -1498,9 +1504,8 @@ function openItemPop(key, anchor){
   else if(key==='summary'){
     html = `
       <button class="rb-pop-close" onclick="closePop()">✕</button>
-      <div class="rb-pop-t">📝 민원 요지 ${badge}</div>
-      <div class="rb-pop-d">빈칸이면 -10점. 답변 3번 항목에 자동 삽입됨.</div>
-      <div class="rb-pop-hint">답변 영역의 따옴표 안에서 직접 편집하세요.</div>
+      <div class="rb-pop-t">민원 요지 ${statusBadge}</div>
+      <div class="rb-pop-d"><b>채점 기준</b><br/>답변 3번 항목에 "~에 관한 것으로 이해(또는 판단)됩니다" 형식으로 민원 요지를 작성해야 합니다. 누락 시 -10점 감점됩니다.</div>
       <div class="rb-pop-btns">
         <button class="rb-pop-btn ghost" onclick="closePop()">닫기</button>
         <button class="rb-pop-btn primary" onclick="focusSumEdit()">✏️ 편집 영역으로 →</button>
@@ -1509,9 +1514,8 @@ function openItemPop(key, anchor){
   else if(key==='readability'){
     html = `
       <button class="rb-pop-close" onclick="closePop()">✕</button>
-      <div class="rb-pop-t">📝 가독성 (구조화) ${badge}</div>
-      <div class="rb-pop-d">본문에 "가. / 나. / 다." 또는 "1. / 2. / 3." 등 구조 표지 2개 이상이 필요합니다.</div>
-      <div class="rb-pop-hint">현재 본문에서 감지된 마커: ${item.markers.length>0? item.markers.map(m=>`<b>${escHtml(m)}</b>`).join(' ') : '<span style="color:var(--red);">없음</span>'}</div>
+      <div class="rb-pop-t">가독성 (구조화) ${statusBadge}</div>
+      <div class="rb-pop-d"><b>채점 기준</b><br/>민원인이 읽기 쉽도록 답변 본문을 "가-나-다", "1-2-3", "○-○-○" 등으로 구분·구조화해야 합니다. 구조가 없으면 -20점 감점됩니다.</div>
       <div class="rb-pop-btns">
         <button class="rb-pop-btn ghost" onclick="closePop()">닫기</button>
         <button class="rb-pop-btn primary" onclick="focusBodyEdit()">✏️ 본문으로 →</button>
@@ -1521,31 +1525,35 @@ function openItemPop(key, anchor){
     const d = item.deducts || {};
     const ev = aiEvalDeducts._evidence || {};
     const dList = [];
-    if(d.privacy)      dList.push({label:'제3자 개인정보·영업비밀', pen:-20, ev:ev.privacy});
+    if(d.privacy)      dList.push({label:'제3자 개인정보·영업비밀 포함', pen:-20, ev:ev.privacy});
     if(d.jurisdiction) dList.push({label:'소관 아님 안내 누락', pen:-10, ev:ev.jurisdiction});
     if(d.passBuck)     dList.push({label:'떠넘기기 답변', pen:-10, ev:ev.passBuck});
     if(d.refOnly)      dList.push({label:'기존 답변 참고 안내', pen:-10, ev:ev.refOnly});
 
     const evHtml = dList.length>0
-      ? dList.map(x=>`<div class="rb-pop-evidence"><b>⚠ ${escHtml(x.label)} ${x.pen}점</b>${x.ev?`<i>"${escHtml(x.ev.slice(0,120))}"</i>`:''}</div>`).join('')
-      : `<div class="rb-pop-hint" style="padding:14px 0;text-align:center;color:var(--muted);">${d===aiEvalDeducts && lastEvalText ? '✓ AI가 감점 항목을 발견하지 않았습니다' : '↺ 재채점 버튼을 눌러 AI 평가를 받으세요'}</div>`;
+      ? dList.map(x=>`<div class="rb-pop-evidence"><b>${escHtml(x.label)} ${x.pen}점</b>${x.ev?`<i>"${escHtml(x.ev.slice(0,120))}"</i>`:''}</div>`).join('')
+      : '';
 
     html = `
       <button class="rb-pop-close" onclick="closePop()">✕</button>
-      <div class="rb-pop-t">📝 성실 답변 ${badge}</div>
-      <div class="rb-pop-d">기본 20점에서 AI가 감점 항목을 찾아 차감합니다.</div>
+      <div class="rb-pop-t">성실 답변 ${statusBadge}</div>
+      <div class="rb-pop-d"><b>채점 기준</b> (20점 배점에서 감점)<br/>
+        · 제3자 개인정보·영업비밀 포함: <b>-20점</b><br/>
+        · 소관 아님 안내 시 이유·소관기관·처리방법 누락: <b>-10점</b><br/>
+        · 다른 부서/기관으로 떠넘기기 답변: <b>-10점</b><br/>
+        · 요구 수용 없이 기존 답변·홈페이지 참고 안내: <b>-10점</b>
+      </div>
       ${evHtml}
-      <div class="rb-pop-hint" style="margin-top:10px;">감점 항목이 있으면 <b>본문 편집</b> 후 <b>↺ 재채점</b>을 눌러주세요.</div>
       <div class="rb-pop-btns">
         <button class="rb-pop-btn ghost" onclick="closePop()">닫기</button>
-        ${dList.length>0?'<button class="rb-pop-btn primary" onclick="focusBodyEdit()">본문으로 →</button>':''}
+        ${dList.length>0?'<button class="rb-pop-btn primary" onclick="focusBodyEdit()">본문 수정 →</button>':''}
       </div>`;
   }
   else if(key==='contact'){
     html = `
       <button class="rb-pop-close" onclick="closePop()">✕</button>
-      <div class="rb-pop-t">📝 담당자 정보 ${badge}</div>
-      <div class="rb-pop-d">3가지 +20점 · 2가지 +14점 · 1가지 +8점 · 없음 0점</div>
+      <div class="rb-pop-t">담당자 정보 ${statusBadge}</div>
+      <div class="rb-pop-d"><b>채점 기준</b><br/>답변 말미에 담당자 정보(부서·성명·전화번호)를 안내해야 합니다.<br/>· 3가지 모두 안내: 20점<br/>· 2가지 안내: 14점<br/>· 1가지 안내: 8점<br/>· 안내 없음: 0점</div>
       <div class="rb-pop-field">
         <label class="rb-pop-label">소속 기관</label>
         <input type="text" class="rb-pop-input" id="pop-rOrg" value="${escHtml($('rOrg').value)}" placeholder="서울특별시교육청">
@@ -1562,7 +1570,7 @@ function openItemPop(key, anchor){
         <label class="rb-pop-label">전화번호</label>
         <input type="text" class="rb-pop-input" id="pop-rPhone" value="${escHtml($('rPhone').value)}" placeholder="02-1234-5678">
       </div>
-      <div class="rb-pop-hint">기관 + 부서는 <b>둘 다 입력해야 1가지로 인정</b>됩니다.</div>
+      <div class="rb-pop-hint">기관 + 부서는 둘 다 입력해야 '1가지 부서 안내'로 인정됩니다.</div>
       <div class="rb-pop-btns">
         <button class="rb-pop-btn ghost" onclick="closePop()">취소</button>
         <button class="rb-pop-btn primary" onclick="savePop('contact')">적용</button>
@@ -1570,14 +1578,15 @@ function openItemPop(key, anchor){
   }
   else if(key==='satisfaction'){
     const on = wSurvey;
+    const satBadge = on ? '<span class="rb-pop-sec-pts ok">+8점 가점</span>' : '<span class="rb-pop-sec-pts na">미포함</span>';
     html = `
       <button class="rb-pop-close" onclick="closePop()">✕</button>
-      <div class="rb-pop-t">⭐ 만족도 참여 유도 ${badge}</div>
-      <div class="rb-pop-d">체크 시 답변 말미에 만족도 유도 문구가 자동 포함됩니다 (+8점 가점)</div>
+      <div class="rb-pop-t">만족도 참여 유도 ${satBadge}</div>
+      <div class="rb-pop-d"><b>채점 기준</b><br/>단순 절차 안내 또는 칭찬민원 등 민원처리에 대한 높은 만족도가 기대되는 경우, 답변 말미에 만족도 평가 참여 유도 문구를 포함하면 +8점 가점을 받습니다.</div>
       <div style="text-align:center;padding:10px 0;">
         <div class="rb-pop-toggle ${on?'on':''}" id="pop-satToggle" onclick="toggleSatPop()">
           <div class="rb-pop-toggle-dot"></div>
-          <span id="pop-satLabel">${on?'포함됨 (+8점)':'미포함'}</span>
+          <span id="pop-satLabel">${on?'포함됨':'미포함'}</span>
         </div>
       </div>
       <div class="rb-pop-btns">
@@ -1586,14 +1595,14 @@ function openItemPop(key, anchor){
   }
   else if(key==='cooperation'){
     const c = coopChecks;
+    const coopBadge = item.ok ? '<span class="rb-pop-sec-pts ok">감점 없음</span>' : '<span class="rb-pop-sec-pts">-30점</span>';
     html = `
       <button class="rb-pop-close" onclick="closePop()">✕</button>
-      <div class="rb-pop-t">🔗 협조민원 자가 확인 ${item.ok?'<span class="rb-pop-sec-pts ok">✓ 모두 체크</span>':'<span class="rb-pop-sec-pts">-30점</span>'}</div>
-      <div class="rb-pop-d">협조기관 답변의 처리 여부는 작성자만 알 수 있습니다. 3개 모두 확인하셨으면 체크해 주세요.</div>
+      <div class="rb-pop-t">협조민원 자가 확인 ${coopBadge}</div>
+      <div class="rb-pop-d"><b>채점 기준</b><br/>협조민원의 경우 주관기관이 협조기관(부서)의 답변을 종합정리하여 제공해야 합니다. 단순 나열이나 복붙 시 -30점 감점됩니다. 협조기관 답변의 처리 여부는 작성자만 알 수 있으므로 아래 3개 항목을 자가 확인해주세요.</div>
       <label class="rb-pop-check"><input type="checkbox" id="pop-c1" ${c.included?'checked':''} onchange="updateCoopPop()"><span class="rb-pop-check-txt">① 협조기관의 답변을 본문에 포함하였습니다</span></label>
       <label class="rb-pop-check"><input type="checkbox" id="pop-c2" ${c.integrated?'checked':''} onchange="updateCoopPop()"><span class="rb-pop-check-txt">② 단순 나열이나 복붙이 아닌 종합정리 형태로 재구성하였습니다</span></label>
       <label class="rb-pop-check"><input type="checkbox" id="pop-c3" ${c.adapted?'checked':''} onchange="updateCoopPop()"><span class="rb-pop-check-txt">③ 민원인의 질문에 맞추어 자연스럽게 녹여냈습니다</span></label>
-      <div class="rb-pop-hint" style="margin-top:8px;text-align:center;">3개 모두: <b style="color:var(--green);">감점 없음</b> · 하나라도 미체크: <b style="color:var(--red);">-30점</b></div>
       <div class="rb-pop-btns">
         <button class="rb-pop-btn primary" onclick="closePop()">확인</button>
       </div>`;
@@ -1601,8 +1610,8 @@ function openItemPop(key, anchor){
   else if(key==='greeting'){
     html = `
       <button class="rb-pop-close" onclick="closePop()">✕</button>
-      <div class="rb-pop-t">📝 인사말 ${badge}</div>
-      <div class="rb-pop-d">답변 1번 "안녕하십니까?..."는 템플릿으로 자동 생성되어 항상 만점입니다.</div>
+      <div class="rb-pop-t">인사말 ${statusBadge}</div>
+      <div class="rb-pop-d"><b>채점 기준</b><br/>답변 본문 첫 문단에 "안녕하십니까?" 등의 인사말이 포함되어야 합니다. 누락 시 -10점 감점됩니다.</div>
       <div class="rb-pop-btns">
         <button class="rb-pop-btn primary" onclick="closePop()">확인</button>
       </div>`;
@@ -2453,6 +2462,13 @@ function getFullText(){
   return `${top}\n\n3. 귀하의 민원 내용은 "${sum}"에 관한 것으로 이해(또는 판단)됩니다.\n\n${mid}\n${body}\n\n${bot}`;
 }
 
+/* 섹션 헤더 점수 — "30점/30점 만점" 또는 "20점/30점 -10점" 구조화 */
+function renderSectionScore(pts, max, deducted){
+  const num = `<span class="pts-num">${pts}</span><span class="pts-max">/${max}</span><span class="pts-unit">점</span>`;
+  if(deducted === 0) return num + '<span class="pts-ded">· 만점</span>';
+  return num + `<span class="pts-ded">· -${deducted}점</span>`;
+}
+
 function syncMini(sc){
   /* 감점식 표현: 개별 항목은 통과 시 빈 문자열(CSS가 ✓ 표시), 감점 시 "-N" 표시 */
   const setPts = (id, deducted, maxPts, unit='') => {
@@ -2466,11 +2482,11 @@ function syncMini(sc){
   if(sc.items.caseNumber.ok){m2.classList.add('pass');m2.querySelector('.mciic').textContent='✓';setPts('mc2',0,10);$('ml2').textContent='신청번호 명시';$('mn2').style.display='none';}
   else{m2.classList.add('fail');m2.querySelector('.mciic').textContent='✕';setPts('mc2',-10,10);$('ml2').textContent='신청번호 미입력';$('mn2').style.display='none';}
 
-  /* 도입부 헤더: 만점 or 감점 표시 */
+  /* 도입부 헤더 */
   const introDeducted = 30 - sc.s1;
   const mp1 = $('mp1');
   if(mp1){
-    mp1.textContent = introDeducted===0 ? '★ 만점' : sc.s1 + '/30 (-'+introDeducted+')';
+    mp1.innerHTML = renderSectionScore(sc.s1, 30, introDeducted);
     mp1.classList.toggle('full', introDeducted===0);
     mp1.classList.toggle('bad', introDeducted>0);
   }
@@ -2500,7 +2516,7 @@ function syncMini(sc){
     else{m5.classList.add('fail');m5.querySelector('.mciic').textContent='✕';setPts('mc5',-20,20);}
   }
 
-  /* ── mi6: 성실답변 + 서브 칩 렌더 ── */
+  /* ── mi6: 성실답변 ── */
   const m6=$('mi6');if(m6){
     m6.classList.remove('pass','fail','bonus');
     const sp=sc.items.sincerity.pts;
@@ -2509,22 +2525,16 @@ function syncMini(sc){
     else if(sp>0){m6.classList.add('bonus');m6.querySelector('.mciic').textContent='△';setPts('mc6',-spDeducted,20);}
     else{m6.classList.add('fail');m6.querySelector('.mciic').textContent='✕';setPts('mc6',-20,20);}
 
-    /* 성실답변 서브 칩 (내부결재 N/A + AI 4개 감점) */
-    const subs = $('sincSubs');
-    if(subs){
+    /* 감점 있을 때만 감점 사유 표시 */
+    const dEl = $('sincDeduct');
+    if(dEl){
       const d = sc.items.sincerity.deducts || {};
-      const hasEvaluated = lastEvalText && lastEvalText.length > 0;
-      const pills = [
-        {label:'내부결재', state:'na', note:'본문만 평가'},
-        {label:'제3자정보', state: d.privacy ? 'bad' : (hasEvaluated?'ok':'pending'), note: d.privacy?'-20':''},
-        {label:'소관안내', state: d.jurisdiction ? 'bad' : (hasEvaluated?'ok':'pending'), note: d.jurisdiction?'-10':''},
-        {label:'떠넘기기', state: d.passBuck ? 'bad' : (hasEvaluated?'ok':'pending'), note: d.passBuck?'-10':''},
-        {label:'기존답변', state: d.refOnly ? 'bad' : (hasEvaluated?'ok':'pending'), note: d.refOnly?'-10':''},
-      ];
-      subs.innerHTML = pills.map(p=>{
-        const icon = p.state==='na'?'N/A':p.state==='ok'?'✓':p.state==='bad'?'✕':'?';
-        return `<span class="sub-pill ${p.state}">${p.label} ${icon}${p.note?' '+p.note:''}</span>`;
-      }).join('');
+      const lines = [];
+      if(d.privacy) lines.push('제3자 개인정보·영업비밀 -20');
+      if(d.jurisdiction) lines.push('소관 아님 안내 누락 -10');
+      if(d.passBuck) lines.push('떠넘기기 답변 -10');
+      if(d.refOnly) lines.push('기존 답변 참고 -10');
+      dEl.innerHTML = lines.map(l => `<div class="mci-deduct-line">${escHtml(l)}</div>`).join('');
     }
   }
 
@@ -2538,11 +2548,11 @@ function syncMini(sc){
   else $('mc7').textContent='-'+cDeducted+'점';
   $('ml7').textContent=sc.contact.label;
 
-  /* 전개부 헤더: 만점 or 감점 표시 */
+  /* 전개부 헤더 */
   const bodyDeducted = 50 - sc.s2;
   const mp2 = $('mp2');
   if(mp2){
-    mp2.textContent = bodyDeducted===0 ? '★ 만점' : sc.s2 + '/50 (-'+bodyDeducted+')';
+    mp2.innerHTML = renderSectionScore(sc.s2, 50, bodyDeducted);
     mp2.classList.toggle('full', bodyDeducted===0);
     mp2.classList.toggle('bad', bodyDeducted>0);
   }
@@ -2550,7 +2560,7 @@ function syncMini(sc){
   /* 종결부 헤더 */
   const mp3 = $('mp3');
   if(mp3){
-    mp3.textContent = cDeducted===0 ? '★ 만점' : sc.s3 + '/20 (-'+cDeducted+')';
+    mp3.innerHTML = renderSectionScore(sc.s3, 20, cDeducted);
     mp3.classList.toggle('full', cDeducted===0);
     mp3.classList.toggle('bad', cDeducted>0);
   }
@@ -2559,7 +2569,15 @@ function syncMini(sc){
   const m8=$('mi8');m8.classList.remove('pass','fail','bonus');
   if(wSurvey){m8.classList.add('bonus');m8.querySelector('.mciic').textContent='⭐';$('mc8').textContent='+'+sc.bonus;}
   else{m8.classList.add('fail');m8.querySelector('.mciic').textContent='✕';$('mc8').textContent='0';}
-  $('mp4').textContent=sc.bonus>0?'+'+sc.bonus:'0';
+  /* 가점 섹션 */
+  const mp4=$('mp4');
+  if(mp4){
+    mp4.innerHTML = wSurvey
+      ? '<span class="pts-num">+'+sc.bonus+'</span><span class="pts-max">/8</span><span class="pts-unit">점</span>'
+      : '<span class="pts-num">0</span><span class="pts-max">/8</span><span class="pts-unit">점</span>';
+    mp4.classList.toggle('full', wSurvey);
+    mp4.classList.toggle('bad', false);
+  }
 
   /* ── 일괄 수정 배너 ── */
   const deductedCount = countDeductedItems(sc);
