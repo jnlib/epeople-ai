@@ -11,52 +11,120 @@ import {
   RUBRIC_VERSION,
 } from './rubric.js';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+// ─────────────────────────────────────────────
+// 보안: 허용된 Origin만 접근 가능 (Gemini 키 남용 방지)
+// ─────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  'https://jnlib.github.io',
+  'http://localhost:8000',
+  'http://localhost:5500',
+  'http://127.0.0.1:8000',
+  'http://127.0.0.1:5500',
+];
+
+function getCors(request) {
+  const origin = request.headers.get('Origin') || '';
+  const allowed = ALLOWED_ORIGINS.includes(origin);
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
+  };
+}
+
+function isAllowedOrigin(request) {
+  const origin = request.headers.get('Origin') || '';
+  const referer = request.headers.get('Referer') || '';
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  // Origin 없을 수 있는 same-origin fetch의 Referer 폴백
+  return ALLOWED_ORIGINS.some((a) => referer.startsWith(a + '/'));
+}
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 const LAW_OC = 'hdh1231';
 const LAW_BASE = 'https://www.law.go.kr/DRF';
 
+// ─────────────────────────────────────────────
+// 간이 레이트 리밋 (IP당 분당 20회)
+// ─────────────────────────────────────────────
+const rateBucket = new Map();
+function checkRateLimit(request) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const now = Date.now();
+  const windowMs = 60_000;
+  const maxReq = 20;
+
+  let entry = rateBucket.get(ip);
+  if (!entry || now - entry.start > windowMs) {
+    entry = { start: now, count: 0 };
+    rateBucket.set(ip, entry);
+  }
+  entry.count++;
+  // 오래된 항목 정리 (메모리 제한)
+  if (rateBucket.size > 500) {
+    for (const [k, v] of rateBucket) {
+      if (now - v.start > windowMs * 2) rateBucket.delete(k);
+    }
+  }
+  return entry.count <= maxReq;
+}
+
 export default {
   async fetch(request, env) {
-    if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
+    const cors = getCors(request);
+    if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
 
     const url = new URL(request.url);
     const path = url.pathname;
 
     try {
+      // 헬스체크는 어디서든 가능
       if (path === '/api/health') {
-        return json({
-          status: 'ok',
-          service: 'epeople-ai-v2',
-          version: RUBRIC_VERSION,
-          geminiKey: !!env.GEMINI_API_KEY,
-        });
+        return json(
+          {
+            status: 'ok',
+            service: 'epeople-ai-v2',
+            version: RUBRIC_VERSION,
+            geminiKey: !!env.GEMINI_API_KEY,
+          },
+          200,
+          cors,
+        );
+      }
+
+      // 나머지 모든 API는 허용된 origin에서만
+      if (!isAllowedOrigin(request)) {
+        return json({ error: 'Forbidden origin' }, 403, cors);
+      }
+
+      // Gemini를 쓰는 엔드포인트에 레이트 리밋 적용
+      if (path === '/api/generate' || path === '/api/evaluate-edit') {
+        if (!checkRateLimit(request)) {
+          return json({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' }, 429, cors);
+        }
       }
 
       if (path === '/api/generate' && request.method === 'POST') {
         const body = await request.json();
-        return await handleGenerate(body, env);
+        return await handleGenerate(body, env, cors);
       }
 
       if (path === '/api/evaluate-edit' && request.method === 'POST') {
         const body = await request.json();
-        return await handleEvaluateEdit(body, env);
+        return await handleEvaluateEdit(body, env, cors);
       }
 
       if (path === '/api/laws' && request.method === 'GET') {
         const query = url.searchParams.get('query') || '';
-        return await handleLawsSearch(query);
+        return await handleLawsSearch(query, cors);
       }
 
-      return json({ error: 'Not Found' }, 404);
+      return json({ error: 'Not Found' }, 404, cors);
     } catch (e) {
       console.error(e);
-      return json({ error: e.message || 'Server error', stack: e.stack?.slice(0, 400) }, 500);
+      return json({ error: e.message || 'Server error' }, 500, cors);
     }
   },
 };
@@ -64,10 +132,10 @@ export default {
 // ─────────────────────────────────────────────
 // 공통: JSON 응답
 // ─────────────────────────────────────────────
-function json(data, status = 200) {
+function json(data, status = 200, cors = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS },
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...cors },
   });
 }
 
@@ -346,10 +414,10 @@ function filterArticlesByTopics(articles, topics) {
 // ─────────────────────────────────────────────
 // /api/generate — 초안 생성 플로우
 // ─────────────────────────────────────────────
-async function handleGenerate(body, env) {
+async function handleGenerate(body, env, cors) {
   const { text, mType, cooperation } = body;
   if (!text || typeof text !== 'string') {
-    return json({ error: '민원 원문이 필요합니다' }, 400);
+    return json({ error: '민원 원문이 필요합니다' }, 400, cors);
   }
 
   const cache = typeof caches !== 'undefined' ? caches.default : null;
@@ -422,15 +490,19 @@ async function handleGenerate(body, env) {
     };
   });
 
-  return json({
-    summary: generation?.summary || '',
-    draft: generation?.draft || '',
-    laws: lawsForUi,
-    unverifiedLaws,
-    isLawRelated,
-    mainIntent: proposal?.mainIntent || '',
-    source: `gemini:${GEMINI_MODEL}`,
-  });
+  return json(
+    {
+      summary: generation?.summary || '',
+      draft: generation?.draft || '',
+      laws: lawsForUi,
+      unverifiedLaws,
+      isLawRelated,
+      mainIntent: proposal?.mainIntent || '',
+      source: `gemini:${GEMINI_MODEL}`,
+    },
+    200,
+    cors,
+  );
 }
 
 // ─────────────────────────────────────────────
@@ -575,10 +647,10 @@ const GENERATION_SCHEMA = {
 // ─────────────────────────────────────────────
 // /api/evaluate-edit — 본문 편집 재채점
 // ─────────────────────────────────────────────
-async function handleEvaluateEdit(body, env) {
+async function handleEvaluateEdit(body, env, cors) {
   const { bodyText, originalComplaint, mType } = body;
   if (!bodyText || typeof bodyText !== 'string') {
-    return json({ error: '본문이 필요합니다' }, 400);
+    return json({ error: '본문이 필요합니다' }, 400, cors);
   }
 
   // 정규식 사전 필터 — 명백한 패턴 감지
@@ -606,13 +678,17 @@ async function handleEvaluateEdit(body, env) {
   }
   sincerity = Math.max(0, sincerity);
 
-  return json({
-    sincerity: { pts: sincerity, max: SINCERITY_BASE },
-    privacy: triggered.privacy,
-    jurisdiction: triggered.jurisdiction,
-    passBuck: triggered.passBuck,
-    refOnly: triggered.refOnly,
-  });
+  return json(
+    {
+      sincerity: { pts: sincerity, max: SINCERITY_BASE },
+      privacy: triggered.privacy,
+      jurisdiction: triggered.jurisdiction,
+      passBuck: triggered.passBuck,
+      refOnly: triggered.refOnly,
+    },
+    200,
+    cors,
+  );
 }
 
 function buildEvaluatePrompt(bodyText, complaint, mType, preSignals) {
@@ -695,8 +771,8 @@ const EVALUATE_SCHEMA = {
 // ─────────────────────────────────────────────
 // /api/laws — 탭 3 단독 법령 검색 (Gemini 0회)
 // ─────────────────────────────────────────────
-async function handleLawsSearch(query) {
-  if (!query.trim()) return json({ items: [] });
+async function handleLawsSearch(query, cors) {
+  if (!query.trim()) return json({ items: [] }, 200, cors);
   const cache = typeof caches !== 'undefined' ? caches.default : null;
 
   const result = await fetchAiSearch(query.trim(), cache);
@@ -715,5 +791,5 @@ async function handleLawsSearch(query) {
     link: it.법령일련번호 ? `https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=${it.법령일련번호}` : '',
   }));
 
-  return json({ items: mapped, query });
+  return json({ items: mapped, query }, 200, cors);
 }
