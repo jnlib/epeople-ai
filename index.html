@@ -1480,12 +1480,13 @@ function buildTpl(){
   else if(mType==='transfer'){const f=($('fromOrg')?.value||'').trim()||'대통령비서실';p2=`2. 귀하께서 ${f}에 제출하여 이첩된 민원(${cN})에 대한 검토 결과를 다음과 같이 알려드립니다.`;}
   else if(mType==='avoid'){const ad=($('avoidDept')?.value||'').trim()||'해당 부서';const ar=($('avoidReason')?.value||'').trim()||'업무 연속성';p2=`2. 귀하께서 ${ad}를 기피신청하셨으나, ${ar} 등을 고려할 때 부득이 ${ad}에서 답변드립니다.`;}
   else if(mType==='passive'){const pr=($('passReason')?.value||'').trim()||'규정상 절차';p2=`2. 소극행정 신고민원에 대하여 ${pr} 등의 사유로 ${od}에서 답변드립니다.`;}
-  let cl=`5. 추가 설명이 필요한 경우 ${od} ${name}(☏${phone})에게 연락주시면 친절히 안내해 드리겠습니다.`;
-  if(wSurvey)cl+=` 아울러 ${on}${oen} 민원서비스 품질 향상을 위해 노력하고 있습니다. 답변에 만족하셨다면 아래 만족도 평가에 참여해 주시기 바랍니다.`;
+  let cl=`5. 귀하의 문의에 만족스러운 답변이 되었기를 바라며, 답변 내용에 대한 추가 설명이 필요한 경우 ${od} ${name}(☏${phone})에게 연락주시면 친절히 안내해 드리도록 하겠습니다.`;
+  if(wSurvey)cl+=` 우리 교육청에서는 민원서비스 품질 향상을 위해 노력하고 있습니다. 답변내용에 만족하셨을 경우 아래 만족도 평가에 참여해주시면 더 나은 민원서비스를 위한 소중한 자료로 활용하겠습니다.`;
   cl+=` 감사합니다.`;
 
-  /* v2: 분할 뷰 각 영역에 렌더 (고정 영역만 즉시 갱신, 편집 영역은 건드리지 않음) */
-  const topText = `제목 : 민원(${cN}) 처리결과 안내\n\n1. 안녕하십니까? ${od}에 근무하는 ${name}입니다. 먼저 민원행정에 관심을 가져주신 데에 깊은 감사의 말씀을 드립니다.\n\n${p2}`;
+  /* v2: 분할 뷰 각 영역에 렌더 (고정 영역만 즉시 갱신, 편집 영역은 건드리지 않음)
+     제목·1번·2번 사이 빈 줄 없음 (공간 절약) */
+  const topText = `제목 : 민원(${cN}) 처리결과 안내\n1. 안녕하십니까? ${od}에 근무하는 ${name}입니다. 먼저 서울교육에 관심을 가져주신 데에 깊은 감사의 말씀 드립니다.\n${p2}`;
   const arsTop=$('arsTop'); if(arsTop) arsTop.textContent = topText;
   const arsBot=$('arsBot'); if(arsBot) arsBot.textContent = cl;
 
