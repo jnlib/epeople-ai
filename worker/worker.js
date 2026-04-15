@@ -446,6 +446,9 @@ async function handlePropose(body, env, cors) {
   );
 
   const preSummary = (proposal?.summary || '').trim();
+  const issues = Array.isArray(proposal?.issues)
+    ? proposal.issues.filter((i) => typeof i === 'string' && i.trim().length > 0)
+    : [];
   const queries = Array.isArray(proposal?.searchQueries)
     ? proposal.searchQueries.filter((q) => typeof q === 'string' && q.trim().length > 0)
     : [];
@@ -455,6 +458,7 @@ async function handlePropose(body, env, cors) {
   return json(
     {
       summary: preSummary,
+      issues,
       searchQueries: queries,
       isLawRelated,
       source: `gemini:${GEMINI_MODEL}`,
@@ -469,16 +473,17 @@ async function handlePropose(body, env, cors) {
 // 브라우저가 직접 법제처에서 수집한 후보를 전달
 // ─────────────────────────────────────────────
 async function handleGenerateDraft(body, env, cors) {
-  const { text, mType, cooperation, candidateLaws, preSummary } = body;
+  const { text, mType, cooperation, candidateLaws, preSummary, issues } = body;
   if (!text || typeof text !== 'string') {
     return json({ error: '민원 원문이 필요합니다' }, 400, cors);
   }
   const complaint = text.slice(0, 3000);
-  const safeCandidates = Array.isArray(candidateLaws) ? candidateLaws.slice(0, 8) : [];
+  const safeCandidates = Array.isArray(candidateLaws) ? candidateLaws.slice(0, 10) : [];
+  const safeIssues = Array.isArray(issues) ? issues.filter(i => typeof i === 'string' && i.trim()) : [];
 
   const generation = await callGemini(
     env.GEMINI_API_KEY,
-    buildGenerationPrompt(complaint, safeCandidates, mType, !!cooperation?.enabled, preSummary || ''),
+    buildGenerationPrompt(complaint, safeCandidates, mType, !!cooperation?.enabled, preSummary || '', safeIssues),
     GENERATION_SCHEMA,
     0.3,
   );
@@ -501,7 +506,7 @@ async function handleGenerateDraft(body, env, cors) {
 // Gemini #1 프롬프트 — 법령 제안
 // ─────────────────────────────────────────────
 function buildProposalPrompt(text, mType) {
-  return `너는 대한민국 국민신문고 민원 전문가다. 아래 민원을 읽고 법제처 법령검색에 쓸 최적의 자연어 검색어를 여러 개 만들어라.
+  return `너는 대한민국 국민신문고 민원 전문가다. 아래 민원을 읽고 (1) 민원인의 질문을 분해하고 (2) 법제처 법령검색(aiSearch)용 검색어를 **여러 법적 관점에서** 만들어라.
 
 [민원 원문]
 ${text}
@@ -514,18 +519,54 @@ ${mType || 'normal'}
    - 답변 3번 "귀하의 민원 내용은 '(요지)'에 관한 것으로 이해됩니다"에 삽입
    - 예: "학교급식 위생관리 개선 요청"
 
-2. 법제처 '지능형 검색(aiSearch)' 전용 검색어를 **서로 다른 관점에서 3개** 생성 (searchQueries)
+2. 민원인의 질문 개별 추출 (issues) — **매우 중요**
+   - 민원 원문을 주의깊게 읽고 민원인이 실제로 묻고 있는 **질문·요구·궁금증을 모두** 뽑아낸다
+   - 하나의 민원이 여러 질문을 포함할 수 있다 (명시적·묵시적 포함)
+   - 각 항목은 "~여부", "~근거", "~절차", "~방법" 형태의 구체 질문으로
+   - **민원인의 관점** 2가지를 꼭 고려하라:
+     (a) 민원인이 행사하고 싶은 "권리" — 예: 열람권, 정정권, 신청권, 이의제기
+     (b) 타인(운영자·기관)의 "행위·의무" — 예: 제공 제한, 처벌, 설치 의무
+   - 민원이 두 관점을 동시에 건드리면 **둘 다 별개 issue로** 분리
+
+   ❌ 나쁜 예 (한 덩어리로 뭉침):
+   · 민원: "CCTV 영상 확인할 때 서약서 써야 하나? 제 영상 어떤 사람이 가져갔다는데 근거는?"
+   · ["CCTV 영상 관련 문의"]  ← 너무 뭉침
+
+   ✓ 좋은 예 (관점별 분리):
+   · ["본인이 CCTV 영상 열람 시 보안서약서 작성 의무 여부",
+      "제3자가 민원인의 영상을 가져간 행위의 법적 근거"]
+   · → (a) 민원인의 열람권 관점 + (b) 운영자의 제공 제한 관점
+
+   ✓ 다른 예 (교권침해):
+   · ["교권 침해 발생 시 교원이 신청할 수 있는 보호 조치",
+      "가해 학생에 대한 징계·제재 절차"]
+
+3. 법제처 aiSearch 검색어 4~5개 (searchQueries) — **서로 다른 법적 관점에서**
+   - 민원이 여러 법적 개념·쟁점을 건드린다면 **각각 별도 쿼리로** 만들어라
+   - 민원인의 행위(신고·열람·신청 등)와 **민원인의 권리**를 모두 고려
+   - 같은 주제의 표현 변형이 아니라 **다른 법적 측면**을 커버해야 함
+
+   ❌ 나쁜 예 (같은 주제 반복):
+   · 민원: "CCTV 보안서약서 작성 의무?"
+   · ["CCTV 보안서약서 작성", "영상정보처리기기 서약", "CCTV 서약서"]
+   · → 모두 "보안서약서" 관점만. 민원인의 "열람권" 관점 누락
+
+   ✓ 좋은 예 (다각도):
+   · 민원: "CCTV 보안서약서 작성 의무? 제 영상 제3자가 가져갔다는데 근거법이?"
+   · ["CCTV 보안서약서 작성 의무", "개인정보 열람권", "정보주체 권리 열람", "영상정보처리기기 운영", "개인정보 제3자 제공"]
+   · → 보안서약서(운영자 의무) + 열람권(민원인 권리) + 정보주체(정보보호) + 제공(제3자 이전) 등 다각도
+
+   ✓ 좋은 예 (교권침해):
+   · ["교권 침해 상담 신청", "교원 교육활동 보호", "학교교권보호위원회", "교원 지위 보호 조치"]
+
+   ✓ 좋은 예 (체험학습 사고):
+   · ["체험학습 안전사고 보상", "학교안전 공제급여 청구", "현장체험학습 안전", "학생 상해 치료비"]
+
+   규칙:
    - 각 3~6단어, 자연어 짧은 구
-   - 1번 쿼리가 0건 반환해도 다른 쿼리로 재시도할 수 있도록 **의미는 같되 표현 다변화**
-   - 첫 번째는 가장 구체적, 마지막은 가장 일반적 주제어
-   - 좋은 예 (교권침해 민원):
-     · ["교권 침해 상담 신청", "교원 교육활동 보호", "교원 지위 보호"]
-   - 좋은 예 (학교급식 위생):
-     · ["학교급식 위생 안전관리", "급식 위생 점검", "학교급식 운영"]
-   - 좋은 예 (체험학습 사고):
-     · ["체험학습 안전사고 보상", "학교 안전사고 공제", "학교안전 공제급여"]
-   - 나쁜 예: ["민원", "학교"] (너무 일반적), ["학교급식법"] (법령명 대신 주제어 사용)
-   - 주제어는 학술적·행정적 용어로 (법제처 문서 투 의식)
+   - 주제어는 학술적·행정적 용어로 (법제처 문서 투)
+   - 법령명 대신 "개념/주제어" 사용 ("학교급식법" ❌ → "학교급식 위생" ✓)
+   - 민원이 물어보는 **직접 주제** + 관련 **권리/절차/의무** 등 다각도 커버
 
 3. 법령 근거가 필요한 사안인지 판단 (isLawRelated)
    - 단순 감사·칭찬·개인 감정 표현은 false → searchQueries는 빈 배열
@@ -534,8 +575,12 @@ ${mType || 'normal'}
 반드시 아래 JSON으로만 응답:
 {
   "isLawRelated": true,
-  "summary": "학교급식 위생관리 개선 요청",
-  "searchQueries": ["학교급식 위생 안전관리", "급식 위생 점검", "학교급식 운영"]
+  "summary": "CCTV 영상 열람 및 보안서약서 문의",
+  "issues": [
+    "본인이 CCTV 영상 열람 시 보안서약서 작성 의무 여부",
+    "제3자가 민원인의 CCTV 영상을 가져간 행위의 법적 근거"
+  ],
+  "searchQueries": ["CCTV 보안서약서 작성", "개인정보 열람권", "정보주체 권리", "영상정보처리기기 운영", "개인정보 제3자 제공"]
 }`;
 }
 
@@ -544,15 +589,16 @@ const PROPOSAL_SCHEMA = {
   properties: {
     isLawRelated: { type: 'boolean' },
     summary: { type: 'string' },
+    issues: { type: 'array', items: { type: 'string' } },
     searchQueries: { type: 'array', items: { type: 'string' } },
   },
-  required: ['summary', 'searchQueries'],
+  required: ['summary', 'issues', 'searchQueries'],
 };
 
 // ─────────────────────────────────────────────
 // Gemini #2 프롬프트 — 답변 생성
 // ─────────────────────────────────────────────
-function buildGenerationPrompt(complaint, candidateLaws, mType, hasCooperation, preSummary) {
+function buildGenerationPrompt(complaint, candidateLaws, mType, hasCooperation, preSummary, issues) {
   const lawsContext = candidateLaws.length
     ? candidateLaws
         .map((l, i) => {
@@ -577,13 +623,17 @@ function buildGenerationPrompt(complaint, candidateLaws, mType, hasCooperation, 
     ? '※ 이 민원은 협조민원입니다. 답변 본문에 협조기관(부서)의 답변을 반영할 수 있도록 구조를 유연하게 구성하되, 단순 나열이 아닌 종합정리 형태로 자연스럽게 서술하세요.'
     : '';
 
-  return `너는 서울특별시교육청 공무원이다. 아래 민원에 대한 답변을 작성하되, 아래 후보 법령 중 **진짜 관련 있는 것만 직접 선별**해서 그 법령만 근거로 인용하라.
+  const issuesBlock = (issues && issues.length > 0)
+    ? `[민원인의 질문 목록 — 반드시 모두 답변]\n${issues.map((q, i) => `${i+1}. ${q}`).join('\n')}\n`
+    : '';
+
+  return `너는 서울특별시교육청 공무원이다. 아래 민원에 대한 답변을 작성하라. 민원인이 물어본 **모든 질문을 빠짐없이** 답하고, 후보 법령 중 **진짜 관련 있는 것**만 선별해서 근거로 인용하라.
 
 [민원 원문]
 ${complaint}
 
-${preSummary ? `[이미 추출된 민원 요지]\n${preSummary}\n` : ''}
-
+${preSummary ? `[민원 요지]\n${preSummary}\n` : ''}
+${issuesBlock}
 [법령 후보 목록 — 법제처 aiSearch 검색 결과 (순서상 1위가 반드시 가장 관련 높은 것은 아님)]
 ${lawsContext}
 
@@ -593,33 +643,42 @@ ${mTypeHint}
 
 ${coopHint}
 
-[너의 임무]
-1. 후보 법령 중 **이 민원에 진짜 관련 있는 것만 1~3개 선별** (selectedLawIds에 법령ID 배열로 반환)
-   - 법제처 검색 1위가 엉뚱하면 2위/3위를 골라라
-   - "조금 관련있어 보이는" 수준은 제외 (직접 관련만)
-   - 관련 법령이 전혀 없거나 모두 억지스러우면 **selectedLawIds=[] (빈 배열)**
-   - 억지 인용보다 법령 없는 일반 행정 답변이 낫다
-2. 선별한 법령만 근거로 본문 draft 작성
-   - **후보 목록에 없는 법령명·조문번호는 절대 draft에 언급 금지**
-   - 확신 없는 조문번호는 "「법령명」에 따라..." 식으로 번호 생략 허용
+[답변 전 필수 분석]
+1. 위 [민원인의 질문 목록]을 확인하고, **각 질문마다 답변해야 할 법령 조문**을 후보 목록에서 찾아라
+2. **민원인의 관점 2가지를 꼭 고려**:
+   (a) 민원인이 행사할 권리 — 열람권, 정정권, 이의신청, 처리정지 등
+   (b) 기관·운영자의 의무 — 제공 제한, 처벌, 설치 의무, 절차 등
+   질문이 권리 관련이면 "정보주체의 권리·열람" 관련 조문 반드시 찾기
 
-[summary 작성 규칙]
-- 10~15자 한 문장 요약 (따옴표 사용 금지)
-- 예: "학교급식 위생관리 개선 요청"
-- 이미 추출된 민원 요지가 있으면 그대로 사용
+[법령 선별 원칙]
+1. 관련 있는 법령을 **최대 5개**까지 선별 (selectedLawIds에 법령ID 배열로 반환)
+   - 질문이 여러 개면 질문별로 다른 법령이 필요할 수 있음
+   - 질문 1개라도 여러 관점(권리·의무)이면 관련 법령 2~3개 필요
+2. 선별한 법령 내에서 **관련 조문은 개수 제한 없이** 모두 인용
+   - 1개 조문으로 충분하면 1개, 3개 필요하면 3개 모두 인용
+3. 관련 법령이 전혀 없거나 모두 억지스러우면 **selectedLawIds=[] (빈 배열)**
+4. 후보 목록에 없는 법령명·조문번호는 draft에 절대 언급 금지
+5. 확신 없는 조문번호는 "「법령명」에 따라..." 식으로 번호 생략 허용
 
 [draft 작성 규칙 — 검토 의견 본문]
-1. 반드시 "가. / 나. / 다." 구조화 (최소 2항목, 권장 3항목)
-2. 각 항목은 3~5문장의 충분한 분량
-3. 법령 인용 시 「법령명」 제X조 형식으로 정확히 인용
-4. **selectedLawIds로 선별한 법령만** 인용. 나머지 후보 인용 금지. 목록 외 법령/조문 지어내기 절대 금지
-5. 공문서 어투 ("~을 알려드립니다", "~조치하겠습니다")
-6. 금지 표현: "해당 부서로 문의", "홈페이지 참고", "이전 답변 참고" 등 떠넘기기·회피 표현
-7. 제3자 개인정보·영업비밀 포함 금지
-8. 구조 예시:
-   가. [현황 파악/확인 결과]
-   나. [관련 제도·법령 설명 — 선별 법령만 인용]
-   다. [향후 조치 계획·양해 요청]
+1. 위 질문 목록의 **모든 질문을 커버**해야 한다
+2. 반드시 "가. / 나. / 다." 구조화 (질문 개수에 맞게 항목 수 조정)
+3. 각 항목은 3~5문장의 충분한 분량, 민원인 질문에 직접 답변
+4. 법령 인용 시 「법령명」 제X조 형식
+5. **selectedLawIds로 선별한 법령만** 인용
+6. 공문서 어투 ("~을 알려드립니다", "~조치하겠습니다")
+7. 금지 표현: "해당 부서로 문의", "홈페이지 참고", "이전 답변 참고" 등 떠넘기기·회피
+8. 제3자 개인정보·영업비밀 포함 금지
+9. 구조 예시 (질문 2개 민원):
+   가. [질문 1에 대한 답변 — 현황 + 관련 법령 + 결론]
+   나. [질문 2에 대한 답변 — 현황 + 관련 법령 + 결론]
+   다. [종합 안내 또는 추가 정보]
+
+[민원인 권리 체크 — 반드시 확인]
+- 민원이 "본인이 ~하려면" / "내가 받을 수 있나" / "제가 볼 수 있나" 형태이면
+  → 후보에서 열람·정정·삭제·처리정지·이의제기 등 **권리 조문** 찾기
+- 개인정보 관련 민원이면 「개인정보 보호법」 제4조(정보주체 권리), 제35~38조(열람·정정·처리정지·권리행사) 확인
+- 교원·학생 관련 민원이면 관련 보호법의 권리 조문 확인
 
 반드시 아래 JSON 형식으로만 응답:
 {

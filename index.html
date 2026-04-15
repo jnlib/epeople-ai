@@ -336,6 +336,27 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
 .mci.clickable:hover{border-color:var(--teal);transform:translateX(2px);box-shadow:0 3px 10px rgba(0,207,192,.12);}
 .mci.clickable:active{transform:translateX(0);}
 
+/* 성실답변 서브 칩 (하위 감점 항목 요약) */
+.mci-subs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.sub-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:9px;font-size:.64em;font-weight:700;font-family:'Share Tech Mono',monospace;border:1px solid transparent;line-height:1.3;}
+.sub-pill.ok{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.22);color:var(--green);}
+.sub-pill.bad{background:rgba(240,48,96,.12);border-color:rgba(240,48,96,.3);color:var(--red);}
+.sub-pill.pending{background:rgba(245,160,0,.1);border-color:rgba(245,160,0,.25);color:var(--amber);}
+.sub-pill.na{background:rgba(106,138,170,.1);border-color:rgba(106,138,170,.2);color:var(--muted);}
+
+/* 섹션 헤더 — 감점식 표현 */
+.sbtitle{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;margin-bottom:7px;font-size:.82em;font-weight:800;color:var(--navy);background:rgba(49,130,255,.04);border-radius:8px;}
+.sbtitle .mcpts{font-family:'Orbitron',monospace;font-size:.86em;font-weight:900;color:var(--muted);}
+.sbtitle .mcpts.full{color:var(--green);}
+.sbtitle .mcpts.bad{color:var(--red);}
+.sb-penalty{font-size:.72em;color:var(--red);font-weight:700;margin-left:6px;font-family:'Share Tech Mono',monospace;}
+
+/* mci 감점 스타일 */
+.mci .mcipts{font-family:'Orbitron',monospace;}
+.mci.pass .mcipts{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);}
+.mci.fail .mcipts{background:rgba(240,48,96,.1);border-color:rgba(240,48,96,.2);color:var(--red);}
+.mci.bonus .mcipts{background:rgba(245,160,0,.1);border-color:rgba(245,160,0,.22);color:var(--amber);}
+
 /* 일괄 수정 배너 */
 .bulk-fix-bar{margin:10px 0 14px;padding:11px 13px;background:linear-gradient(135deg,rgba(240,48,96,.09),rgba(245,160,0,.08));border:1.5px solid rgba(240,48,96,.22);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;animation:bulkPulse 2s ease-in-out infinite;}
 @keyframes bulkPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,48,96,.15);}50%{box-shadow:0 0 0 6px rgba(240,48,96,0);}}
@@ -937,7 +958,14 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
       <div class="sbtitle"><span>📋 전개부</span><span class="mcpts full" id="mp2">50/50점</span></div>
       <div class="mci pass clickable" id="mi4" onclick="openItemPop('summary', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">민원 요지</div></div><div class="mcir"><div class="mcipts" id="mc4" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
       <div class="mci pass clickable" id="mi5" onclick="openItemPop('readability', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">가독성</div></div><div class="mcir"><div class="mcipts" id="mc5" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+20점</div></div></div>
-      <div class="mci pass clickable" id="mi6" onclick="openItemPop('sincerity', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">성실 답변</div></div><div class="mcir"><div class="mcipts" id="mc6" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+20점</div></div></div>
+      <div class="mci pass clickable" id="mi6" onclick="openItemPop('sincerity', this)">
+        <div class="mciic">✓</div>
+        <div class="mcibody">
+          <div class="mcilbl">성실 답변</div>
+          <div class="mci-subs" id="sincSubs"></div>
+        </div>
+        <div class="mcir"><div class="mcipts" id="mc6">만점</div></div>
+      </div>
     </div>
     <div class="sblock">
       <div class="sbtitle"><span>🏷️ 종결부</span><span class="mcpts" id="mp3">0/20점</span></div>
@@ -1773,7 +1801,7 @@ function startAnalysis(){
 
 /* ═════ 법제처 직접 호출 (브라우저 → law.go.kr, Cloudflare 우회) ═════ */
 async function lawAiSearch(query){
-  const qs=new URLSearchParams({OC:LAW_OC,target:'aiSearch',type:'JSON',query,search:'0',display:'10'});
+  const qs=new URLSearchParams({OC:LAW_OC,target:'aiSearch',type:'JSON',query,search:'0',display:'15'});
   try{
     const r=await fetch(`${LAW_API}/lawSearch.do?${qs}`, {signal:AbortSignal.timeout(10000)});
     if(!r.ok) return [];
@@ -1807,37 +1835,46 @@ async function lawGetBody(lawId){
   }
 }
 
-/* 민원원문 → 법령후보 수집 (병렬 호출, 가장 많은 결과 채택) */
+/* 민원원문 → 법령후보 수집
+   병렬 호출 후 모든 성공 결과를 합쳐서 법령ID별로 그룹화
+   여러 쿼리가 다른 조문을 찾을 수 있으므로 '합집합'이 더 풍부함 */
 async function fetchLawCandidates(searchQueries){
-  const uniq=[...new Set(searchQueries)].slice(0,4);
+  const uniq=[...new Set(searchQueries)].slice(0,5);
   const results=await Promise.all(uniq.map(async q => ({query:q, items:await lawAiSearch(q)})));
-  // 가장 많이 반환한 쿼리 선택
-  let best=null;
-  for(const r of results){ if(r.items.length>0 && (!best||r.items.length>best.items.length)) best=r; }
-  const items=best?.items||[];
-  const usedQuery=best?.query||'';
-  // 법령ID별 그룹화
-  const groups=new Map();
-  for(const it of items){
-    const id=it['법령ID']; if(!id) continue;
-    if(!groups.has(id)){
-      groups.set(id,{
-        lawId:id, mst:it['법령일련번호'], name:it['법령명'],
-        kind:it['법령종류명']||'', ministry:it['소관부처명']||'',
-        effectiveDate:String(it['시행일자']||'').slice(0,8),
-        shortName:'', articles:[],
-      });
-    }
-    const g=groups.get(id);
-    if(g && g.articles.length<5){
-      g.articles.push({
-        no:String(it['조문번호']||'').replace(/^0+/,'')||'0',
-        title:it['조문제목']||'',
-        content:it['조문내용']||'',
-      });
+
+  // 쿼리별 성공 여부 확인
+  const successQueries = results.filter(r=>r.items.length>0).map(r=>r.query);
+  const usedQuery = successQueries.join(' + ') || '';
+
+  // 법령ID별 그룹화 — 모든 쿼리 결과 합침
+  const groups = new Map();
+  for(const r of results){
+    for(const it of r.items){
+      const id = it['법령ID']; if(!id) continue;
+      if(!groups.has(id)){
+        groups.set(id, {
+          lawId:id, mst:it['법령일련번호'], name:it['법령명'],
+          kind:it['법령종류명']||'', ministry:it['소관부처명']||'',
+          effectiveDate:String(it['시행일자']||'').slice(0,8),
+          shortName:'', articles:[],
+          _articleKeys: new Set(),
+        });
+      }
+      const g = groups.get(id);
+      const artKey = String(it['조문번호']||'')+':'+String(it['조문가지번호']||'');
+      if(g && !g._articleKeys.has(artKey) && g.articles.length < 8){
+        g._articleKeys.add(artKey);
+        g.articles.push({
+          no: String(it['조문번호']||'').replace(/^0+/,'')||'0',
+          title: it['조문제목']||'',
+          content: it['조문내용']||'',
+        });
+      }
     }
   }
-  return {candidates:[...groups.values()].slice(0,8), usedQuery, searchQueries:uniq};
+  // _articleKeys 제거 (Gemini에 불필요)
+  const candidates = [...groups.values()].map(g=>{ delete g._articleKeys; return g; }).slice(0, 10);
+  return {candidates, usedQuery, searchQueries:uniq};
 }
 
 async function runAnalysis(){
@@ -1847,7 +1884,7 @@ async function runAnalysis(){
   try{
     if(!raw) throw new Error('no raw');
 
-    /* ─ 1) Gemini 제안: 요지 + 검색어 ─ */
+    /* ─ 1) Gemini 제안: 요지 + 질문 목록 + 검색어 ─ */
     const propRes=await fetch(PROPOSE_EP,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1858,6 +1895,7 @@ async function runAnalysis(){
     if(proposeData.error) throw new Error(proposeData.error);
 
     const preSummary=proposeData.summary||'';
+    const issues=Array.isArray(proposeData.issues)?proposeData.issues:[];
     const qs=Array.isArray(proposeData.searchQueries)?proposeData.searchQueries:[];
     const isLawRelated=proposeData.isLawRelated!==false;
 
@@ -1876,7 +1914,7 @@ async function runAnalysis(){
       }));
     }
 
-    /* ─ 3) Gemini 답변 생성: 민원 + 법령후보 → draft ─ */
+    /* ─ 3) Gemini 답변 생성: 민원 + 질문 목록 + 법령후보 → draft ─ */
     const draftRes=await fetch(DRAFT_EP,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1886,6 +1924,7 @@ async function runAnalysis(){
         cooperation:{enabled:coopEnabled},
         candidateLaws:candidates,
         preSummary,
+        issues,
       })
     });
     if(!draftRes.ok) throw new Error('draft 서버오류');
@@ -2168,42 +2207,78 @@ function getFullText(){
 }
 
 function syncMini(sc){
-  /* ── mi2: 민원번호 ── */
+  /* 감점식 표현: 만점이면 "만점", 감점이면 "-N" 빨간 */
+  const setPts = (id, deducted, maxPts, unit='점') => {
+    const el = $(id); if(!el) return;
+    if(deducted === 0) el.textContent = '만점';
+    else el.textContent = '-' + Math.abs(deducted) + unit;
+  };
+
+  /* ── mi2: 민원번호 (-10 or 만점) ── */
   const m2=$('mi2');m2.classList.remove('pass','fail');
-  if(sc.items.caseNumber.ok){m2.classList.add('pass');m2.querySelector('.mciic').textContent='✓';$('mc2').textContent='+10점';$('ml2').textContent='신청번호 명시';$('mn2').style.display='none';}
-  else{m2.classList.add('fail');m2.querySelector('.mciic').textContent='✕';$('mc2').textContent='-10점';$('ml2').textContent='신청번호 미입력';$('mn2').style.display='none';}
-  $('mp1').textContent=sc.s1+'/30점';$('mp1').classList.toggle('full',sc.s1===30);
+  if(sc.items.caseNumber.ok){m2.classList.add('pass');m2.querySelector('.mciic').textContent='✓';setPts('mc2',0,10);$('ml2').textContent='신청번호 명시';$('mn2').style.display='none';}
+  else{m2.classList.add('fail');m2.querySelector('.mciic').textContent='✕';setPts('mc2',-10,10);$('ml2').textContent='신청번호 미입력';$('mn2').style.display='none';}
+
+  /* 도입부 헤더: 30점 - 감점 */
+  const introDeducted = 30 - sc.s1;
+  const mp1 = $('mp1');
+  if(mp1){
+    mp1.textContent = sc.s1 + '/30' + (introDeducted>0 ? ' (-'+introDeducted+')' : '');
+    mp1.classList.toggle('full', introDeducted===0);
+    mp1.classList.toggle('bad', introDeducted>0);
+  }
 
   /* ── mi3: 이첩/기피/소극 사유 ── */
   const m3=$('mi3');m3.classList.remove('pass','fail');
   const typeLabel={normal:'일반민원(해당없음)',transfer:'이첩 사유',avoid:'기피 사유',passive:'소극행정 사유'}[mType]||'일반민원';
   if(sc.items.routing.na || sc.items.routing.ok){
-    m3.classList.add('pass');m3.querySelector('.mciic').textContent='✓';$('mc3').textContent='+10점';$('ml3').textContent=typeLabel;
+    m3.classList.add('pass');m3.querySelector('.mciic').textContent='✓';setPts('mc3',0,10);
+    $('ml3').textContent = sc.items.routing.na ? '해당없음' : typeLabel;
   } else {
-    m3.classList.add('fail');m3.querySelector('.mciic').textContent='✕';$('mc3').textContent='-10점';$('ml3').textContent=sc.items.routing.missing||typeLabel;
+    m3.classList.add('fail');m3.querySelector('.mciic').textContent='✕';setPts('mc3',-10,10);
+    $('ml3').textContent=sc.items.routing.missing||typeLabel;
   }
 
   /* ── mi4: 민원요지 ── */
   const m4=$('mi4');if(m4){
     m4.classList.remove('pass','fail');
-    if(sc.items.summary.ok){m4.classList.add('pass');m4.querySelector('.mciic').textContent='✓';$('mc4').textContent='+10점';}
-    else{m4.classList.add('fail');m4.querySelector('.mciic').textContent='✕';$('mc4').textContent='-10점';}
+    if(sc.items.summary.ok){m4.classList.add('pass');m4.querySelector('.mciic').textContent='✓';setPts('mc4',0,10);}
+    else{m4.classList.add('fail');m4.querySelector('.mciic').textContent='✕';setPts('mc4',-10,10);}
   }
 
   /* ── mi5: 가독성 ── */
   const m5=$('mi5');if(m5){
     m5.classList.remove('pass','fail');
-    if(sc.items.readability.ok){m5.classList.add('pass');m5.querySelector('.mciic').textContent='✓';$('mc5').textContent='+20점';}
-    else{m5.classList.add('fail');m5.querySelector('.mciic').textContent='✕';$('mc5').textContent='-20점';}
+    if(sc.items.readability.ok){m5.classList.add('pass');m5.querySelector('.mciic').textContent='✓';setPts('mc5',0,20);}
+    else{m5.classList.add('fail');m5.querySelector('.mciic').textContent='✕';setPts('mc5',-20,20);}
   }
 
-  /* ── mi6: 성실답변 (AI 감점 반영) ── */
+  /* ── mi6: 성실답변 + 서브 칩 렌더 ── */
   const m6=$('mi6');if(m6){
     m6.classList.remove('pass','fail','bonus');
     const sp=sc.items.sincerity.pts;
-    if(sp===20){m6.classList.add('pass');m6.querySelector('.mciic').textContent='✓';$('mc6').textContent='+20점';}
-    else if(sp>0){m6.classList.add('bonus');m6.querySelector('.mciic').textContent='△';$('mc6').textContent='+'+sp+'점';}
-    else{m6.classList.add('fail');m6.querySelector('.mciic').textContent='✕';$('mc6').textContent='0점';}
+    const spDeducted = 20 - sp;
+    if(sp===20){m6.classList.add('pass');m6.querySelector('.mciic').textContent='✓';setPts('mc6',0,20);}
+    else if(sp>0){m6.classList.add('bonus');m6.querySelector('.mciic').textContent='△';setPts('mc6',-spDeducted,20);}
+    else{m6.classList.add('fail');m6.querySelector('.mciic').textContent='✕';setPts('mc6',-20,20);}
+
+    /* 성실답변 서브 칩 (내부결재 N/A + AI 4개 감점) */
+    const subs = $('sincSubs');
+    if(subs){
+      const d = sc.items.sincerity.deducts || {};
+      const hasEvaluated = lastEvalText && lastEvalText.length > 0;
+      const pills = [
+        {label:'내부결재', state:'na', note:'본문만 평가'},
+        {label:'제3자정보', state: d.privacy ? 'bad' : (hasEvaluated?'ok':'pending'), note: d.privacy?'-20':''},
+        {label:'소관안내', state: d.jurisdiction ? 'bad' : (hasEvaluated?'ok':'pending'), note: d.jurisdiction?'-10':''},
+        {label:'떠넘기기', state: d.passBuck ? 'bad' : (hasEvaluated?'ok':'pending'), note: d.passBuck?'-10':''},
+        {label:'기존답변', state: d.refOnly ? 'bad' : (hasEvaluated?'ok':'pending'), note: d.refOnly?'-10':''},
+      ];
+      subs.innerHTML = pills.map(p=>{
+        const icon = p.state==='na'?'N/A':p.state==='ok'?'✓':p.state==='bad'?'✕':'?';
+        return `<span class="sub-pill ${p.state}">${p.label} ${icon}${p.note?' '+p.note:''}</span>`;
+      }).join('');
+    }
   }
 
   /* ── mi7: 담당자 ── */
@@ -2211,15 +2286,33 @@ function syncMini(sc){
   if(sc.contact.pts===20){m7.classList.add('pass');m7.querySelector('.mciic').textContent='✓';}
   else if(sc.contact.pts>0){m7.classList.add('bonus');m7.querySelector('.mciic').textContent='△';}
   else{m7.classList.add('fail');m7.querySelector('.mciic').textContent='✕';}
-  $('mc7').textContent=sc.contact.pts>0?'+'+sc.contact.pts+'점':'0점';$('ml7').textContent=sc.contact.label;$('mp3').textContent=sc.s3+'/20점';$('mp3').classList.toggle('full',sc.s3===20);
+  const cDeducted = 20 - sc.contact.pts;
+  if(cDeducted===0) $('mc7').textContent='만점';
+  else $('mc7').textContent='-'+cDeducted+'점';
+  $('ml7').textContent=sc.contact.label;
 
-  /* ── mi8: 만족도 ── */
+  /* 전개부 헤더: 50점 - 감점 */
+  const bodyDeducted = 50 - sc.s2;
+  const mp2 = $('mp2');
+  if(mp2){
+    mp2.textContent = sc.s2 + '/50' + (bodyDeducted>0 ? ' (-'+bodyDeducted+')' : '');
+    mp2.classList.toggle('full', bodyDeducted===0);
+    mp2.classList.toggle('bad', bodyDeducted>0);
+  }
+
+  /* 종결부 헤더 */
+  const mp3 = $('mp3');
+  if(mp3){
+    mp3.textContent = sc.s3 + '/20' + (cDeducted>0 ? ' (-'+cDeducted+')' : '');
+    mp3.classList.toggle('full', cDeducted===0);
+    mp3.classList.toggle('bad', cDeducted>0);
+  }
+
+  /* ── mi8: 만족도 (가점이라 "+N" 유지) ── */
   const m8=$('mi8');m8.classList.remove('pass','fail','bonus');
-  if(wSurvey){m8.classList.add('bonus');m8.querySelector('.mciic').textContent='⭐';}else{m8.classList.add('fail');m8.querySelector('.mciic').textContent='✕';}
-  $('mc8').textContent=wSurvey?'+'+sc.bonus+'점':'0점';$('mp4').textContent=sc.bonus>0?'+'+sc.bonus+'점':'0점';
-
-  /* 전개부 점수 동적 갱신 */
-  const mp2=$('mp2'); if(mp2){mp2.textContent=sc.s2+'/50점';mp2.classList.toggle('full',sc.s2===50);}
+  if(wSurvey){m8.classList.add('bonus');m8.querySelector('.mciic').textContent='⭐';$('mc8').textContent='+'+sc.bonus;}
+  else{m8.classList.add('fail');m8.querySelector('.mciic').textContent='✕';$('mc8').textContent='0';}
+  $('mp4').textContent=sc.bonus>0?'+'+sc.bonus:'0';
 
   /* ── 일괄 수정 배너 ── */
   const deductedCount = countDeductedItems(sc);
