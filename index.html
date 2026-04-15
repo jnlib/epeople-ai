@@ -250,6 +250,40 @@ input:focus{border-color:var(--teal);background:var(--white);box-shadow:0 0 0 3p
 textarea.ttxt{flex:1;background:transparent;border:none;outline:none;resize:none;font-family:'Noto Sans KR',sans-serif;font-size:1em;line-height:1.9;color:var(--text);min-height:160px;width:100%;caret-color:var(--teal);}
 textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
 
+/* 협조민원 체크박스 (v2) */
+.coopchk{display:flex;align-items:flex-start;gap:11px;padding:14px 16px;margin:12px 0;background:rgba(49,130,255,.04);border:1.5px solid rgba(49,130,255,.18);border-radius:12px;cursor:pointer;transition:all .2s;}
+.coopchk:hover{background:rgba(49,130,255,.07);border-color:rgba(49,130,255,.35);}
+.coopchk:has(input:checked){background:rgba(49,130,255,.1);border-color:var(--blue);box-shadow:0 4px 14px rgba(49,130,255,.12);}
+.coopchk input{width:18px;height:18px;accent-color:var(--blue);flex-shrink:0;margin-top:2px;cursor:pointer;}
+.coopchk-body{display:flex;flex-direction:column;gap:3px;flex:1;}
+.coopchk-title{font-size:.92em;font-weight:800;color:var(--navy);}
+.coopchk-desc{font-size:.76em;color:var(--muted);line-height:1.5;}
+
+/* 협조민원 자가 체크리스트 (v2, 결과화면 col-center) */
+.coopck{margin-top:14px;padding:14px;border:1.5px solid rgba(245,160,0,.3);border-radius:12px;background:rgba(245,160,0,.04);}
+.coopck-t{display:flex;align-items:center;gap:6px;font-size:.88em;font-weight:900;color:#8a5000;margin-bottom:8px;}
+.coopck-s{font-size:.72em;color:var(--muted);margin-bottom:10px;line-height:1.55;}
+.coopck-i{display:flex;gap:9px;padding:9px 11px;background:var(--white);border:1px solid rgba(245,160,0,.15);border-radius:8px;margin-bottom:5px;cursor:pointer;transition:.15s;}
+.coopck-i:hover{border-color:rgba(245,160,0,.35);}
+.coopck-i input{accent-color:#f5a000;width:16px;height:16px;margin-top:1px;flex-shrink:0;cursor:pointer;}
+.coopck-i span{font-size:.78em;color:var(--text2);line-height:1.55;}
+.coopck-f{margin-top:7px;font-size:.7em;color:var(--muted);text-align:center;}
+.coopck-f b{color:var(--red);}
+
+/* 관련 법령 카드 (v2, 결과화면 col-center) */
+.lawpanel{margin-top:14px;}
+.lawpanel-t{font-size:.98em;font-weight:900;color:var(--navy);margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+.lawcard{border:1.5px solid rgba(0,207,192,.18);border-radius:11px;padding:12px 14px;background:var(--white);margin-bottom:8px;transition:.15s;}
+.lawcard:hover{border-color:var(--teal);box-shadow:0 4px 14px rgba(0,207,192,.1);}
+.lawcard-n{font-size:.88em;font-weight:800;color:var(--teal2);display:flex;align-items:center;gap:5px;margin-bottom:3px;}
+.lawcard-m{font-size:.68em;color:var(--muted);font-family:'Share Tech Mono',monospace;margin-bottom:8px;}
+.lawcard-a{font-size:.78em;color:var(--text2);padding:7px 9px;background:rgba(0,207,192,.04);border-radius:7px;line-height:1.55;border-left:2px solid var(--teal);margin-bottom:7px;}
+.lawcard-a b{color:var(--teal2);font-weight:800;}
+.lawcard-btns{display:flex;gap:5px;flex-wrap:wrap;}
+.lawcard-btns a,.lawcard-btns button{padding:5px 9px;border-radius:6px;font-size:.7em;font-weight:700;background:rgba(0,207,192,.08);color:var(--teal2);border:1px solid rgba(0,207,192,.2);cursor:pointer;text-decoration:none;transition:.15s;font-family:inherit;}
+.lawcard-btns a:hover,.lawcard-btns button:hover{background:rgba(0,207,192,.15);border-color:var(--teal);}
+.lawempty{font-size:.78em;color:var(--muted);text-align:center;padding:16px;background:var(--bg2);border-radius:10px;line-height:1.6;}
+
 /* 경고 */
 .wbar{display:flex;align-items:center;gap:12px;background:rgba(245,160,0,.06);border:1.5px solid rgba(245,160,0,.22);border-radius:14px;padding:13px 17px;margin-bottom:12px;}
 .wico{font-size:1.2em;flex-shrink:0;}
@@ -546,12 +580,11 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
 <div class="sbar">
   <div class="si on" id="si0"><div class="si-n">1</div><span class="si-label">시작</span></div><div class="sarr">›</div>
   <div class="si" id="si1"><div class="si-n">2</div><span class="si-label">원문</span></div><div class="sarr">›</div>
-  <div class="si" id="si2"><div class="si-n">3</div><span class="si-label">공개여부</span></div><div class="sarr">›</div>
-  <div class="si" id="si3"><div class="si-n">4</div><span class="si-label">유형</span></div><div class="sarr">›</div>
-  <div class="si" id="si4"><div class="si-n">5</div><span class="si-label">만족도</span></div><div class="sarr">›</div>
-  <div class="si" id="si5"><div class="si-n">6</div><span class="si-label">기본정보</span></div><div class="sarr">›</div>
-  <div class="si" id="si6"><div class="si-n">7</div><span class="si-label">분석</span></div><div class="sarr">›</div>
-  <div class="si" id="si7"><div class="si-n">8</div><span class="si-label">결과</span></div>
+  <div class="si" id="si3"><div class="si-n">3</div><span class="si-label">유형</span></div><div class="sarr">›</div>
+  <div class="si" id="si4"><div class="si-n">4</div><span class="si-label">만족도</span></div><div class="sarr">›</div>
+  <div class="si" id="si5"><div class="si-n">5</div><span class="si-label">기본정보</span></div><div class="sarr">›</div>
+  <div class="si" id="si6"><div class="si-n">6</div><span class="si-label">분석</span></div><div class="sarr">›</div>
+  <div class="si" id="si7"><div class="si-n">7</div><span class="si-label">결과</span></div>
 </div>
 
 <div class="screens">
@@ -648,8 +681,16 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
     <div class="xf" id="xfTr"><div class="xf-in"><div class="field"><div class="fl">이첩된 최초 기관명</div><input type="text" id="fromOrg" placeholder="예) 대통령비서실"/></div></div></div>
     <div class="xf" id="xfAv"><div class="xf-in"><div class="row2"><div class="field"><div class="fl">기피 대상 부서</div><input type="text" id="avoidDept" placeholder="예) OOO과"/></div><div class="field"><div class="fl">불수용 사유</div><input type="text" id="avoidReason" placeholder="예) 업무 연속성"/></div></div></div></div>
     <div class="xf" id="xfPa"><div class="xf-in"><div class="field"><div class="fl">현업부서 답변 사유</div><input type="text" id="passReason" placeholder="예) 자체 종결 사안"/></div></div></div>
+    <!-- 협조민원 체크 (v2 신규 · 다른 기관/부서 답변 포함 시) -->
+    <label class="coopchk" id="coopChk">
+      <input type="checkbox" onchange="toggleCoop(this.checked)"/>
+      <span class="coopchk-body">
+        <span class="coopchk-title">🔗 협조민원입니다</span>
+        <span class="coopchk-desc">다른 기관/부서의 답변을 포함해야 하는 민원 · 체크 시 결과 화면에 자가 체크리스트 표시</span>
+      </span>
+    </label>
     <button class="nbtn" onclick="goTo(4)">다음 →</button>
-    <button class="gbtn" onclick="goTo(2)">← 이전</button>
+    <button class="gbtn" onclick="goTo(1)">← 이전</button>
   </div>
 </div>
 
@@ -807,14 +848,36 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
       <div class="sbtitle"><span>⭐ 가점</span><span class="mcpts" id="mp4">+0점</span></div>
       <div class="mci" id="mi8"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">만족도 유도</div></div><div class="mcir"><div class="mcipts" id="mc8">—</div></div></div>
     </div>
+    <!-- 협조민원 감점 (v2, 체크 시만 표시) -->
+    <div class="sblock" id="coopSblock" style="display:none;">
+      <div class="sbtitle"><span>🔗 협조민원</span><span class="mcpts" id="mpCoop">-30점</span></div>
+      <div class="mci" id="miCoop"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">자가 체크리스트</div><div class="mcidesc" id="mlCoop">3개 체크 필요</div></div><div class="mcir"><div class="mcipts" id="mcCoop">-30</div></div></div>
+    </div>
   </div>
   <div class="col-center">
     <div style="font-size:.98em;font-weight:900;color:var(--navy);margin-bottom:11px;">⚠️ 감점 분석</div>
     <div class="hblock" id="hintBlock"><div class="hbtitle" id="hbTitle">분석중...</div><div id="hintLines"></div></div>
+
+    <!-- 관련 법령 (v2) -->
+    <div class="lawpanel" id="lawPanel">
+      <div class="lawpanel-t">⚖️ 관련 법령 <span id="lawCount" style="font-size:.75em;color:var(--muted);font-weight:600;"></span></div>
+      <div id="lawList"><div class="lawempty">AI 초안 생성 시 자동으로 표시돼요</div></div>
+    </div>
+
+    <!-- 협조민원 자가 체크 (v2, 체크 시만 표시) -->
+    <div class="coopck" id="coopChecklist" style="display:none;">
+      <div class="coopck-t">⚠️ 협조민원 자가 확인</div>
+      <div class="coopck-s">협조기관 답변의 처리 여부는 작성자만 알 수 있습니다. 3개 모두 확인 후 체크해 주세요.</div>
+      <label class="coopck-i"><input type="checkbox" id="coopCk1" onchange="onCoopCheckChange()"/><span>① 협조기관의 답변을 본문에 포함하였습니다</span></label>
+      <label class="coopck-i"><input type="checkbox" id="coopCk2" onchange="onCoopCheckChange()"/><span>② 단순 나열이나 복붙이 아닌 종합정리 형태로 재구성하였습니다</span></label>
+      <label class="coopck-i"><input type="checkbox" id="coopCk3" onchange="onCoopCheckChange()"/><span>③ 민원인의 질문에 맞추어 자연스럽게 녹여냈습니다</span></label>
+      <div class="coopck-f">3개 모두 체크: <b>감점 없음</b> · 하나라도 미체크: <b>-30점</b></div>
+    </div>
+
     <div style="font-size:.98em;font-weight:900;color:var(--navy);margin:13px 0 9px;">📝 기본정보 수정</div>
     <div class="dblock">
       <div class="dbtitle">담당자 정보 입력</div>
-      <div class="di"><div class="dil">민원 신청번호</div><input type="text" id="rCase" placeholder="1AA-2504-0000000" oninput="onInfoInput('rCase')"/></div>
+      <div class="di"><div class="dil">민원 신청번호</div><input type="text" id="rCase" placeholder="1AA-2504-0000000 (선택)" oninput="onInfoInput('rCase')"/></div>
       <div class="di"><div class="dil">소속 기관명</div><input type="text" id="rOrg" placeholder="서울특별시교육청" oninput="onInfoInput('rOrg')"/></div>
       <div class="di"><div class="dil">소속 부서</div><input type="text" id="rDept" placeholder="OOO과" oninput="onInfoInput('rDept')"/></div>
       <div class="di"><div class="dil">담당 주무관</div><input type="text" id="rName" placeholder="홍길동" oninput="onInfoInput('rName')"/></div>
@@ -840,11 +903,16 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
 
 <script>
 const $=id=>document.getElementById(id);
-const WORKER='https://icy-art-4e14.hdh1231.workers.dev';
+const WORKER='https://epeople-ai-v2.hdh1231.workers.dev';
 const AI_EP=WORKER+'/api/generate';
+const EVAL_EP=WORKER+'/api/evaluate-edit';
+const LAWS_EP=WORKER+'/api/laws';
 const MASCOT='';
 
-let isPublic=null,mType='normal',wSurvey=null,aiSum='',aiDraft='',curResult='',curScr='s0',inSplit=false;
+let isPublic=false,mType='normal',wSurvey=null,aiSum='',aiDraft='',curResult='',curScr='s0',inSplit=false;
+let coopEnabled=false, coopChecks={included:false,integrated:false,adapted:false};
+let aiLaws=[], unverifiedLaws=[];
+let aiEvalDeducts={privacy:false,jurisdiction:false,passBuck:false,refOnly:false};
 let prefetchPromise=null;
 
 (function(){
@@ -867,6 +935,7 @@ function toast(msg,ico='✅'){$('tIco').textContent=ico;$('tMsg').textContent=ms
 function setStep(n){
   for(let i=0;i<8;i++){
     const e=$('si'+i);
+    if(!e)continue; /* v2: si2(공개여부) 제거됨 */
     e.classList.remove('on','done');
     if(i<n)e.classList.add('done');
     if(i===n)e.classList.add('on');
@@ -880,15 +949,19 @@ function trans(fId,tId,sN){
 }
 function goTo(n){
   if(n===2&&!$('rawTxt').value.trim()){toast('원문을 먼저 입력해주세요','⚠️');return;}
-  if(n===3&&isPublic===null){toast('공개/비공개를 선택해주세요','⚠️');return;}
+  /* S2(공개/비공개) 제거됨: S1 "다음" 누르면 S3로 직행 */
+  if(n===2){ isPublic=false; n=3; }
   if(n===5&&wSurvey===null){toast('만족도 여부를 선택해주세요','⚠️');return;}
   if(n===6){startAnalysis();return;}
-  /* ★ 원문 넘어갈 때 AI 프리페치 시작 */
-  if(n===2&&!prefetchPromise){
+  /* ★ S1에서 넘어갈 때 AI 프리페치 시작 (v2: mType + cooperation 포함) */
+  if(n===3&&!prefetchPromise){
     const raw=$('rawTxt').value.trim();
-    if(raw) prefetchPromise=fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw})}).then(r=>r.ok?r.json():null).catch(()=>null);
+    if(raw){
+      const payload={text:raw, mType:mType||'normal', cooperation:{enabled: !!coopEnabled}};
+      prefetchPromise=fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.ok?r.json():null).catch(()=>null);
+    }
   }
-  const m={0:'s0',1:'s1',2:'s2',3:'s3',4:'s4',5:'s5'};if(m[n])trans(curScr,m[n],n);
+  const m={0:'s0',1:'s1',3:'s3',4:'s4',5:'s5'};if(m[n])trans(curScr,m[n],n);
 }
 function showScore(){trans(curScr,'s-score',6);}
 
@@ -902,7 +975,112 @@ function showSplit(){
     inSplit=true;
     curScr='s-result';
     setStep(7); /* ★ 결과탭 = 인덱스 7 */
+    /* v2: 법령 카드/협조민원 UI 렌더 */
+    renderLaws();
+    renderCoopUi();
+    /* 결과 진입 후 바로 실시간 채점 1회 */
+    setTimeout(()=>{ aiEvaluate(); }, 800);
   },340);
+}
+
+/* v2: 법령 카드 렌더링 */
+function renderLaws(){
+  const list=$('lawList'); const cnt=$('lawCount');
+  if(!list)return;
+  if(!aiLaws || aiLaws.length===0){
+    cnt.textContent='';
+    const unv=unverifiedLaws?.length ? `<div class="lawempty" style="border-left:3px solid var(--amber);text-align:left;background:rgba(245,160,0,.06);">⚠️ AI가 제안했으나 법제처에서 찾지 못한 법령: ${unverifiedLaws.map(escHtml).join(', ')}</div>` : '';
+    list.innerHTML=unv+'<div class="lawempty">📎 이 민원은 법령 근거가 필요하지 않거나 관련 법령을 찾지 못했습니다.</div>';
+    return;
+  }
+  cnt.textContent='· '+aiLaws.length+'건';
+  const unv=unverifiedLaws?.length ? `<div class="lawempty" style="border-left:3px solid var(--amber);text-align:left;background:rgba(245,160,0,.06);margin-bottom:8px;">⚠️ 미검증: ${unverifiedLaws.map(escHtml).join(', ')}</div>` : '';
+  list.innerHTML = unv + aiLaws.map((l,i)=>{
+    const label = l.shortName ? `${escHtml(l.name)} <span style="font-size:.82em;opacity:.7;">(${escHtml(l.shortName)})</span>` : escHtml(l.name);
+    const meta = [l.kind, l.ministry, l.effectiveDate?('시행 '+l.effectiveDate):''].filter(Boolean).join(' · ');
+    const art = l.articleNo ? `<div class="lawcard-a"><b>제${escHtml(l.articleNo)}조 (${escHtml(l.articleTitle||'')})</b><br/>${escHtml((l.content||'').slice(0,220))}${(l.content||'').length>220?'...':''}</div>` : '';
+    const link = l.link ? `<a href="${escHtml(l.link)}" target="_blank" rel="noopener">🔗 법제처 전문보기</a>` : '';
+    return `<div class="lawcard">
+      <div class="lawcard-n">⚖️ ${label}</div>
+      <div class="lawcard-m">${escHtml(meta)}</div>
+      ${art}
+      <div class="lawcard-btns">${link}<button onclick="copyLaw(${i})">📋 조문 복사</button></div>
+    </div>`;
+  }).join('');
+}
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function copyLaw(idx){
+  const l=aiLaws[idx]; if(!l)return;
+  const arts=(l.allArticles||[{no:l.articleNo,title:l.articleTitle,content:l.content}]).filter(a=>a.no).map(a=>`제${a.no}조 (${a.title})\n${a.content}`).join('\n\n');
+  const txt=`${l.name}\n\n${arts}`;
+  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(txt).then(()=>toast('조문이 복사됐어요 📋','📋'));}else{toast('복사 실패','⚠️');}
+}
+
+/* v2: 협조민원 UI 표시/숨김 + 감점 블록 표시 */
+function renderCoopUi(){
+  $('coopChecklist').style.display = coopEnabled ? 'block' : 'none';
+  $('coopSblock').style.display = coopEnabled ? 'block' : 'none';
+}
+
+function onCoopCheckChange(){
+  coopChecks.included = !!$('coopCk1')?.checked;
+  coopChecks.integrated = !!$('coopCk2')?.checked;
+  coopChecks.adapted = !!$('coopCk3')?.checked;
+  const allOk = coopChecks.included && coopChecks.integrated && coopChecks.adapted;
+  // 감점 블록 시각 갱신
+  const mci=$('miCoop'); const pts=$('mcCoop'); const lbl=$('mlCoop'); const head=$('mpCoop');
+  if(mci){
+    mci.classList.toggle('pass', allOk);
+    mci.classList.toggle('fail', !allOk);
+    mci.querySelector('.mciic').textContent = allOk ? '✓' : '✕';
+  }
+  if(pts){pts.textContent = allOk ? '0' : '-30'; pts.style.color = allOk ? 'var(--green)' : 'var(--red)';}
+  if(lbl){lbl.textContent = allOk ? '종합정리 확인 완료' : ((3-Object.values(coopChecks).filter(Boolean).length)+'개 더 체크 필요');}
+  if(head){head.textContent = allOk ? '0점' : '-30점'; head.classList.toggle('full', allOk);}
+  autoRescore();
+}
+
+/* v2: AI 실시간 재채점 (본문 편집 시 debounce) */
+let aiEvalTimer=null, lastEvalText='', aiEvaling=false;
+function scheduleAiEvaluate(){
+  clearTimeout(aiEvalTimer);
+  aiEvalTimer = setTimeout(aiEvaluate, 2000);
+}
+async function aiEvaluate(){
+  if(aiEvaling)return;
+  const body = $('resBox')?.value || '';
+  if(!body.trim() || body===lastEvalText) return;
+  lastEvalText = body;
+  aiEvaling = true;
+  try{
+    const res = await fetch(EVAL_EP, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ bodyText: body, originalComplaint: $('rawTxt').value.trim(), mType: mType||'normal' })
+    });
+    if(!res.ok) throw new Error('채점 API '+res.status);
+    const d = await res.json();
+    aiEvalDeducts = {
+      privacy: d.privacy?.triggered || false,
+      jurisdiction: d.jurisdiction?.triggered || false,
+      passBuck: d.passBuck?.triggered || false,
+      refOnly: d.refOnly?.triggered || false,
+    };
+    aiEvalDeducts._evidence = {
+      privacy: d.privacy?.evidence,
+      jurisdiction: d.jurisdiction?.evidence,
+      passBuck: d.passBuck?.evidence,
+      refOnly: d.refOnly?.evidence,
+    };
+    const sc = calcScore();
+    syncMini(sc); updateHint(sc);
+    $('sVal')&&($('sVal').textContent=sc.total);
+  }catch(e){
+    console.warn('AI 채점 실패', e.message);
+  }
+  aiEvaling = false;
 }
 
 function pick1(v){isPublic=v;$('cPub').classList.toggle('sel',v);$('cPrv').classList.toggle('sel',!v);$('sl2').textContent=v?'신청번호(해당없음)':'신청번호 명시';$('sd2').textContent=v?'공개용 — 기재 안 함':'비공개 — 기재 필요';$('ml2').textContent=v?'신청번호(해당없음)':'신청번호 명시';setTimeout(()=>goTo(3),280);}
@@ -925,6 +1103,8 @@ function pickInfo(v){
   }
 }
 function pick3(v){wSurvey=v;$('cSY').classList.toggle('sel',v);$('cSN').classList.toggle('sel',!v);setTimeout(()=>trans(curScr,'s5',5),280);}
+
+function toggleCoop(v){coopEnabled=!!v;}
 
 /* 라이브 텍스트 타이핑 */
 const liveTexts=[
@@ -952,17 +1132,22 @@ async function runAnalysis(){
     if(!raw)throw new Error('no raw');
     /* ★ 프리페치가 있으면 재사용, 없으면 새로 호출 */
     let d;
+    const payload={text:raw, mType:mType||'normal', cooperation:{enabled:coopEnabled}};
     if(prefetchPromise){
       d=await prefetchPromise;
       prefetchPromise=null;
       if(!d)throw new Error('프리페치 실패');
     }else{
-      const res=await fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw})});
+      const res=await fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       if(!res.ok)throw new Error('서버오류');d=await res.json();
     }
     if(d.error)throw new Error(d.error);
-    await pp;aiSum=d.summary||'';aiDraft=typeof d.draft==='string'?d.draft:'';
-  }catch(e){await pp.catch(()=>{});aiSum='';aiDraft='';toast('AI 실패 → 빈 초안으로 진행','⚠️');}
+    await pp;
+    aiSum=d.summary||'';
+    aiDraft=typeof d.draft==='string'?d.draft:'';
+    aiLaws=Array.isArray(d.laws)?d.laws:[];
+    unverifiedLaws=Array.isArray(d.unverifiedLaws)?d.unverifiedLaws:[];
+  }catch(e){await pp.catch(()=>{});aiSum='';aiDraft='';aiLaws=[];unverifiedLaws=[];toast('AI 실패 → 빈 초안으로 진행','⚠️');}
   showScore();await delay(200);await runScoreShow();
 }
 
@@ -1075,11 +1260,34 @@ function calcScore(){
     : '3가지 모두 안내 (+20점)';
 
   const bonus=wSurvey?8:0;
+
+  // v2: 전개부 '성실답변' 기본 20 - AI 감점
+  let sincerity = 20;
+  if(aiEvalDeducts.privacy) sincerity -= 20;
+  if(aiEvalDeducts.jurisdiction) sincerity -= 10;
+  if(aiEvalDeducts.passBuck) sincerity -= 10;
+  if(aiEvalDeducts.refOnly) sincerity -= 10;
+  sincerity = Math.max(0, sincerity);
+
+  // 전개부: 민원요지 10 + 가독성 20 + 성실답변(가변)
+  const s2 = 10 + 20 + sincerity;
+
+  // v2: 협조민원 감점
+  let coopPenalty = 0;
+  if(coopEnabled){
+    const allOk = coopChecks.included && coopChecks.integrated && coopChecks.adapted;
+    coopPenalty = allOk ? 0 : -30;
+  }
+
+  const rawTotal = 10+(cp?10:0)+10 + s2 + cPts + bonus + coopPenalty;
+  const total = Math.max(0, Math.min(100+bonus, rawTotal));
+
   return{
     case2:{pass:cp,na},
     contact:{pass:cPts>0,pts:cPts,label:cLbl,rc,deptOk,nameOk,phoneOk},
-    s1:10+(cp?10:0)+10, s2:50, s3:cPts, bonus,
-    total:Math.min(100, 10+(cp?10:0)+10+50+cPts+bonus)
+    sincerity,
+    s1:10+(cp?10:0)+10, s2, s3:cPts, bonus, coopPenalty,
+    total
   };
 }
 
@@ -1116,6 +1324,20 @@ function syncMini(sc){
   const m8=$('mi8');m8.classList.remove('pass','fail','bonus');
   if(wSurvey){m8.classList.add('bonus');m8.querySelector('.mciic').textContent='⭐';}else{m8.classList.add('fail');m8.querySelector('.mciic').textContent='✕';}
   $('mc8').textContent=wSurvey?'+'+sc.bonus+'점':'0점';$('mp4').textContent=sc.bonus>0?'+'+sc.bonus+'점':'0점';
+  /* v2: 전개부 점수 동적 갱신 (민원요지 10 + 가독성 20 + 성실답변 가변) */
+  const mp2=$('mp2'); if(mp2){mp2.textContent=sc.s2+'/50점';mp2.classList.toggle('full',sc.s2===50);}
+  /* v2: 협조민원 블록 동기화 (renderCoopUi의 onCoopCheckChange와 별개로 표시) */
+  if(coopEnabled){
+    $('coopSblock').style.display='block';
+    const allOk = coopChecks.included && coopChecks.integrated && coopChecks.adapted;
+    const mci=$('miCoop');
+    if(mci){mci.classList.remove('pass','fail');mci.classList.add(allOk?'pass':'fail');mci.querySelector('.mciic').textContent=allOk?'✓':'✕';}
+    $('mcCoop').textContent = allOk ? '0' : '-30';
+    $('mcCoop').style.color = allOk ? 'var(--green)' : 'var(--red)';
+    $('mpCoop').textContent = allOk ? '0점' : '-30점';
+  } else {
+    $('coopSblock').style.display='none';
+  }
   const t=sc.total;$('mRing').style.strokeDashoffset=170-(170*(t/100));$('mRing').style.stroke=t>=80?'#00cfc0':t>=60?'url(#sg)':'#f5a000';
   cntUp('mNum',parseInt($('mNum').textContent)||0,t,400);
   $('mGr').textContent=(t>=100?'🏆 만점!':t>=90?'🏆 최우수':t>=80?'🥇 우수':t>=65?'🥈 양호':'🔧 보완')+' · '+t+'점';
@@ -1137,8 +1359,29 @@ function updateHint(sc){
   if(sc.contact.rc===2)
     hints.push('<div class="hline" style="color:var(--amber);">💡 2가지 안내(+14점) → 1가지 더 입력하면 만점</div>');
 
+  /* v2: AI 감점 (성실답변 차감) */
+  const ev = aiEvalDeducts._evidence || {};
+  if(aiEvalDeducts.privacy)
+    hints.push(`<div class="hline"><span class="wtx">⚠ 제3자 개인정보/영업비밀</span> — -20점${ev.privacy?'<br/><span style="font-size:.82em;opacity:.75;">"'+escHtml(ev.privacy.slice(0,80))+'"</span>':''}</div>`);
+  if(aiEvalDeducts.jurisdiction)
+    hints.push(`<div class="hline"><span class="wtx">⚠ 소관 아님 안내 누락</span> — -10점${ev.jurisdiction?'<br/><span style="font-size:.82em;opacity:.75;">"'+escHtml(ev.jurisdiction.slice(0,80))+'"</span>':''}</div>`);
+  if(aiEvalDeducts.passBuck)
+    hints.push(`<div class="hline"><span class="wtx">⚠ 떠넘기기 답변</span> — -10점${ev.passBuck?'<br/><span style="font-size:.82em;opacity:.75;">"'+escHtml(ev.passBuck.slice(0,80))+'"</span>':''}</div>`);
+  if(aiEvalDeducts.refOnly)
+    hints.push(`<div class="hline"><span class="wtx">⚠ 기존 답변 참고 안내</span> — -10점${ev.refOnly?'<br/><span style="font-size:.82em;opacity:.75;">"'+escHtml(ev.refOnly.slice(0,80))+'"</span>':''}</div>`);
+
+  /* v2: 협조민원 자가체크 미완료 */
+  if(coopEnabled){
+    const allOk = coopChecks.included && coopChecks.integrated && coopChecks.adapted;
+    if(!allOk){
+      hints.push('<div class="hline"><span class="wtx">⚠ 협조민원 자가체크 미완료</span> — -30점 (3개 항목 모두 체크 필요)</div>');
+    }
+  }
+
   const hb=$('hintBlock'),ht=$('hbTitle');
-  const hasWarn=!sc.case2.pass&&!sc.case2.na || !sc.contact.deptOk || !sc.contact.nameOk || !sc.contact.phoneOk;
+  const hasAiDeduct = aiEvalDeducts.privacy||aiEvalDeducts.jurisdiction||aiEvalDeducts.passBuck||aiEvalDeducts.refOnly;
+  const coopBad = coopEnabled && !(coopChecks.included && coopChecks.integrated && coopChecks.adapted);
+  const hasWarn = !sc.case2.pass&&!sc.case2.na || !sc.contact.deptOk || !sc.contact.nameOk || !sc.contact.phoneOk || hasAiDeduct || coopBad;
   if(hints.length&&hasWarn){hb.className='hblock warn';ht.className='hbtitle warn';ht.innerHTML='<div class="rdot"></div>감점 항목 발견';$('hintLines').innerHTML=hints.join('');}
   else if(hints.length){hb.className='hblock';ht.className='hbtitle';ht.innerHTML='💡 추가 입력 가능';$('hintLines').innerHTML=hints.join('');}
   else{hb.className='hblock ok';ht.className='hbtitle ok';ht.innerHTML='✅ 감점 없음';$('hintLines').innerHTML='<div class="hline"><span class="oktx">모든 항목 충족!</span></div>';}
@@ -1199,14 +1442,22 @@ let rsR=false;
 async function reScan(){if(rsR)return;rsR=true;const ico=$('rIco');if(ico)ico.style.animation='spin .5s linear infinite';const sc=calcScore();for(let i=1;i<=8;i++){const e=$('mi'+i);if(!e)continue;e.classList.add('blink-pending');await delay(80);e.classList.remove('blink-pending');}syncMini(sc);updateHint(sc);$('sVal')&&($('sVal').textContent=sc.total);if(ico)ico.style.animation='';rsR=false;toast('재채점 완료! '+sc.total+'점','📊');blinkFailsPersistent(sc);}
 
 async function doReGen(){const sc=calcScore();const tpl=buildTpl();curResult=tpl;$('liveDot').style.display='inline-block';await typeIn($('resBox'),tpl);$('liveDot').style.display='none';syncMini(sc);updateHint(sc);}
-function onEdit(){const b=$('resBox');if(!b)return;curResult=b.value;$('resCt').textContent=b.value.length+'자';}
+function onEdit(){
+  const b=$('resBox');if(!b)return;
+  curResult=b.value;
+  $('resCt').textContent=b.value.length+'자';
+  /* v2: 본문 편집 시 AI 실시간 재채점 (debounce 2초) */
+  scheduleAiEvaluate();
+}
 function doCopy(){const b=$('resBox');const t=b?b.value:curResult;if(!t?.trim()){toast('먼저 서식을 생성해주세요','⚠️');return;}if(navigator.clipboard?.writeText){navigator.clipboard.writeText(t).then(()=>toast('복사됐어요! 📋','📋')).catch(()=>lcp(t));return;}lcp(t);}
 function lcp(t){const b=$('resBox');if(b){b.focus();b.select();try{if(document.execCommand('copy')){toast('복사됐어요! 📋','📋');return;}}catch(e){}}const ta=document.createElement('textarea');Object.assign(ta.style,{position:'fixed',top:'0',left:'0',width:'2px',height:'2px',opacity:'0'});ta.value=t;document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');toast('복사됐어요! 📋','📋');}catch{toast('Ctrl+C로 복사해주세요','⚠️');}document.body.removeChild(ta);}
 async function typeIn(el,tpl){el.value='';$('resCt').textContent='0자';const chars=[...tpl];let i=0;await new Promise(res=>{const go=()=>{if(i<chars.length){el.value+=chars[i++];$('resCt').textContent=el.value.length+'자';setTimeout(go,i<80?4:1);}else res();};go();});curResult=el.value;}
 function cntUp(id,from,to,dur){const el=$(id);if(!el)return;let t=0;const iv=16;const tid=setInterval(()=>{t+=iv;el.textContent=Math.min(Math.round(from+(to-from)*(t/dur)),to);if(t>=dur){el.textContent=to;clearInterval(tid);}},iv);}
 
 function restart(){
-  isPublic=null;mType='normal';wSurvey=null;aiSum='';aiDraft='';curResult='';inSplit=false;prefetchPromise=null;
+  isPublic=false;mType='normal';wSurvey=null;aiSum='';aiDraft='';curResult='';inSplit=false;prefetchPromise=null;
+  coopEnabled=false;coopChecks={included:false,integrated:false,adapted:false};
+  aiLaws=[];unverifiedLaws=[];aiEvalDeducts={privacy:false,jurisdiction:false,passBuck:false,refOnly:false};
   $('rawTxt').value='';
   ['dCase','dOrg','dDept','dName','dPhone','rCase','rOrg','rDept','rName','rPhone'].forEach(id=>{const e=$(id);if(e)e.value='';});
   /* 깜빡임 클래스 전부 제거 */
