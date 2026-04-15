@@ -215,7 +215,8 @@ async function fetchLawBody(lawId, cache) {
 
   const parsed = {
     lawId: base.법령ID || lawId,
-    mst: (law.법령키 || '').slice(0, 6), // 법령일련번호 대용
+    // mst(법령일련번호)는 lawService 응답에 직접 없음 — eflaw/aiSearch에서 받은 값을 상위 파이프라인에서 주입
+    mst: null,
     name: base.법령명_한글 || '',
     shortName: base.법령명약칭 || '',
     kind: base.법종구분?.content || '',
