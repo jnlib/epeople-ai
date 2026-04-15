@@ -102,24 +102,23 @@ body{font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--bg
   transition:opacity .36s cubic-bezier(.22,1,.36,1),transform .36s cubic-bezier(.22,1,.36,1);transform:translateX(36px);}
 .split3.show{opacity:1;pointer-events:all;transform:none;}
 .split3.out{opacity:0;pointer-events:none;transform:translateX(-36px);}
-.col-score{width:300px;flex-shrink:0;overflow-y:auto;padding:14px;border-right:1px solid var(--brd);background:rgba(255,255,255,.88);backdrop-filter:blur(16px);}
-.col-score::-webkit-scrollbar{width:3px;}
-.col-center{width:260px;flex-shrink:0;overflow-y:auto;padding:14px;border-right:1px solid var(--brd);background:rgba(244,249,255,.9);backdrop-filter:blur(16px);}
-.col-result{flex:1;min-width:0;overflow:hidden;padding:16px 18px;display:flex;flex-direction:column;background:rgba(255,255,255,.97);}
-.col-law{width:320px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-left:1px solid var(--brd);background:rgba(240,250,255,.85);backdrop-filter:blur(16px);}
+.col-score{width:320px;flex-shrink:0;overflow-y:auto;padding:14px;border-right:1px solid var(--brd);background:rgba(255,255,255,.88);backdrop-filter:blur(16px);}
+.col-score::-webkit-scrollbar{width:4px;}
+.col-score::-webkit-scrollbar-thumb{background:rgba(0,207,192,.2);border-radius:4px;}
+.col-result{flex:1;min-width:0;overflow:hidden;padding:18px 22px;display:flex;flex-direction:column;background:rgba(255,255,255,.97);}
+.col-law{width:340px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-left:1px solid var(--brd);background:rgba(240,250,255,.85);backdrop-filter:blur(16px);}
 .col-law::-webkit-scrollbar{width:4px;}
 .col-law::-webkit-scrollbar-thumb{background:rgba(0,207,192,.22);border-radius:4px;}
-@media(max-width:1180px){
-  .col-law{width:280px;}
-  .col-center{width:240px;}
-  .col-score{width:280px;}
+@media(max-width:1280px){
+  .col-law{width:300px;}
+  .col-score{width:300px;}
 }
-@media(max-width:1000px){
+@media(max-width:1080px){
   .split3{flex-direction:column;overflow-y:auto;}
-  .col-score,.col-center,.col-law{width:100%;border-right:none;border-left:none;border-bottom:1px solid var(--brd);}
-  .col-score{max-height:380px;}.col-center{max-height:420px;}
+  .col-score,.col-law{width:100%;border-right:none;border-left:none;border-bottom:1px solid var(--brd);}
+  .col-score{max-height:400px;}
   .col-law{max-height:400px;}
-  .col-result{flex:1;min-height:500px;}
+  .col-result{flex:1;min-height:520px;}
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -278,6 +277,72 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
 .coopck-i span{font-size:.78em;color:var(--text2);line-height:1.55;}
 .coopck-f{margin-top:7px;font-size:.7em;color:var(--muted);text-align:center;}
 .coopck-f b{color:var(--red);}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   💬 말풍선 편집 팝오버 (v2)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.rb-pop{position:fixed;background:var(--white);border:2px solid var(--teal);border-radius:14px;padding:18px 20px;box-shadow:0 16px 48px rgba(7,33,58,.18);z-index:1200;min-width:280px;max-width:360px;animation:popIn .22s cubic-bezier(.22,1,.36,1);}
+.rb-pop.wide{min-width:420px;max-width:520px;max-height:80vh;overflow-y:auto;}
+.rb-pop::before{content:'';position:absolute;left:-12px;top:24px;width:0;height:0;border-top:11px solid transparent;border-bottom:11px solid transparent;border-right:12px solid var(--teal);}
+.rb-pop::after{content:'';position:absolute;left:-9px;top:26px;width:0;height:0;border-top:9px solid transparent;border-bottom:9px solid transparent;border-right:10px solid var(--white);}
+.rb-pop.pop-left::before{left:auto;right:-12px;border-right:none;border-left:12px solid var(--teal);}
+.rb-pop.pop-left::after{left:auto;right:-9px;border-right:none;border-left:10px solid var(--white);}
+.rb-pop.pop-center::before,.rb-pop.pop-center::after{display:none;}
+@keyframes popIn{from{opacity:0;transform:translateX(-8px) scale(.96);}to{opacity:1;transform:none;}}
+
+.rb-pop-t{font-size:1em;font-weight:900;color:var(--navy);margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.rb-pop-d{font-size:.78em;color:var(--muted);margin-bottom:14px;line-height:1.55;}
+.rb-pop-sec{margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed rgba(0,207,192,.18);}
+.rb-pop-sec:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.rb-pop-sec-t{font-size:.88em;font-weight:800;color:var(--navy2);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.rb-pop-sec-pts{font-size:.78em;font-weight:900;padding:2px 9px;border-radius:10px;background:rgba(240,48,96,.1);color:var(--red);}
+.rb-pop-sec-pts.ok{background:rgba(0,196,122,.1);color:var(--green);}
+.rb-pop-sec-pts.na{background:rgba(106,138,170,.12);color:var(--muted);}
+
+.rb-pop-field{margin-bottom:9px;}
+.rb-pop-label{font-size:.72em;font-weight:700;color:var(--muted);margin-bottom:4px;display:block;}
+.rb-pop-input{width:100%;padding:9px 12px;border:1.5px solid rgba(0,207,192,.2);border-radius:9px;font-family:inherit;font-size:.92em;color:var(--text);background:var(--bg);outline:none;transition:.15s;}
+.rb-pop-input:focus{border-color:var(--teal);background:var(--white);box-shadow:0 0 0 3px rgba(0,207,192,.12);}
+.rb-pop-hint{font-size:.72em;color:var(--muted);margin-top:4px;line-height:1.5;}
+
+.rb-pop-check{display:flex;gap:10px;padding:9px 11px;border:1.5px solid rgba(0,207,192,.15);border-radius:10px;cursor:pointer;margin-bottom:6px;transition:.15s;background:var(--bg);}
+.rb-pop-check:hover{border-color:var(--teal);background:rgba(0,207,192,.04);}
+.rb-pop-check input{accent-color:var(--teal);width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer;}
+.rb-pop-check-txt{font-size:.82em;color:var(--text2);line-height:1.5;flex:1;}
+
+.rb-pop-toggle{display:inline-flex;align-items:center;gap:10px;padding:9px 14px;border:1.5px solid rgba(49,130,255,.25);border-radius:10px;background:var(--bg);cursor:pointer;font-size:.88em;font-weight:700;color:var(--text2);transition:.15s;}
+.rb-pop-toggle.on{background:linear-gradient(135deg,rgba(49,130,255,.1),rgba(0,207,192,.06));border-color:var(--blue);color:var(--blue2);}
+.rb-pop-toggle-dot{width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.2s;}
+.rb-pop-toggle.on .rb-pop-toggle-dot{background:var(--blue);box-shadow:0 0 0 3px rgba(49,130,255,.18);}
+
+.rb-pop-evidence{background:rgba(240,48,96,.05);border-left:3px solid var(--red);padding:9px 11px;border-radius:7px;margin:7px 0;font-size:.78em;line-height:1.55;color:var(--text2);}
+.rb-pop-evidence b{color:var(--red);display:block;margin-bottom:3px;font-size:.96em;}
+.rb-pop-evidence i{color:var(--muted);font-style:normal;font-size:.94em;}
+
+.rb-pop-btns{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,207,192,.12);}
+.rb-pop-btn{flex:1;padding:10px 14px;border:none;border-radius:9px;font-family:inherit;font-size:.88em;font-weight:800;cursor:pointer;transition:.15s;}
+.rb-pop-btn.primary{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;box-shadow:0 3px 10px rgba(0,207,192,.22);}
+.rb-pop-btn.primary:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(0,207,192,.28);}
+.rb-pop-btn.ghost{background:var(--bg);color:var(--muted);border:1px solid rgba(106,138,170,.2);}
+.rb-pop-btn.ghost:hover{background:var(--bg2);color:var(--text2);}
+.rb-pop-close{position:absolute;top:10px;right:12px;width:24px;height:24px;border:none;background:transparent;color:var(--muted);font-size:1.2em;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.15s;}
+.rb-pop-close:hover{background:rgba(240,48,96,.1);color:var(--red);}
+
+.rb-pop-preview{margin:12px 0;padding:11px 13px;background:linear-gradient(135deg,rgba(0,207,192,.06),rgba(49,130,255,.05));border-radius:10px;font-size:.86em;font-weight:700;color:var(--text2);display:flex;justify-content:space-between;align-items:center;}
+.rb-pop-preview b{font-size:1.15em;color:var(--teal2);font-family:'Orbitron',monospace;}
+
+/* 클릭 가능한 채점표 항목 */
+.mci.clickable{cursor:pointer;transition:.18s;}
+.mci.clickable:hover{border-color:var(--teal);transform:translateX(2px);box-shadow:0 3px 10px rgba(0,207,192,.12);}
+.mci.clickable:active{transform:translateX(0);}
+
+/* 일괄 수정 배너 */
+.bulk-fix-bar{margin:10px 0 14px;padding:11px 13px;background:linear-gradient(135deg,rgba(240,48,96,.09),rgba(245,160,0,.08));border:1.5px solid rgba(240,48,96,.22);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;animation:bulkPulse 2s ease-in-out infinite;}
+@keyframes bulkPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,48,96,.15);}50%{box-shadow:0 0 0 6px rgba(240,48,96,0);}}
+.bulk-fix-txt{font-size:.82em;font-weight:800;color:#a82040;display:flex;align-items:center;gap:7px;}
+.bulk-fix-txt b{font-size:1.1em;color:var(--red);}
+.bulk-fix-btn{padding:8px 14px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--red),#c41e4a);color:#fff;font-family:inherit;font-size:.82em;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(240,48,96,.28);transition:.15s;white-space:nowrap;}
+.bulk-fix-btn:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(240,48,96,.38);}
 
 /* 관련 법령 카드 (v2, col-law 맨 오른쪽 컬럼) */
 .lawpanel{margin-top:14px;}
@@ -857,55 +922,51 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
       <div class="mring"><svg viewBox="0 0 66 66"><circle class="mrt2" cx="33" cy="33" r="27"/><circle class="mrf2" id="mRing" cx="33" cy="33" r="27"/></svg><div class="mrc2"><div class="mrn2" id="mNum">0</div><div class="mrm2">/100점</div></div></div>
       <div class="minfo2"><div class="mgr2" id="mGr">-</div><div class="msub2" id="mSub"></div></div>
     </div>
+    <!-- 일괄 수정 배너 (감점 2개 이상 시 표시) -->
+    <div class="bulk-fix-bar" id="bulkFixBar" style="display:none;">
+      <div class="bulk-fix-txt">⚠️ 감점 <b id="bulkFixCount">0</b>개 항목</div>
+      <button class="bulk-fix-btn" onclick="openBulkPop()">✏️ 한 번에 수정</button>
+    </div>
     <div class="sblock">
       <div class="sbtitle"><span>🏁 도입부</span><span class="mcpts" id="mp1">0/30점</span></div>
-      <div class="mci pass" id="mi1"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">인사말</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
-      <div class="mci" id="mi2"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl" id="ml2">신청번호</div></div><div class="mcir"><div class="mcipts" id="mc2">—</div><div class="mna" id="mn2" style="display:none;">해당없음</div></div></div>
-      <div class="mci pass" id="mi3"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl" id="ml3">일반민원</div></div><div class="mcir"><div class="mcipts" id="mc3" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
+      <div class="mci pass clickable" id="mi1" onclick="openItemPop('greeting', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">인사말</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
+      <div class="mci clickable" id="mi2" onclick="openItemPop('caseNumber', this)"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl" id="ml2">신청번호</div></div><div class="mcir"><div class="mcipts" id="mc2">—</div><div class="mna" id="mn2" style="display:none;">해당없음</div></div></div>
+      <div class="mci pass clickable" id="mi3" onclick="openItemPop('routing', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl" id="ml3">일반민원</div></div><div class="mcir"><div class="mcipts" id="mc3" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
     </div>
     <div class="sblock">
       <div class="sbtitle"><span>📋 전개부</span><span class="mcpts full" id="mp2">50/50점</span></div>
-      <div class="mci pass"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">민원 요지</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
-      <div class="mci pass"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">가독성</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+20점</div></div></div>
-      <div class="mci pass"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">성실 답변</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+20점</div></div></div>
+      <div class="mci pass clickable" id="mi4" onclick="openItemPop('summary', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">민원 요지</div></div><div class="mcir"><div class="mcipts" id="mc4" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
+      <div class="mci pass clickable" id="mi5" onclick="openItemPop('readability', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">가독성</div></div><div class="mcir"><div class="mcipts" id="mc5" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+20점</div></div></div>
+      <div class="mci pass clickable" id="mi6" onclick="openItemPop('sincerity', this)"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">성실 답변</div></div><div class="mcir"><div class="mcipts" id="mc6" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+20점</div></div></div>
     </div>
     <div class="sblock">
       <div class="sbtitle"><span>🏷️ 종결부</span><span class="mcpts" id="mp3">0/20점</span></div>
-      <div class="mci" id="mi7"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">담당자 정보</div><div class="mcidesc" id="ml7">대기중</div></div><div class="mcir"><div class="mcipts" id="mc7">0점</div></div></div>
+      <div class="mci clickable" id="mi7" onclick="openItemPop('contact', this)"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">담당자 정보</div><div class="mcidesc" id="ml7">대기중</div></div><div class="mcir"><div class="mcipts" id="mc7">0점</div></div></div>
     </div>
     <div class="sblock">
       <div class="sbtitle"><span>⭐ 가점</span><span class="mcpts" id="mp4">+0점</span></div>
-      <div class="mci" id="mi8"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">만족도 유도</div></div><div class="mcir"><div class="mcipts" id="mc8">—</div></div></div>
+      <div class="mci clickable" id="mi8" onclick="openItemPop('satisfaction', this)"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">만족도 유도</div></div><div class="mcir"><div class="mcipts" id="mc8">—</div></div></div>
     </div>
     <!-- 협조민원 감점 (v2, 체크 시만 표시) -->
     <div class="sblock" id="coopSblock" style="display:none;">
       <div class="sbtitle"><span>🔗 협조민원</span><span class="mcpts" id="mpCoop">-30점</span></div>
-      <div class="mci" id="miCoop"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">자가 체크리스트</div><div class="mcidesc" id="mlCoop">3개 체크 필요</div></div><div class="mcir"><div class="mcipts" id="mcCoop">-30</div></div></div>
+      <div class="mci clickable" id="miCoop" onclick="openItemPop('cooperation', this)"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">자가 체크리스트</div><div class="mcidesc" id="mlCoop">3개 체크 필요</div></div><div class="mcir"><div class="mcipts" id="mcCoop">-30</div></div></div>
     </div>
   </div>
-  <div class="col-center">
-    <div style="font-size:.98em;font-weight:900;color:var(--navy);margin-bottom:11px;">⚠️ 감점 분석</div>
-    <div class="hblock" id="hintBlock"><div class="hbtitle" id="hbTitle">분석중...</div><div id="hintLines"></div></div>
-
-    <!-- 협조민원 자가 체크 (v2, 체크 시만 표시) -->
-    <div class="coopck" id="coopChecklist" style="display:none;">
-      <div class="coopck-t">⚠️ 협조민원 자가 확인</div>
-      <div class="coopck-s">협조기관 답변의 처리 여부는 작성자만 알 수 있습니다. 3개 모두 확인 후 체크해 주세요.</div>
-      <label class="coopck-i"><input type="checkbox" id="coopCk1" onchange="onCoopCheckChange()"/><span>① 협조기관의 답변을 본문에 포함하였습니다</span></label>
-      <label class="coopck-i"><input type="checkbox" id="coopCk2" onchange="onCoopCheckChange()"/><span>② 단순 나열이나 복붙이 아닌 종합정리 형태로 재구성하였습니다</span></label>
-      <label class="coopck-i"><input type="checkbox" id="coopCk3" onchange="onCoopCheckChange()"/><span>③ 민원인의 질문에 맞추어 자연스럽게 녹여냈습니다</span></label>
-      <div class="coopck-f">3개 모두 체크: <b>감점 없음</b> · 하나라도 미체크: <b>-30점</b></div>
-    </div>
-
-    <div style="font-size:.98em;font-weight:900;color:var(--navy);margin:13px 0 9px;">📝 기본정보 수정</div>
-    <div class="dblock">
-      <div class="dbtitle">담당자 정보 입력</div>
-      <div class="di"><div class="dil">민원 신청번호</div><input type="text" id="rCase" placeholder="1AA-2504-0000000 (선택)" oninput="onInfoInput('rCase')"/></div>
-      <div class="di"><div class="dil">소속 기관명</div><input type="text" id="rOrg" placeholder="서울특별시교육청" oninput="onInfoInput('rOrg')"/></div>
-      <div class="di"><div class="dil">소속 부서</div><input type="text" id="rDept" placeholder="OOO과" oninput="onInfoInput('rDept')"/></div>
-      <div class="di"><div class="dil">담당 주무관</div><input type="text" id="rName" placeholder="홍길동" oninput="onInfoInput('rName')"/></div>
-      <div class="di"><div class="dil">전화번호</div><input type="text" id="rPhone" placeholder="02-0000-0000" inputmode="tel" oninput="onInfoInput('rPhone')"/></div>
-      <button class="abtn" onclick="doApply()">✅ 반영 &amp; 재채점</button>
+  <!-- v2: col-center 제거 (감점분석·기본정보수정은 말풍선으로 이전)
+       기존 입력 필드들은 말풍선이 값을 읽고 쓰기 때문에 숨김 처리해서 DOM에 남김 -->
+  <div id="hiddenFields" style="display:none;">
+    <input type="text" id="rCase"/>
+    <input type="text" id="rOrg"/>
+    <input type="text" id="rDept"/>
+    <input type="text" id="rName"/>
+    <input type="text" id="rPhone"/>
+    <!-- 숨김: 현재 사용 안 하지만 호환용 -->
+    <div class="hblock" id="hintBlock"><div class="hbtitle" id="hbTitle"></div><div id="hintLines"></div></div>
+    <div id="coopChecklist">
+      <input type="checkbox" id="coopCk1" onchange="onCoopCheckChange()"/>
+      <input type="checkbox" id="coopCk2" onchange="onCoopCheckChange()"/>
+      <input type="checkbox" id="coopCk3" onchange="onCoopCheckChange()"/>
     </div>
   </div>
   <div class="col-result">
@@ -1047,6 +1108,553 @@ function renderLaws(){
 }
 
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ═══════════════════════════════════════════════════════════════
+   💬 말풍선 시스템 — v2
+   클릭 시 편집 말풍선, 외부 클릭/ESC로 닫힘
+═══════════════════════════════════════════════════════════════ */
+let openedPop = null;
+
+function openPop(contentHtml, anchorEl, opts={}){
+  closePop();
+  const pop = document.createElement('div');
+  pop.className = 'rb-pop' + (opts.wide?' wide':'');
+  pop.innerHTML = contentHtml;
+  document.body.appendChild(pop);
+
+  // 위치 계산 — 기본 앵커 오른쪽, 공간 없으면 왼쪽 or 중앙
+  if(anchorEl){
+    const r = anchorEl.getBoundingClientRect();
+    const pr = pop.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    let left = r.right + 14;
+    let top = Math.max(12, r.top - 10);
+    if(left + pr.width > vw - 12){
+      // 오른쪽 공간 부족 → 왼쪽에 띄움
+      left = r.left - pr.width - 14;
+      pop.classList.add('pop-left');
+      if(left < 12){
+        // 왼쪽도 부족 → 화면 중앙
+        left = (vw - pr.width) / 2;
+        pop.classList.remove('pop-left');
+        pop.classList.add('pop-center');
+        top = Math.max(12, (vh - pr.height) / 2);
+      }
+    }
+    if(top + pr.height > vh - 12) top = Math.max(12, vh - pr.height - 12);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+  } else {
+    // 중앙 표시
+    pop.classList.add('pop-center');
+    const pr = pop.getBoundingClientRect();
+    pop.style.left = ((window.innerWidth - pr.width)/2) + 'px';
+    pop.style.top = ((window.innerHeight - pr.height)/2) + 'px';
+  }
+
+  openedPop = pop;
+  // 다음 tick에 바인딩 (현재 클릭 이벤트가 닫지 않도록)
+  setTimeout(()=>{document.addEventListener('mousedown', onPopOutside);},10);
+
+  // 첫 입력 필드 포커스
+  setTimeout(()=>{const first=pop.querySelector('input[type=text], input[type=tel], input:not([type]), textarea'); if(first)first.focus();},50);
+}
+
+function closePop(){
+  if(openedPop){ openedPop.remove(); openedPop=null; }
+  document.removeEventListener('mousedown', onPopOutside);
+}
+
+function onPopOutside(e){
+  if(openedPop && !openedPop.contains(e.target)) closePop();
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closePop(); });
+
+/* ═════ 항목별 말풍선 콘텐츠 ═════ */
+function openItemPop(key, anchor){
+  const sc = calcScore();
+  const item = sc.items[key];
+  if(!item) return;
+
+  let html = '';
+  const badge = item.ok ? '<span class="rb-pop-sec-pts ok">✓ 만점</span>'
+               : item.na ? '<span class="rb-pop-sec-pts na">해당없음</span>'
+               : `<span class="rb-pop-sec-pts">${item.pts}/${item.max}</span>`;
+
+  if(key==='caseNumber'){
+    html = `
+      <button class="rb-pop-close" onclick="closePop()">✕</button>
+      <div class="rb-pop-t">📝 민원신청번호 ${badge}</div>
+      <div class="rb-pop-d">빈칸이면 -10점 · 형식 제한 없음</div>
+      <div class="rb-pop-field">
+        <label class="rb-pop-label">국민신문고 신청번호</label>
+        <input type="text" class="rb-pop-input" id="pop-rCase" value="${escHtml($('rCase').value)}" placeholder="예) 1AA-2504-1234567">
+        <div class="rb-pop-hint">입력만 하면 만점 +10점. 형식은 자유.</div>
+      </div>
+      <div class="rb-pop-btns">
+        <button class="rb-pop-btn ghost" onclick="closePop()">취소</button>
+        <button class="rb-pop-btn primary" onclick="savePop('caseNumber')">적용</button>
+      </div>`;
+  }
+  else if(key==='routing'){
+    if(item.na){
+      html = `
+        <button class="rb-pop-close" onclick="closePop()">✕</button>
+        <div class="rb-pop-t">📝 이첩/기피/소극행정 사유 <span class="rb-pop-sec-pts na">해당없음</span></div>
+        <div class="rb-pop-d">일반민원이므로 사유 안내가 필요하지 않습니다. (+10점 고정)</div>
+        <div class="rb-pop-hint">민원 유형이 이첩/기피/소극행정이면 사유 필드가 나타납니다.</div>
+        <div class="rb-pop-btns">
+          <button class="rb-pop-btn primary" onclick="closePop()">확인</button>
+        </div>`;
+    } else if(item.mType==='transfer'){
+      html = `
+        <button class="rb-pop-close" onclick="closePop()">✕</button>
+        <div class="rb-pop-t">📝 이첩민원 경로 안내 ${badge}</div>
+        <div class="rb-pop-d">이첩 경로 기재가 누락되면 -10점</div>
+        <div class="rb-pop-field">
+          <label class="rb-pop-label">이첩된 최초 기관</label>
+          <input type="text" class="rb-pop-input" id="pop-fromOrg" value="${escHtml($('fromOrg').value)}" placeholder="예) 대통령비서실">
+        </div>
+        <div class="rb-pop-btns">
+          <button class="rb-pop-btn ghost" onclick="closePop()">취소</button>
+          <button class="rb-pop-btn primary" onclick="savePop('routing')">적용</button>
+        </div>`;
+    } else if(item.mType==='avoid'){
+      html = `
+        <button class="rb-pop-close" onclick="closePop()">✕</button>
+        <div class="rb-pop-t">📝 기피신청 불수용 사유 ${badge}</div>
+        <div class="rb-pop-d">기피 부서와 불수용 사유 미안내 시 -10점</div>
+        <div class="rb-pop-field">
+          <label class="rb-pop-label">기피 대상 부서</label>
+          <input type="text" class="rb-pop-input" id="pop-avoidDept" value="${escHtml($('avoidDept').value)}" placeholder="예) 감사관실">
+        </div>
+        <div class="rb-pop-field">
+          <label class="rb-pop-label">불수용 사유</label>
+          <input type="text" class="rb-pop-input" id="pop-avoidReason" value="${escHtml($('avoidReason').value)}" placeholder="예) 업무 연속성">
+        </div>
+        <div class="rb-pop-btns">
+          <button class="rb-pop-btn ghost" onclick="closePop()">취소</button>
+          <button class="rb-pop-btn primary" onclick="savePop('routing')">적용</button>
+        </div>`;
+    } else if(item.mType==='passive'){
+      html = `
+        <button class="rb-pop-close" onclick="closePop()">✕</button>
+        <div class="rb-pop-t">📝 소극행정 감사부서 미처리 사유 ${badge}</div>
+        <div class="rb-pop-d">감사부서 미처리 사유가 누락되면 -10점</div>
+        <div class="rb-pop-field">
+          <label class="rb-pop-label">현업부서 답변 사유</label>
+          <input type="text" class="rb-pop-input" id="pop-passReason" value="${escHtml($('passReason').value)}" placeholder="예) 자체 종결 사안">
+        </div>
+        <div class="rb-pop-btns">
+          <button class="rb-pop-btn ghost" onclick="closePop()">취소</button>
+          <button class="rb-pop-btn primary" onclick="savePop('routing')">적용</button>
+        </div>`;
+    }
+  }
+  else if(key==='summary'){
+    html = `
+      <button class="rb-pop-close" onclick="closePop()">✕</button>
+      <div class="rb-pop-t">📝 민원 요지 ${badge}</div>
+      <div class="rb-pop-d">빈칸이면 -10점. 답변 3번 항목에 자동 삽입됨.</div>
+      <div class="rb-pop-hint">답변 영역의 따옴표 안에서 직접 편집하세요.</div>
+      <div class="rb-pop-btns">
+        <button class="rb-pop-btn ghost" onclick="closePop()">닫기</button>
+        <button class="rb-pop-btn primary" onclick="focusSumEdit()">✏️ 편집 영역으로 →</button>
+      </div>`;
+  }
+  else if(key==='readability'){
+    html = `
+      <button class="rb-pop-close" onclick="closePop()">✕</button>
+      <div class="rb-pop-t">📝 가독성 (구조화) ${badge}</div>
+      <div class="rb-pop-d">본문에 "가. / 나. / 다." 또는 "1. / 2. / 3." 등 구조 표지 2개 이상이 필요합니다.</div>
+      <div class="rb-pop-hint">현재 본문에서 감지된 마커: ${item.markers.length>0? item.markers.map(m=>`<b>${escHtml(m)}</b>`).join(' ') : '<span style="color:var(--red);">없음</span>'}</div>
+      <div class="rb-pop-btns">
+        <button class="rb-pop-btn ghost" onclick="closePop()">닫기</button>
+        <button class="rb-pop-btn primary" onclick="focusBodyEdit()">✏️ 본문으로 →</button>
+      </div>`;
+  }
+  else if(key==='sincerity'){
+    const d = item.deducts || {};
+    const ev = aiEvalDeducts._evidence || {};
+    const dList = [];
+    if(d.privacy)      dList.push({label:'제3자 개인정보·영업비밀', pen:-20, ev:ev.privacy});
+    if(d.jurisdiction) dList.push({label:'소관 아님 안내 누락', pen:-10, ev:ev.jurisdiction});
+    if(d.passBuck)     dList.push({label:'떠넘기기 답변', pen:-10, ev:ev.passBuck});
+    if(d.refOnly)      dList.push({label:'기존 답변 참고 안내', pen:-10, ev:ev.refOnly});
+
+    const evHtml = dList.length>0
+      ? dList.map(x=>`<div class="rb-pop-evidence"><b>⚠ ${escHtml(x.label)} ${x.pen}점</b>${x.ev?`<i>"${escHtml(x.ev.slice(0,120))}"</i>`:''}</div>`).join('')
+      : `<div class="rb-pop-hint" style="padding:14px 0;text-align:center;color:var(--muted);">${d===aiEvalDeducts && lastEvalText ? '✓ AI가 감점 항목을 발견하지 않았습니다' : '↺ 재채점 버튼을 눌러 AI 평가를 받으세요'}</div>`;
+
+    html = `
+      <button class="rb-pop-close" onclick="closePop()">✕</button>
+      <div class="rb-pop-t">📝 성실 답변 ${badge}</div>
+      <div class="rb-pop-d">기본 20점에서 AI가 감점 항목을 찾아 차감합니다.</div>
+      ${evHtml}
+      <div class="rb-pop-hint" style="margin-top:10px;">감점 항목이 있으면 <b>본문 편집</b> 후 <b>↺ 재채점</b>을 눌러주세요.</div>
+      <div class="rb-pop-btns">
+        <button class="rb-pop-btn ghost" onclick="closePop()">닫기</button>
+        ${dList.length>0?'<button class="rb-pop-btn primary" onclick="focusBodyEdit()">본문으로 →</button>':''}
+      </div>`;
+  }
+  else if(key==='contact'){
+    html = `
+      <button class="rb-pop-close" onclick="closePop()">✕</button>
+      <div class="rb-pop-t">📝 담당자 정보 ${badge}</div>
+      <div class="rb-pop-d">3가지 +20점 · 2가지 +14점 · 1가지 +8점 · 없음 0점</div>
+      <div class="rb-pop-field">
+        <label class="rb-pop-label">소속 기관</label>
+        <input type="text" class="rb-pop-input" id="pop-rOrg" value="${escHtml($('rOrg').value)}" placeholder="서울특별시교육청">
+      </div>
+      <div class="rb-pop-field">
+        <label class="rb-pop-label">소속 부서</label>
+        <input type="text" class="rb-pop-input" id="pop-rDept" value="${escHtml($('rDept').value)}" placeholder="예) 학생건강정책과">
+      </div>
+      <div class="rb-pop-field">
+        <label class="rb-pop-label">성명·직위</label>
+        <input type="text" class="rb-pop-input" id="pop-rName" value="${escHtml($('rName').value)}" placeholder="예) 홍길동 주무관">
+      </div>
+      <div class="rb-pop-field">
+        <label class="rb-pop-label">전화번호</label>
+        <input type="text" class="rb-pop-input" id="pop-rPhone" value="${escHtml($('rPhone').value)}" placeholder="02-1234-5678">
+      </div>
+      <div class="rb-pop-hint">기관 + 부서는 <b>둘 다 입력해야 1가지로 인정</b>됩니다.</div>
+      <div class="rb-pop-btns">
+        <button class="rb-pop-btn ghost" onclick="closePop()">취소</button>
+        <button class="rb-pop-btn primary" onclick="savePop('contact')">적용</button>
+      </div>`;
+  }
+  else if(key==='satisfaction'){
+    const on = wSurvey;
+    html = `
+      <button class="rb-pop-close" onclick="closePop()">✕</button>
+      <div class="rb-pop-t">⭐ 만족도 참여 유도 ${badge}</div>
+      <div class="rb-pop-d">체크 시 답변 말미에 만족도 유도 문구가 자동 포함됩니다 (+8점 가점)</div>
+      <div style="text-align:center;padding:10px 0;">
+        <div class="rb-pop-toggle ${on?'on':''}" id="pop-satToggle" onclick="toggleSatPop()">
+          <div class="rb-pop-toggle-dot"></div>
+          <span id="pop-satLabel">${on?'포함됨 (+8점)':'미포함'}</span>
+        </div>
+      </div>
+      <div class="rb-pop-btns">
+        <button class="rb-pop-btn primary" onclick="closePop()">확인</button>
+      </div>`;
+  }
+  else if(key==='cooperation'){
+    const c = coopChecks;
+    html = `
+      <button class="rb-pop-close" onclick="closePop()">✕</button>
+      <div class="rb-pop-t">🔗 협조민원 자가 확인 ${item.ok?'<span class="rb-pop-sec-pts ok">✓ 모두 체크</span>':'<span class="rb-pop-sec-pts">-30점</span>'}</div>
+      <div class="rb-pop-d">협조기관 답변의 처리 여부는 작성자만 알 수 있습니다. 3개 모두 확인하셨으면 체크해 주세요.</div>
+      <label class="rb-pop-check"><input type="checkbox" id="pop-c1" ${c.included?'checked':''} onchange="updateCoopPop()"><span class="rb-pop-check-txt">① 협조기관의 답변을 본문에 포함하였습니다</span></label>
+      <label class="rb-pop-check"><input type="checkbox" id="pop-c2" ${c.integrated?'checked':''} onchange="updateCoopPop()"><span class="rb-pop-check-txt">② 단순 나열이나 복붙이 아닌 종합정리 형태로 재구성하였습니다</span></label>
+      <label class="rb-pop-check"><input type="checkbox" id="pop-c3" ${c.adapted?'checked':''} onchange="updateCoopPop()"><span class="rb-pop-check-txt">③ 민원인의 질문에 맞추어 자연스럽게 녹여냈습니다</span></label>
+      <div class="rb-pop-hint" style="margin-top:8px;text-align:center;">3개 모두: <b style="color:var(--green);">감점 없음</b> · 하나라도 미체크: <b style="color:var(--red);">-30점</b></div>
+      <div class="rb-pop-btns">
+        <button class="rb-pop-btn primary" onclick="closePop()">확인</button>
+      </div>`;
+  }
+  else if(key==='greeting'){
+    html = `
+      <button class="rb-pop-close" onclick="closePop()">✕</button>
+      <div class="rb-pop-t">📝 인사말 ${badge}</div>
+      <div class="rb-pop-d">답변 1번 "안녕하십니까?..."는 템플릿으로 자동 생성되어 항상 만점입니다.</div>
+      <div class="rb-pop-btns">
+        <button class="rb-pop-btn primary" onclick="closePop()">확인</button>
+      </div>`;
+  }
+
+  if(html) openPop(html, anchor);
+}
+
+/* 말풍선 저장 핸들러 */
+function savePop(key){
+  if(key==='caseNumber'){
+    $('rCase').value = $('pop-rCase').value;
+  } else if(key==='routing'){
+    if(mType==='transfer') $('fromOrg').value = $('pop-fromOrg').value;
+    if(mType==='avoid'){ $('avoidDept').value = $('pop-avoidDept').value; $('avoidReason').value = $('pop-avoidReason').value; }
+    if(mType==='passive') $('passReason').value = $('pop-passReason').value;
+  } else if(key==='contact'){
+    $('rOrg').value = $('pop-rOrg').value;
+    $('rDept').value = $('pop-rDept').value;
+    $('rName').value = $('pop-rName').value;
+    $('rPhone').value = $('pop-rPhone').value;
+  }
+  closePop();
+  autoRescore();
+  toast('반영됐어요 ✅','✅');
+}
+
+function toggleSatPop(){
+  wSurvey = !wSurvey;
+  const t = $('pop-satToggle'); const l = $('pop-satLabel');
+  if(t){ t.classList.toggle('on', wSurvey); }
+  if(l){ l.textContent = wSurvey ? '포함됨 (+8점)' : '미포함'; }
+  autoRescore();
+}
+
+function updateCoopPop(){
+  coopChecks.included = !!$('pop-c1')?.checked;
+  coopChecks.integrated = !!$('pop-c2')?.checked;
+  coopChecks.adapted = !!$('pop-c3')?.checked;
+  autoRescore();
+}
+
+function focusSumEdit(){
+  closePop();
+  const el = $('sumEdit');
+  if(el){
+    el.focus();
+    // 커서 끝으로
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
+
+function focusBodyEdit(){
+  closePop();
+  const el = $('bodyEdit');
+  if(el){
+    el.focus();
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
+
+/* 감점 항목 개수 */
+function countDeductedItems(sc){
+  let n = 0;
+  if(!sc.items.caseNumber.ok) n++;
+  if(!sc.items.routing.ok && !sc.items.routing.na) n++;
+  if(!sc.items.summary.ok) n++;
+  if(!sc.items.readability.ok) n++;
+  if(!sc.items.sincerity.ok) n++;
+  if(!sc.items.contact.ok) n++;
+  if(sc.items.cooperation.enabled && !sc.items.cooperation.ok) n++;
+  // 만족도는 가점이라 감점 아님
+  return n;
+}
+
+/* 감점 항목 목록 반환 */
+function listDeductedItems(sc){
+  const list = [];
+  if(!sc.items.caseNumber.ok) list.push('caseNumber');
+  if(!sc.items.routing.ok && !sc.items.routing.na) list.push('routing');
+  if(!sc.items.summary.ok) list.push('summary');
+  if(!sc.items.readability.ok) list.push('readability');
+  if(!sc.items.sincerity.ok) list.push('sincerity');
+  if(!sc.items.contact.ok) list.push('contact');
+  if(sc.items.cooperation.enabled && !sc.items.cooperation.ok) list.push('cooperation');
+  return list;
+}
+
+/* ═════ 일괄 수정 큰 말풍선 ═════ */
+function openBulkPop(){
+  const sc = calcScore();
+  const deducted = listDeductedItems(sc);
+  if(deducted.length === 0){
+    toast('감점 항목이 없어요 ✨','✅');
+    return;
+  }
+
+  const sections = deducted.map(key => buildBulkSection(key, sc)).join('');
+  const currentTotal = sc.total;
+
+  const html = `
+    <button class="rb-pop-close" onclick="closePop()">✕</button>
+    <div class="rb-pop-t">📝 감점 항목 일괄 수정</div>
+    <div class="rb-pop-d"><b style="color:var(--red);">${deducted.length}개 항목</b>에서 감점이 있습니다. 수정 후 전부 적용 버튼을 눌러주세요.</div>
+    ${sections}
+    <div class="rb-pop-preview">
+      <span>현재 점수</span>
+      <b id="bulk-current">${currentTotal}</b>
+      <span>/ 100점</span>
+    </div>
+    <div class="rb-pop-btns">
+      <button class="rb-pop-btn ghost" onclick="closePop()">취소</button>
+      <button class="rb-pop-btn primary" onclick="saveBulkPop()">✓ 전부 적용</button>
+    </div>`;
+
+  openPop(html, null, {wide:true});
+
+  // 실시간 점수 미리보기
+  const pop = openedPop;
+  if(pop){
+    pop.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input', updateBulkPreview);
+      inp.addEventListener('change', updateBulkPreview);
+    });
+  }
+}
+
+function buildBulkSection(key, sc){
+  const item = sc.items[key];
+  const badge = `<span class="rb-pop-sec-pts">${item.pts}/${item.max||'−'} ⚠</span>`;
+
+  if(key==='caseNumber'){
+    return `<div class="rb-pop-sec">
+      <div class="rb-pop-sec-t"><span>📌 민원신청번호</span>${badge}</div>
+      <div class="rb-pop-field">
+        <input type="text" class="rb-pop-input" id="bulk-rCase" value="${escHtml($('rCase').value)}" placeholder="1AA-2504-1234567">
+      </div>
+    </div>`;
+  }
+  if(key==='routing'){
+    if(item.mType==='transfer'){
+      return `<div class="rb-pop-sec">
+        <div class="rb-pop-sec-t"><span>📌 이첩 경로</span>${badge}</div>
+        <div class="rb-pop-field">
+          <input type="text" class="rb-pop-input" id="bulk-fromOrg" value="${escHtml($('fromOrg').value)}" placeholder="예) 대통령비서실">
+        </div>
+      </div>`;
+    }
+    if(item.mType==='avoid'){
+      return `<div class="rb-pop-sec">
+        <div class="rb-pop-sec-t"><span>📌 기피신청 사유</span>${badge}</div>
+        <div class="rb-pop-field">
+          <label class="rb-pop-label">기피 대상 부서</label>
+          <input type="text" class="rb-pop-input" id="bulk-avoidDept" value="${escHtml($('avoidDept').value)}" placeholder="예) 감사관실">
+        </div>
+        <div class="rb-pop-field">
+          <label class="rb-pop-label">불수용 사유</label>
+          <input type="text" class="rb-pop-input" id="bulk-avoidReason" value="${escHtml($('avoidReason').value)}" placeholder="예) 업무 연속성">
+        </div>
+      </div>`;
+    }
+    if(item.mType==='passive'){
+      return `<div class="rb-pop-sec">
+        <div class="rb-pop-sec-t"><span>📌 소극행정 사유</span>${badge}</div>
+        <div class="rb-pop-field">
+          <input type="text" class="rb-pop-input" id="bulk-passReason" value="${escHtml($('passReason').value)}" placeholder="예) 자체 종결 사안">
+        </div>
+      </div>`;
+    }
+  }
+  if(key==='summary'){
+    return `<div class="rb-pop-sec">
+      <div class="rb-pop-sec-t"><span>📌 민원 요지</span>${badge}</div>
+      <div class="rb-pop-hint">답변 영역의 따옴표 안에서 편집해야 합니다.</div>
+      <button class="rb-pop-btn primary" style="margin-top:6px;" onclick="focusSumEdit()">✏️ 편집 영역으로 이동 →</button>
+    </div>`;
+  }
+  if(key==='readability'){
+    return `<div class="rb-pop-sec">
+      <div class="rb-pop-sec-t"><span>📌 가독성 (구조화)</span>${badge}</div>
+      <div class="rb-pop-hint">본문에 "가. / 나. / 다." 또는 "1. / 2. / 3." 등 구조 표지 2개 이상 필요</div>
+      <button class="rb-pop-btn primary" style="margin-top:6px;" onclick="focusBodyEdit()">✏️ 본문으로 이동 →</button>
+    </div>`;
+  }
+  if(key==='sincerity'){
+    const d = item.deducts || {};
+    const ev = aiEvalDeducts._evidence || {};
+    const dList = [];
+    if(d.privacy) dList.push({label:'제3자 개인정보·영업비밀',pen:-20,ev:ev.privacy});
+    if(d.jurisdiction) dList.push({label:'소관 아님 안내 누락',pen:-10,ev:ev.jurisdiction});
+    if(d.passBuck) dList.push({label:'떠넘기기 답변',pen:-10,ev:ev.passBuck});
+    if(d.refOnly) dList.push({label:'기존 답변 참고',pen:-10,ev:ev.refOnly});
+    const evList = dList.map(x=>`<div class="rb-pop-evidence"><b>⚠ ${escHtml(x.label)} ${x.pen}점</b>${x.ev?`<i>"${escHtml(x.ev.slice(0,100))}"</i>`:''}</div>`).join('');
+    return `<div class="rb-pop-sec">
+      <div class="rb-pop-sec-t"><span>📌 성실 답변 (AI 판정)</span>${badge}</div>
+      ${evList || '<div class="rb-pop-hint">AI 재채점이 필요합니다</div>'}
+      <button class="rb-pop-btn primary" style="margin-top:6px;" onclick="focusBodyEdit()">✏️ 본문으로 이동 →</button>
+    </div>`;
+  }
+  if(key==='contact'){
+    return `<div class="rb-pop-sec">
+      <div class="rb-pop-sec-t"><span>📌 담당자 정보</span>${badge}</div>
+      <div class="rb-pop-field">
+        <label class="rb-pop-label">소속 기관</label>
+        <input type="text" class="rb-pop-input" id="bulk-rOrg" value="${escHtml($('rOrg').value)}" placeholder="서울특별시교육청">
+      </div>
+      <div class="rb-pop-field">
+        <label class="rb-pop-label">소속 부서</label>
+        <input type="text" class="rb-pop-input" id="bulk-rDept" value="${escHtml($('rDept').value)}" placeholder="예) 학생건강정책과">
+      </div>
+      <div class="rb-pop-field">
+        <label class="rb-pop-label">성명·직위</label>
+        <input type="text" class="rb-pop-input" id="bulk-rName" value="${escHtml($('rName').value)}" placeholder="예) 홍길동 주무관">
+      </div>
+      <div class="rb-pop-field">
+        <label class="rb-pop-label">전화번호</label>
+        <input type="text" class="rb-pop-input" id="bulk-rPhone" value="${escHtml($('rPhone').value)}" placeholder="02-1234-5678">
+      </div>
+    </div>`;
+  }
+  if(key==='cooperation'){
+    const c = coopChecks;
+    return `<div class="rb-pop-sec">
+      <div class="rb-pop-sec-t"><span>📌 협조민원 자가 확인</span>${badge}</div>
+      <label class="rb-pop-check"><input type="checkbox" id="bulk-c1" ${c.included?'checked':''}><span class="rb-pop-check-txt">① 협조기관의 답변을 본문에 포함하였습니다</span></label>
+      <label class="rb-pop-check"><input type="checkbox" id="bulk-c2" ${c.integrated?'checked':''}><span class="rb-pop-check-txt">② 단순 나열·복붙이 아닌 종합정리 형태로 재구성</span></label>
+      <label class="rb-pop-check"><input type="checkbox" id="bulk-c3" ${c.adapted?'checked':''}><span class="rb-pop-check-txt">③ 민원인의 질문에 맞추어 자연스럽게 녹여냈습니다</span></label>
+    </div>`;
+  }
+  return '';
+}
+
+/* 일괄 저장 */
+function saveBulkPop(){
+  // 각 bulk- 필드를 실제 필드에 반영
+  const map = {
+    'bulk-rCase':'rCase',
+    'bulk-fromOrg':'fromOrg',
+    'bulk-avoidDept':'avoidDept',
+    'bulk-avoidReason':'avoidReason',
+    'bulk-passReason':'passReason',
+    'bulk-rOrg':'rOrg',
+    'bulk-rDept':'rDept',
+    'bulk-rName':'rName',
+    'bulk-rPhone':'rPhone',
+  };
+  Object.entries(map).forEach(([b,t])=>{
+    const src=$(b), dst=$(t);
+    if(src && dst) dst.value = src.value;
+  });
+  // 협조민원 체크박스
+  const c1=$('bulk-c1'),c2=$('bulk-c2'),c3=$('bulk-c3');
+  if(c1) coopChecks.included = c1.checked;
+  if(c2) coopChecks.integrated = c2.checked;
+  if(c3) coopChecks.adapted = c3.checked;
+
+  closePop();
+  autoRescore();
+  const sc = calcScore();
+  toast(`✓ 적용됨 · ${sc.total}점`,'✅');
+}
+
+/* 일괄 말풍선 실시간 점수 미리보기 */
+function updateBulkPreview(){
+  // 현재 말풍선 입력값을 임시로 적용해서 calcScore 실행
+  const prevVals = {};
+  const map = {
+    'bulk-rCase':'rCase','bulk-fromOrg':'fromOrg','bulk-avoidDept':'avoidDept',
+    'bulk-avoidReason':'avoidReason','bulk-passReason':'passReason',
+    'bulk-rOrg':'rOrg','bulk-rDept':'rDept','bulk-rName':'rName','bulk-rPhone':'rPhone',
+  };
+  Object.entries(map).forEach(([b,t])=>{
+    const src=$(b), dst=$(t);
+    if(src && dst){ prevVals[t] = dst.value; dst.value = src.value; }
+  });
+  const prevCoop = {...coopChecks};
+  const c1=$('bulk-c1'),c2=$('bulk-c2'),c3=$('bulk-c3');
+  if(c1) coopChecks.included = c1.checked;
+  if(c2) coopChecks.integrated = c2.checked;
+  if(c3) coopChecks.adapted = c3.checked;
+
+  const sc = calcScore();
+  const el = $('bulk-current');
+  if(el) el.textContent = sc.total;
+
+  // 원상복구
+  Object.entries(prevVals).forEach(([t,v])=>{ const dst=$(t); if(dst) dst.value=v; });
+  coopChecks = prevCoop;
+}
 
 function copyLaw(idx){
   const l=aiLaws[idx]; if(!l)return;
@@ -1398,29 +2006,78 @@ async function runScoreShow(){
 function animBig(v){$('bRing').style.strokeDashoffset=376-(376*(v/100));$('bRing').style.stroke=v>=80?'#00cfc0':v>=60?'url(#sg)':'#f5a000';cntUp('bNum',parseInt($('bNum').textContent)||0,v,400);}
 
 function calcScore(){
+  /* ═════ 입력값 수집 ═════ */
   const cV=($('rCase')?.value||'').trim();
   const orgV=($('rOrg')?.value||'').trim();
   const dV=($('rDept')?.value||'').trim();
   const nV=($('rName')?.value||'').trim();
   const pV=($('rPhone')?.value||'').trim();
 
-  const na=!!isPublic, cp=na?true:cV.length>0;
+  /* ═════ 도입부 (30점) ═════ */
+  // 1. 인사말 (템플릿 고정)
+  const greetingPts = 10;
 
-  // 부서 = 소속기관 AND 소속부서 둘 다 있어야 1개로 인정
+  // 2. 민원신청번호 (빈칸만 아니면 만점, 형식 체크 없음)
+  const casePts = cV.length > 0 ? 10 : 0;
+
+  // 3. 이첩/기피/소극 사유 (mType별 폼 체크)
+  let routingPts = 10;
+  let routingNa = false;
+  let routingMissing = '';
+  if(mType === 'normal'){
+    routingNa = true; // 일반민원 — 해당없음 (항상 만점)
+  } else if(mType === 'transfer'){
+    const fo = ($('fromOrg')?.value||'').trim();
+    if(!fo){ routingPts = 0; routingMissing = '이첩 기관 미입력'; }
+  } else if(mType === 'avoid'){
+    const ad = ($('avoidDept')?.value||'').trim();
+    const ar = ($('avoidReason')?.value||'').trim();
+    if(!ad || !ar){ routingPts = 0; routingMissing = '기피 부서/사유 미입력'; }
+  } else if(mType === 'passive'){
+    const pr = ($('passReason')?.value||'').trim();
+    if(!pr){ routingPts = 0; routingMissing = '소극행정 사유 미입력'; }
+  }
+
+  const introPts = greetingPts + casePts + routingPts;  // 최대 30
+
+  /* ═════ 전개부 (50점) ═════ */
+  // 4. 민원요지 (빈칸만 아니면 만점 — 사용자 명시 요구)
+  const sumText = ($('sumEdit')?.textContent || '').trim();
+  const summaryPts = sumText.length > 0 ? 10 : 0;
+
+  // 5. 가독성 — 본문에 구조 마커(가-나-다 / 1-2-3 / ①② / ○) 2개 이상 매칭
+  const bodyText = ($('bodyEdit')?.value || '');
+  const markers = bodyText.match(/(?:가\.|나\.|다\.|라\.|마\.|1\.|2\.|3\.|4\.|5\.|①|②|③|④|⑤|○|●)/g) || [];
+  const uniqueMarkers = [...new Set(markers)];
+  const readabilityPts = uniqueMarkers.length >= 2 ? 20 : 0;
+
+  // 6. 성실답변 기본 20 - AI 감점 차감
+  let sincerityPts = 20;
+  if(aiEvalDeducts.privacy)      sincerityPts -= 20;
+  if(aiEvalDeducts.jurisdiction) sincerityPts -= 10;
+  if(aiEvalDeducts.passBuck)     sincerityPts -= 10;
+  if(aiEvalDeducts.refOnly)      sincerityPts -= 10;
+  sincerityPts = Math.max(0, sincerityPts);
+
+  // 7. 협조민원 감점
+  let coopPenalty = 0;
+  let coopAllOk = true;
+  if(coopEnabled){
+    coopAllOk = coopChecks.included && coopChecks.integrated && coopChecks.adapted;
+    coopPenalty = coopAllOk ? 0 : -30;
+  }
+
+  const bodyPtsBase = summaryPts + readabilityPts + sincerityPts; // 최대 50
+  const bodyPts = Math.max(0, bodyPtsBase + coopPenalty); // 협조민원 감점 후
+
+  /* ═════ 종결부 (20점) — 담당자 정보 ═════ */
   const deptOk = orgV.length>0 && dV.length>0;
   const nameOk = nV.length>0;
   const phoneOk = pV.length>0;
-
-  // 채워진 항목 수 (부서1+성명1+전화1, 최대3)
   const rc = [deptOk, nameOk, phoneOk].filter(Boolean).length;
-
-  // 규정: 2가지=14점, 1가지=8점, 0=0점 (3가지도 14점 — 규정 최대 14점)
-  // ※ 실제로 3가지 모두면 20점 주는 게 맞는지 확인 필요하나,
-  //   규정 원문 "2가지=14, 1가지=8" 기준으로 최대 20점은 3가지일 때만
-  //   실제 규정엔 3가지 케이스가 명시되어 있을 수 있으므로 아래처럼 처리
+  // 규정: 2가지=14 / 1가지=8 / 없음=0 / (3가지 모두=20, 의무 준수)
   const cPts = rc>=3 ? 20 : rc===2 ? 14 : rc===1 ? 8 : 0;
 
-  // 라벨 — 항목별로 뭐가 빠졌는지 표시
   let missingParts = [];
   if(!deptOk){
     if(!orgV && !dV) missingParts.push('부서(기관+부서명)');
@@ -1431,42 +2088,44 @@ function calcScore(){
   if(!phoneOk) missingParts.push('전화번호');
 
   const cLbl = rc===0
-    ? '부서·성명·전화 미입력 (0점)'
+    ? '부서·성명·전화 미입력'
     : rc===1
-    ? `1가지 안내 (+8점)${missingParts.length?' — '+missingParts.join(', ')+' 미입력':''}`
+    ? `1가지 안내${missingParts.length?' — '+missingParts.join(', ')+' 미입력':''}`
     : rc===2
-    ? `2가지 안내 (+14점)${missingParts.length?' — '+missingParts.join(', ')+' 미입력':''}`
-    : '3가지 모두 안내 (+20점)';
+    ? `2가지 안내${missingParts.length?' — '+missingParts.join(', ')+' 미입력':''}`
+    : '3가지 모두 안내';
 
-  const bonus=wSurvey?8:0;
+  /* ═════ 가점 ═════ */
+  const bonus = wSurvey ? 8 : 0;
 
-  // v2: 전개부 '성실답변' 기본 20 - AI 감점
-  let sincerity = 20;
-  if(aiEvalDeducts.privacy) sincerity -= 20;
-  if(aiEvalDeducts.jurisdiction) sincerity -= 10;
-  if(aiEvalDeducts.passBuck) sincerity -= 10;
-  if(aiEvalDeducts.refOnly) sincerity -= 10;
-  sincerity = Math.max(0, sincerity);
+  /* ═════ 총점 ═════ */
+  const rawTotal = introPts + bodyPts + cPts + bonus;
+  const total = Math.max(0, Math.min(108, rawTotal));
 
-  // 전개부: 민원요지 10 + 가독성 20 + 성실답변(가변)
-  const s2 = 10 + 20 + sincerity;
-
-  // v2: 협조민원 감점
-  let coopPenalty = 0;
-  if(coopEnabled){
-    const allOk = coopChecks.included && coopChecks.integrated && coopChecks.adapted;
-    coopPenalty = allOk ? 0 : -30;
-  }
-
-  const rawTotal = 10+(cp?10:0)+10 + s2 + cPts + bonus + coopPenalty;
-  const total = Math.max(0, Math.min(100+bonus, rawTotal));
-
-  return{
-    case2:{pass:cp,na},
-    contact:{pass:cPts>0,pts:cPts,label:cLbl,rc,deptOk,nameOk,phoneOk},
-    sincerity,
-    s1:10+(cp?10:0)+10, s2, s3:cPts, bonus, coopPenalty,
-    total
+  /* ═════ 반환 (기존 구조 + 새 필드) ═════ */
+  return {
+    // 기존 호환 필드
+    case2: { pass: casePts>0, na: false },
+    contact: { pass: cPts>0, pts: cPts, label: cLbl, rc, deptOk, nameOk, phoneOk },
+    sincerity: sincerityPts,
+    s1: introPts,
+    s2: bodyPts,
+    s3: cPts,
+    bonus,
+    coopPenalty,
+    total,
+    // 새 필드 (말풍선·채점표용)
+    items: {
+      greeting:    { pts: greetingPts, max: 10, ok: true },
+      caseNumber:  { pts: casePts, max: 10, ok: casePts===10, value: cV },
+      routing:     { pts: routingPts, max: 10, ok: routingPts===10, na: routingNa, missing: routingMissing, mType },
+      summary:     { pts: summaryPts, max: 10, ok: summaryPts===10, value: sumText },
+      readability: { pts: readabilityPts, max: 20, ok: readabilityPts===20, markers: uniqueMarkers },
+      sincerity:   { pts: sincerityPts, max: 20, ok: sincerityPts===20, deducts: aiEvalDeducts },
+      contact:     { pts: cPts, max: 20, ok: cPts===20, rc, deptOk, nameOk, phoneOk, missing: missingParts, label: cLbl },
+      satisfaction:{ pts: bonus, max: 8, ok: wSurvey, bonus: true },
+      cooperation: { pts: coopPenalty, max: 0, ok: coopAllOk, enabled: coopEnabled, checks: {...coopChecks} },
+    },
   };
 }
 
@@ -1509,23 +2168,70 @@ function getFullText(){
 }
 
 function syncMini(sc){
+  /* ── mi2: 민원번호 ── */
   const m2=$('mi2');m2.classList.remove('pass','fail');
-  if(sc.case2.na){m2.classList.add('pass');m2.querySelector('.mciic').textContent='✓';$('mc2').textContent='+10점';$('ml2').textContent='신청번호(해당없음)';$('mn2').style.display='flex';}
-  else if(sc.case2.pass){m2.classList.add('pass');m2.querySelector('.mciic').textContent='✓';$('mc2').textContent='+10점';$('ml2').textContent='신청번호 명시';$('mn2').style.display='none';}
-  else{m2.classList.add('fail');m2.querySelector('.mciic').textContent='✕';$('mc2').textContent='0점';$('ml2').textContent='신청번호 없음';$('mn2').style.display='none';}
+  if(sc.items.caseNumber.ok){m2.classList.add('pass');m2.querySelector('.mciic').textContent='✓';$('mc2').textContent='+10점';$('ml2').textContent='신청번호 명시';$('mn2').style.display='none';}
+  else{m2.classList.add('fail');m2.querySelector('.mciic').textContent='✕';$('mc2').textContent='-10점';$('ml2').textContent='신청번호 미입력';$('mn2').style.display='none';}
   $('mp1').textContent=sc.s1+'/30점';$('mp1').classList.toggle('full',sc.s1===30);
-  const typeLabel={normal:'일반민원',transfer:'이첩민원',avoid:'기피신청',passive:'소극행정신고'}[mType]||'일반민원';
-  $('mi3').querySelector('.mciic').textContent='✓';$('mc3').textContent='+10점';$('ml3').textContent=typeLabel;
+
+  /* ── mi3: 이첩/기피/소극 사유 ── */
+  const m3=$('mi3');m3.classList.remove('pass','fail');
+  const typeLabel={normal:'일반민원(해당없음)',transfer:'이첩 사유',avoid:'기피 사유',passive:'소극행정 사유'}[mType]||'일반민원';
+  if(sc.items.routing.na || sc.items.routing.ok){
+    m3.classList.add('pass');m3.querySelector('.mciic').textContent='✓';$('mc3').textContent='+10점';$('ml3').textContent=typeLabel;
+  } else {
+    m3.classList.add('fail');m3.querySelector('.mciic').textContent='✕';$('mc3').textContent='-10점';$('ml3').textContent=sc.items.routing.missing||typeLabel;
+  }
+
+  /* ── mi4: 민원요지 ── */
+  const m4=$('mi4');if(m4){
+    m4.classList.remove('pass','fail');
+    if(sc.items.summary.ok){m4.classList.add('pass');m4.querySelector('.mciic').textContent='✓';$('mc4').textContent='+10점';}
+    else{m4.classList.add('fail');m4.querySelector('.mciic').textContent='✕';$('mc4').textContent='-10점';}
+  }
+
+  /* ── mi5: 가독성 ── */
+  const m5=$('mi5');if(m5){
+    m5.classList.remove('pass','fail');
+    if(sc.items.readability.ok){m5.classList.add('pass');m5.querySelector('.mciic').textContent='✓';$('mc5').textContent='+20점';}
+    else{m5.classList.add('fail');m5.querySelector('.mciic').textContent='✕';$('mc5').textContent='-20점';}
+  }
+
+  /* ── mi6: 성실답변 (AI 감점 반영) ── */
+  const m6=$('mi6');if(m6){
+    m6.classList.remove('pass','fail','bonus');
+    const sp=sc.items.sincerity.pts;
+    if(sp===20){m6.classList.add('pass');m6.querySelector('.mciic').textContent='✓';$('mc6').textContent='+20점';}
+    else if(sp>0){m6.classList.add('bonus');m6.querySelector('.mciic').textContent='△';$('mc6').textContent='+'+sp+'점';}
+    else{m6.classList.add('fail');m6.querySelector('.mciic').textContent='✕';$('mc6').textContent='0점';}
+  }
+
+  /* ── mi7: 담당자 ── */
   const m7=$('mi7');m7.classList.remove('pass','fail','bonus');
   if(sc.contact.pts===20){m7.classList.add('pass');m7.querySelector('.mciic').textContent='✓';}
   else if(sc.contact.pts>0){m7.classList.add('bonus');m7.querySelector('.mciic').textContent='△';}
   else{m7.classList.add('fail');m7.querySelector('.mciic').textContent='✕';}
   $('mc7').textContent=sc.contact.pts>0?'+'+sc.contact.pts+'점':'0점';$('ml7').textContent=sc.contact.label;$('mp3').textContent=sc.s3+'/20점';$('mp3').classList.toggle('full',sc.s3===20);
+
+  /* ── mi8: 만족도 ── */
   const m8=$('mi8');m8.classList.remove('pass','fail','bonus');
   if(wSurvey){m8.classList.add('bonus');m8.querySelector('.mciic').textContent='⭐';}else{m8.classList.add('fail');m8.querySelector('.mciic').textContent='✕';}
   $('mc8').textContent=wSurvey?'+'+sc.bonus+'점':'0점';$('mp4').textContent=sc.bonus>0?'+'+sc.bonus+'점':'0점';
-  /* v2: 전개부 점수 동적 갱신 (민원요지 10 + 가독성 20 + 성실답변 가변) */
+
+  /* 전개부 점수 동적 갱신 */
   const mp2=$('mp2'); if(mp2){mp2.textContent=sc.s2+'/50점';mp2.classList.toggle('full',sc.s2===50);}
+
+  /* ── 일괄 수정 배너 ── */
+  const deductedCount = countDeductedItems(sc);
+  const bar = $('bulkFixBar');
+  if(bar){
+    if(deductedCount >= 2){
+      bar.style.display='flex';
+      $('bulkFixCount').textContent=deductedCount;
+    } else {
+      bar.style.display='none';
+    }
+  }
   /* v2: 협조민원 블록 동기화 (renderCoopUi의 onCoopCheckChange와 별개로 표시) */
   if(coopEnabled){
     $('coopSblock').style.display='block';
