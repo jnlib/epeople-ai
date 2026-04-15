@@ -529,6 +529,26 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
 
 .resbox{flex:1;background:var(--bg);border:1.5px solid rgba(0,207,192,.13);border-radius:13px;padding:17px;font-size:.98em;line-height:2;color:var(--text);white-space:pre-wrap;font-family:'Noto Sans KR',sans-serif;resize:none;outline:none;cursor:text;min-height:300px;caret-color:var(--teal);}
 .resbox:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,207,192,.1);}
+
+/* v2: 답변 분할 뷰 (고정 / 편집 구분) */
+.answer-doc{flex:1;min-height:300px;background:var(--bg);border:1.5px solid rgba(0,207,192,.13);border-radius:13px;padding:14px;font-size:.94em;line-height:1.88;color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.answer-doc::-webkit-scrollbar{width:5px;}
+.answer-doc::-webkit-scrollbar-thumb{background:rgba(0,207,192,.18);border-radius:5px;}
+
+.ardoc-lock{position:relative;background:rgba(106,138,170,.07);border-left:3px solid rgba(106,138,170,.38);border-radius:9px;padding:13px 15px 12px 16px;white-space:pre-wrap;color:var(--text2);font-size:.93em;}
+.ardoc-lock::before{content:'🔒 자동 생성';position:absolute;top:-8px;left:12px;font-size:.58em;padding:2px 8px;background:var(--muted);color:#fff;border-radius:8px;font-family:'Share Tech Mono',monospace;letter-spacing:.05em;font-weight:700;}
+
+.ardoc-sum-wrap{position:relative;background:var(--white);border:2px solid rgba(0,207,192,.35);border-radius:10px;padding:13px 15px 12px;box-shadow:0 3px 12px rgba(0,207,192,.08);}
+.ardoc-sum-wrap::before{content:'✏️ 편집 가능';position:absolute;top:-9px;left:12px;font-size:.58em;padding:2px 9px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;border-radius:8px;font-family:'Share Tech Mono',monospace;letter-spacing:.05em;font-weight:800;box-shadow:0 2px 6px rgba(0,207,192,.25);}
+.ardoc-sum-line{font-size:.93em;color:var(--text2);}
+.ardoc-edit-sum{display:inline-block;min-width:90px;padding:3px 10px;margin:0 2px;border-radius:6px;background:rgba(0,207,192,.1);border:1.5px dashed var(--teal);color:var(--teal2);font-weight:800;outline:none;cursor:text;transition:all .15s;}
+.ardoc-edit-sum:focus{background:rgba(0,207,192,.18);box-shadow:0 0 0 3px rgba(0,207,192,.15);}
+.ardoc-edit-sum:empty::before{content:'민원 요지';color:rgba(0,0,0,.28);font-weight:500;}
+
+.ardoc-body-wrap{position:relative;background:var(--white);border:2px solid rgba(49,130,255,.35);border-radius:10px;padding:13px 14px 10px;box-shadow:0 3px 12px rgba(49,130,255,.08);}
+.ardoc-body-wrap::before{content:'✏️ 본문 편집';position:absolute;top:-9px;left:12px;font-size:.58em;padding:2px 9px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border-radius:8px;font-family:'Share Tech Mono',monospace;letter-spacing:.05em;font-weight:800;box-shadow:0 2px 6px rgba(49,130,255,.25);}
+.ardoc-body{width:100%;border:none;background:transparent;font-family:'Noto Sans KR',sans-serif;font-size:.94em;line-height:1.88;color:var(--text);resize:vertical;outline:none;min-height:140px;caret-color:var(--blue);padding:2px 0;}
+.ardoc-body::placeholder{color:rgba(0,0,0,.28);}
 .resfoot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-shrink:0;}
 .resct{font-size:.78em;color:var(--muted);font-family:'Share Tech Mono',monospace;}
 .rb{padding:6px 12px;border-radius:7px;font-size:.78em;font-weight:700;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all .2s;background:var(--bg);border:1.5px solid var(--brd);color:var(--muted);}
@@ -893,8 +913,22 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
         <button class="rb copy" onclick="doCopy()">📋 복사</button>
       </div>
     </div>
-    <div style="font-size:.8em;color:var(--muted);margin-bottom:8px;flex-shrink:0;font-family:'Share Tech Mono',monospace;">✏️ 직접 클릭해서 수정 가능</div>
-    <textarea class="resbox" id="resBox" oninput="onEdit()" spellcheck="false" placeholder="서식이 여기에 생성됩니다..."></textarea>
+    <div style="font-size:.8em;color:var(--muted);margin-bottom:8px;flex-shrink:0;font-family:'Share Tech Mono',monospace;">🔒 자동 · <span style="color:var(--teal2);">✏️ 민원요지</span> · <span style="color:var(--blue2);">✏️ 본문</span> 2곳만 수정 가능</div>
+    <div class="answer-doc" id="answerDoc">
+      <div class="ardoc-lock" id="arsTop"></div>
+      <div class="ardoc-sum-wrap">
+        <div class="ardoc-sum-line">
+          3. 귀하의 민원 내용은 "<span class="ardoc-edit-sum" id="sumEdit" contenteditable="true" spellcheck="false" oninput="onSumEdit()"></span>"에 관한 것으로 이해(또는 판단)됩니다.
+        </div>
+      </div>
+      <div class="ardoc-lock" id="arsMid">4. 귀하의 문의 사항에 대해 검토한 의견은 다음과 같습니다.</div>
+      <div class="ardoc-body-wrap">
+        <textarea class="ardoc-body" id="bodyEdit" spellcheck="false" placeholder="가. (현황 파악 또는 확인 결과)&#10;나. (관련 제도·법령 설명)&#10;다. (향후 조치 계획)" oninput="onEdit()"></textarea>
+      </div>
+      <div class="ardoc-lock" id="arsBot"></div>
+    </div>
+    <!-- 숨김 resBox (buildTpl 호환용, 미사용) -->
+    <textarea id="resBox" style="display:none;"></textarea>
     <div class="resfoot"><span class="resct" id="resCt">0자</span></div>
   </div>
 </div>
@@ -1050,7 +1084,7 @@ function scheduleAiEvaluate(){
 }
 async function aiEvaluate(){
   if(aiEvaling)return;
-  const body = $('resBox')?.value || '';
+  const body = $('bodyEdit')?.value || '';
   if(!body.trim() || body===lastEvalText) return;
   lastEvalText = body;
   aiEvaling = true;
@@ -1210,8 +1244,17 @@ async function runScoreShow(){
   const t=sc.total;$('sGrade').textContent=(t>=100?'🏆 만점!':t>=90?'🏆 최우수':t>=80?'🥇 우수':t>=65?'🥈 양호':'🔧 보완')+' · '+t+'점';
   $('sFace').textContent=t>=95?'🤩':t>=80?'😊':'😅';
   $('sPill').style.display='flex';$('sVal').textContent=t;
-  await delay(700);const tpl=buildTpl();curResult=tpl;showSplit();$('restBtn').style.display='';
-  syncMini(sc);updateHint(sc);await delay(300);$('liveDot').style.display='inline-block';await typeIn($('resBox'),tpl);$('liveDot').style.display='none';
+  await delay(700);
+  /* v2: buildTpl 먼저 호출하여 고정 영역(arsTop/arsBot) 및 민원요지 렌더 */
+  buildTpl();
+  curResult = getFullText();
+  showSplit();$('restBtn').style.display='';
+  syncMini(sc);updateHint(sc);
+  await delay(300);
+  $('liveDot').style.display='inline-block';
+  /* 본문만 타이핑 애니메이션 */
+  await typeInBody(aiDraft || '가. \n나. \n다. ');
+  $('liveDot').style.display='none';
   /* ★ 입력될 때까지 지속 깜빡이기 */
   blinkFailsPersistent(sc);
 }
@@ -1295,17 +1338,37 @@ function buildTpl(){
   const cN=($('rCase')?.value||'').trim()||'1AA-0000-0000000';
   const org=($('rOrg')?.value||'').trim(),dept=($('rDept')?.value||'').trim()||'OOO과';
   const name=($('rName')?.value||'').trim()||'OOO 주무관',phone=($('rPhone')?.value||'').trim()||'02-0000-0000';
-  const sum=aiSum||'OOO';const od=org?`${org} ${dept}`:dept;const on=org||'우리 기관';const oen=josa(on,'은는');
+  const od=org?`${org} ${dept}`:dept;const on=org||'우리 기관';const oen=josa(on,'은는');
   let p2='';
   if(mType==='normal')p2=`2. 귀하께서 국민신문고를 통해 신청하신 민원(${cN})에 대하여 다음과 같이 답변드립니다.`;
   else if(mType==='transfer'){const f=($('fromOrg')?.value||'').trim()||'대통령비서실';p2=`2. 귀하께서 ${f}에 제출하여 이첩된 민원(${cN})에 대한 검토 결과를 다음과 같이 알려드립니다.`;}
   else if(mType==='avoid'){const ad=($('avoidDept')?.value||'').trim()||'해당 부서';const ar=($('avoidReason')?.value||'').trim()||'업무 연속성';p2=`2. 귀하께서 ${ad}를 기피신청하셨으나, ${ar} 등을 고려할 때 부득이 ${ad}에서 답변드립니다.`;}
   else if(mType==='passive'){const pr=($('passReason')?.value||'').trim()||'규정상 절차';p2=`2. 소극행정 신고민원에 대하여 ${pr} 등의 사유로 ${od}에서 답변드립니다.`;}
-  const body=aiDraft||'가. \n나. ';
   let cl=`5. 추가 설명이 필요한 경우 ${od} ${name}(☏${phone})에게 연락주시면 친절히 안내해 드리겠습니다.`;
   if(wSurvey)cl+=` 아울러 ${on}${oen} 민원서비스 품질 향상을 위해 노력하고 있습니다. 답변에 만족하셨다면 아래 만족도 평가에 참여해 주시기 바랍니다.`;
   cl+=` 감사합니다.`;
-  return `제목 : 민원(${cN}) 처리결과 안내\n\n1. 안녕하십니까? ${od}에 근무하는 ${name}입니다. 먼저 민원행정에 관심을 가져주신 데에 깊은 감사의 말씀을 드립니다.\n\n${p2}\n\n3. 귀하의 민원 내용은 "${sum}"에 관한 것으로 이해(또는 판단)됩니다.\n\n4. 귀하의 문의 사항에 대해 검토한 의견은 다음과 같습니다.\n${body}\n\n${cl}`;
+
+  /* v2: 분할 뷰 각 영역에 렌더 (고정 영역만 즉시 갱신, 편집 영역은 건드리지 않음) */
+  const topText = `제목 : 민원(${cN}) 처리결과 안내\n\n1. 안녕하십니까? ${od}에 근무하는 ${name}입니다. 먼저 민원행정에 관심을 가져주신 데에 깊은 감사의 말씀을 드립니다.\n\n${p2}`;
+  const arsTop=$('arsTop'); if(arsTop) arsTop.textContent = topText;
+  const arsBot=$('arsBot'); if(arsBot) arsBot.textContent = cl;
+
+  /* 민원요지: contenteditable이 비어있으면 aiSum 채워넣기 */
+  const sumEl=$('sumEdit');
+  if(sumEl && !sumEl.textContent.trim() && aiSum) sumEl.textContent = aiSum;
+
+  /* 본문은 여기서 채우지 않음 — typeIn 애니메이션 또는 사용자 편집 상태 유지 */
+
+  return getFullText();
+}
+
+function getFullText(){
+  const top = $('arsTop')?.textContent || '';
+  const sum = ($('sumEdit')?.textContent || '').trim() || 'OOO';
+  const mid = $('arsMid')?.textContent || '4. 귀하의 문의 사항에 대해 검토한 의견은 다음과 같습니다.';
+  const body = $('bodyEdit')?.value || '가. \n나. ';
+  const bot = $('arsBot')?.textContent || '';
+  return `${top}\n\n3. 귀하의 민원 내용은 "${sum}"에 관한 것으로 이해(또는 판단)됩니다.\n\n${mid}\n${body}\n\n${bot}`;
 }
 
 function syncMini(sc){
@@ -1427,12 +1490,26 @@ function onInfoInput(fieldId){
 }
 
 let debT=null;
-function autoRescore(){clearTimeout(debT);debT=setTimeout(()=>{const sc=calcScore();syncMini(sc);updateHint(sc);const tpl=buildTpl();curResult=tpl;const box=$('resBox');if(box){box.value=tpl;$('resCt').textContent=tpl.length+'자';}$('sVal')&&($('sVal').textContent=sc.total);},200);}
+function autoRescore(){
+  clearTimeout(debT);
+  debT=setTimeout(()=>{
+    const sc=calcScore();
+    syncMini(sc);updateHint(sc);
+    /* v2: buildTpl이 고정 영역(arsTop/arsBot)을 다시 렌더. 편집 영역은 건드리지 않음 */
+    const tpl=buildTpl();
+    curResult=tpl;
+    $('resCt').textContent=getFullText().length+'자';
+    $('sVal')&&($('sVal').textContent=sc.total);
+  },200);
+}
 
 function doApply(){
   ['rCase','rOrg','rDept','rName','rPhone'].forEach(id=>$(id)?.classList.remove('fi-pending'));
   ['mi2','mi7'].forEach(id=>$(id)?.classList.remove('blink-pending'));
-  const sc=calcScore();const tpl=buildTpl();curResult=tpl;const box=$('resBox');if(box){box.value=tpl;$('resCt').textContent=tpl.length+'자';}
+  const sc=calcScore();
+  buildTpl(); /* 고정 영역 재렌더 (편집 영역은 건드리지 않음) */
+  curResult=getFullText();
+  $('resCt').textContent=curResult.length+'자';
   syncMini(sc);updateHint(sc);$('sVal')&&($('sVal').textContent=sc.total);
   toast('반영 완료! '+sc.total+'점 ✅','✅');
   blinkFailsPersistent(sc);
@@ -1441,17 +1518,72 @@ function doApply(){
 let rsR=false;
 async function reScan(){if(rsR)return;rsR=true;const ico=$('rIco');if(ico)ico.style.animation='spin .5s linear infinite';const sc=calcScore();for(let i=1;i<=8;i++){const e=$('mi'+i);if(!e)continue;e.classList.add('blink-pending');await delay(80);e.classList.remove('blink-pending');}syncMini(sc);updateHint(sc);$('sVal')&&($('sVal').textContent=sc.total);if(ico)ico.style.animation='';rsR=false;toast('재채점 완료! '+sc.total+'점','📊');blinkFailsPersistent(sc);}
 
-async function doReGen(){const sc=calcScore();const tpl=buildTpl();curResult=tpl;$('liveDot').style.display='inline-block';await typeIn($('resBox'),tpl);$('liveDot').style.display='none';syncMini(sc);updateHint(sc);}
+async function doReGen(){
+  const sc=calcScore();
+  buildTpl(); /* 고정 영역 재렌더 */
+  $('liveDot').style.display='inline-block';
+  await typeInBody(aiDraft || '가. \n나. \n다. ');
+  $('liveDot').style.display='none';
+  syncMini(sc);updateHint(sc);
+}
+
+/* v2: 편집 영역 변경 이벤트 — 본문 textarea */
 function onEdit(){
-  const b=$('resBox');if(!b)return;
-  curResult=b.value;
-  $('resCt').textContent=b.value.length+'자';
-  /* v2: 본문 편집 시 AI 실시간 재채점 (debounce 2초) */
+  const b=$('bodyEdit');if(!b)return;
+  curResult=getFullText();
+  $('resCt').textContent=curResult.length+'자';
+  /* 본문 편집 시 AI 실시간 재채점 (debounce 2초) */
   scheduleAiEvaluate();
 }
-function doCopy(){const b=$('resBox');const t=b?b.value:curResult;if(!t?.trim()){toast('먼저 서식을 생성해주세요','⚠️');return;}if(navigator.clipboard?.writeText){navigator.clipboard.writeText(t).then(()=>toast('복사됐어요! 📋','📋')).catch(()=>lcp(t));return;}lcp(t);}
-function lcp(t){const b=$('resBox');if(b){b.focus();b.select();try{if(document.execCommand('copy')){toast('복사됐어요! 📋','📋');return;}}catch(e){}}const ta=document.createElement('textarea');Object.assign(ta.style,{position:'fixed',top:'0',left:'0',width:'2px',height:'2px',opacity:'0'});ta.value=t;document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');toast('복사됐어요! 📋','📋');}catch{toast('Ctrl+C로 복사해주세요','⚠️');}document.body.removeChild(ta);}
-async function typeIn(el,tpl){el.value='';$('resCt').textContent='0자';const chars=[...tpl];let i=0;await new Promise(res=>{const go=()=>{if(i<chars.length){el.value+=chars[i++];$('resCt').textContent=el.value.length+'자';setTimeout(go,i<80?4:1);}else res();};go();});curResult=el.value;}
+
+/* v2: 민원요지 인라인 편집 이벤트 */
+function onSumEdit(){
+  const sc=calcScore();
+  syncMini(sc);updateHint(sc);
+  curResult=getFullText();
+  $('resCt').textContent=curResult.length+'자';
+}
+
+function doCopy(){
+  const t = getFullText();
+  if(!t?.trim()){toast('먼저 서식을 생성해주세요','⚠️');return;}
+  curResult = t;
+  if(navigator.clipboard?.writeText){
+    navigator.clipboard.writeText(t).then(()=>toast('복사됐어요! 📋','📋')).catch(()=>lcp(t));
+    return;
+  }
+  lcp(t);
+}
+
+function lcp(t){
+  const ta=document.createElement('textarea');
+  Object.assign(ta.style,{position:'fixed',top:'0',left:'0',width:'2px',height:'2px',opacity:'0'});
+  ta.value=t;document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand('copy');toast('복사됐어요! 📋','📋');}catch{toast('Ctrl+C로 복사해주세요','⚠️');}
+  document.body.removeChild(ta);
+}
+
+/* v2: 본문 영역에만 타이핑 애니메이션 (고정 영역은 즉시 표시) */
+async function typeInBody(bodyText){
+  const el=$('bodyEdit');if(!el){return;}
+  el.value='';
+  $('resCt').textContent=getFullText().length+'자';
+  const chars=[...bodyText];let i=0;
+  await new Promise(res=>{
+    const go=()=>{
+      if(i<chars.length){
+        el.value+=chars[i++];
+        $('resCt').textContent=getFullText().length+'자';
+        setTimeout(go,i<80?4:1);
+      }else res();
+    };
+    go();
+  });
+  curResult=getFullText();
+}
+
+/* 구버전 호환 (혹시 어딘가 남아있는 호출 대비) */
+async function typeIn(el,tpl){return typeInBody(aiDraft || tpl || '');}
 function cntUp(id,from,to,dur){const el=$(id);if(!el)return;let t=0;const iv=16;const tid=setInterval(()=>{t+=iv;el.textContent=Math.min(Math.round(from+(to-from)*(t/dur)),to);if(t>=dur){el.textContent=to;clearInterval(tid);}},iv);}
 
 function restart(){
@@ -1471,7 +1603,21 @@ function restart(){
   $('mNum').textContent='0';$('mRing').style.strokeDashoffset='170';
   const mg=$('mGr');if(mg)mg.textContent='-';
   const ms=$('mSub');if(ms)ms.textContent='';
-  $('resBox').value='';$('resCt').textContent='0자';
+  /* v2: 분할 뷰 리셋 */
+  if($('resBox')) $('resBox').value='';
+  if($('bodyEdit')) $('bodyEdit').value='';
+  if($('sumEdit')) $('sumEdit').textContent='';
+  if($('arsTop')) $('arsTop').textContent='';
+  if($('arsBot')) $('arsBot').textContent='';
+  if($('coopChk')) { const cc=$('coopChk').querySelector('input'); if(cc) cc.checked=false; }
+  if($('coopCk1')) $('coopCk1').checked=false;
+  if($('coopCk2')) $('coopCk2').checked=false;
+  if($('coopCk3')) $('coopCk3').checked=false;
+  if($('coopChecklist')) $('coopChecklist').style.display='none';
+  if($('coopSblock')) $('coopSblock').style.display='none';
+  if($('lawList')) $('lawList').innerHTML='<div class="lawempty">AI 초안 생성 시 자동으로 표시돼요</div>';
+  if($('lawCount')) $('lawCount').textContent='';
+  $('resCt').textContent='0자';
   $('s-result').classList.remove('show');$('s-result').classList.add('out');
   setTimeout(()=>{$('s-result').classList.remove('out');$('s0').classList.add('show');curScr='s0';setStep(0);},340);
 }

@@ -197,8 +197,8 @@ function safeParseLaw(text) {
   }
 }
 
-// 법제처 fetch with retry — Cloudflare → law.go.kr 간 525/타임아웃 대응
-async function lawFetchWithRetry(url, timeoutMs = 25000, maxRetries = 2) {
+// 법제처 fetch with retry — 빠른 실패 전략 (전체 요청 30초 제한 고려)
+async function lawFetchWithRetry(url, timeoutMs = 10000, maxRetries = 1) {
   let lastErr = null;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -208,16 +208,15 @@ async function lawFetchWithRetry(url, timeoutMs = 25000, maxRetries = 2) {
         cf: { cacheTtl: 300, cacheEverything: true },
       });
       const text = await res.text();
-      // 525/프레임/HTML 페이지 감지
       if (
         text.includes('error code: 525') ||
         text.includes('<!DOCTYPE') ||
         text.includes('error500') ||
         text.includes('미신청')
       ) {
-        lastErr = new Error('법제처 응답 오류: ' + text.slice(0, 100));
+        lastErr = new Error('법제처 응답 오류: ' + text.slice(0, 80));
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+          await new Promise((r) => setTimeout(r, 300));
           continue;
         }
         return null;
@@ -226,12 +225,12 @@ async function lawFetchWithRetry(url, timeoutMs = 25000, maxRetries = 2) {
     } catch (e) {
       lastErr = e;
       if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+        await new Promise((r) => setTimeout(r, 300));
         continue;
       }
     }
   }
-  console.log('lawFetch 최종 실패:', lastErr?.message);
+  console.log('lawFetch 실패:', url.slice(0, 80), '-', lastErr?.message);
   return null;
 }
 
@@ -295,7 +294,7 @@ async function fetchLawBody(lawId, cache) {
   const qs = new URLSearchParams({
     OC: LAW_OC, target: 'law', type: 'JSON', ID: lawId,
   });
-  const text = await lawFetchWithRetry(`${LAW_BASE}/lawService.do?${qs}`, 28000);
+  const text = await lawFetchWithRetry(`${LAW_BASE}/lawService.do?${qs}`, 12000);
   const data = safeParseLaw(text);
   if (!data) return null;
   const law = data.법령 || null;
@@ -343,14 +342,49 @@ function formatYmd(raw) {
 }
 
 // ─────────────────────────────────────────────
-// 법령명 검증: eflaw 1차 → aiSearch 폴백
+// 법령명 검증: aiSearch 1차 (안정적, 약칭 지원) → eflaw 2차 폴백
 // ─────────────────────────────────────────────
 async function verifyLawName(name, cache) {
-  // 1차: eflaw search=1
-  const r1 = await fetchEflawByName(name, cache);
-  if (parseInt(r1.totalCnt || '0', 10) > 0) {
-    const laws = Array.isArray(r1.law) ? r1.law : [r1.law];
-    return laws.map((l) => ({
+  // 1차: aiSearch — 실측 결과 가장 안정적이고 약칭도 처리
+  const r1 = await fetchAiSearch(name, cache);
+  const items1 = Array.isArray(r1.법령조문) ? r1.법령조문 : [r1.법령조문].filter(Boolean);
+  if (items1.length > 0) {
+    // 같은 법령ID 중복 제거, 이름 매칭 우선
+    const seen = new Set();
+    const result = [];
+    const nameNoSpace = name.replace(/\s+/g, '');
+    // 제안한 이름과 매칭도 높은 것 우선 정렬
+    const sorted = [...items1].sort((a, b) => {
+      const aName = (a.법령명 || '').replace(/\s+/g, '');
+      const bName = (b.법령명 || '').replace(/\s+/g, '');
+      const aMatch = aName.includes(nameNoSpace) || nameNoSpace.includes(aName) ? 0 : 1;
+      const bMatch = bName.includes(nameNoSpace) || nameNoSpace.includes(bName) ? 0 : 1;
+      return aMatch - bMatch;
+    });
+    for (const it of sorted) {
+      const id = it.법령ID;
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      result.push({
+        lawId: id,
+        mst: it.법령일련번호,
+        name: it.법령명,
+        shortName: '',
+        kind: it.법령종류명 || '',
+        ministry: it.소관부처명 || '',
+        effectiveDate: formatYmd(it.시행일자),
+        source: 'aiSearch',
+      });
+      if (result.length >= 1) break; // 가장 관련 높은 것 1개만
+    }
+    if (result.length > 0) return result;
+  }
+
+  // 2차 폴백: eflaw search=1 (정확 법령명 매칭)
+  const r2 = await fetchEflawByName(name, cache);
+  if (parseInt(r2.totalCnt || '0', 10) > 0) {
+    const laws = Array.isArray(r2.law) ? r2.law : [r2.law];
+    return laws.slice(0, 1).map((l) => ({
       lawId: l.법령ID,
       mst: l.법령일련번호,
       name: l.법령명한글,
@@ -362,31 +396,7 @@ async function verifyLawName(name, cache) {
     }));
   }
 
-  // 2차 폴백: aiSearch (약칭 지원)
-  const r2 = await fetchAiSearch(name, cache);
-  const items = Array.isArray(r2.법령조문) ? r2.법령조문 : [r2.법령조문].filter(Boolean);
-  if (items.length === 0) return [];
-
-  // 같은 법령ID 하나만 (첫 결과 기준)
-  const seen = new Set();
-  const result = [];
-  for (const it of items) {
-    const id = it.법령ID;
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    result.push({
-      lawId: id,
-      mst: it.법령일련번호,
-      name: it.법령명,
-      shortName: '',
-      kind: it.법령종류명 || '',
-      ministry: it.소관부처명 || '',
-      effectiveDate: formatYmd(it.시행일자),
-      source: 'aiSearch',
-    });
-    if (result.length >= 2) break; // 폴백은 최대 2개
-  }
-  return result;
+  return [];
 }
 
 // ─────────────────────────────────────────────
@@ -439,28 +449,27 @@ async function handleGenerate(body, env, cors) {
   let unverifiedLaws = [];
 
   if (isLawRelated && proposedLaws.length > 0) {
-    const verifications = await Promise.all(
-      proposedLaws.slice(0, 5).map(async (p) => {
-        try {
-          const matches = await verifyLawName(p.name, cache);
-          if (matches.length === 0) return { fail: true, name: p.name };
-          // 첫 매칭 (본법) 하나만 깊이 조회
-          const primary = matches[0];
-          const detail = await fetchLawBody(primary.lawId, cache);
-          if (!detail) return { fail: true, name: p.name };
-          // topics 힌트로 조문 필터링
-          const topicArts = filterArticlesByTopics(detail.articles, p.topics || []);
-          return {
-            fail: false,
-            data: { ...detail, mst: detail.mst || primary.mst, articles: topicArts },
-          };
-        } catch (e) {
-          return { fail: true, name: p.name, error: e.message };
+    // 순차 처리 — 법제처 서버 부하 분산 (병렬 시 일부 타임아웃)
+    // 최대 4개 법령까지만 검증 (시간 예산 고려)
+    for (const p of proposedLaws.slice(0, 4)) {
+      try {
+        const matches = await verifyLawName(p.name, cache);
+        if (matches.length === 0) {
+          unverifiedLaws.push(p.name);
+          continue;
         }
-      }),
-    );
-    verifiedLaws = verifications.filter((v) => !v.fail).map((v) => v.data);
-    unverifiedLaws = verifications.filter((v) => v.fail).map((v) => v.name);
+        const primary = matches[0];
+        const detail = await fetchLawBody(primary.lawId, cache);
+        if (!detail) {
+          unverifiedLaws.push(p.name);
+          continue;
+        }
+        const topicArts = filterArticlesByTopics(detail.articles, p.topics || []);
+        verifiedLaws.push({ ...detail, mst: detail.mst || primary.mst, articles: topicArts });
+      } catch (e) {
+        unverifiedLaws.push(p.name);
+      }
+    }
   }
 
   // ═════ Gemini #2: 답변 생성 ═════
