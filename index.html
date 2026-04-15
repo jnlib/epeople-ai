@@ -1,1230 +1,1254 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>민원봇 AI — 서울시교육청</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>민원봇 AI v2 — 서울시교육청</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:     #f4f7ff;
-  --bg2:    #eaf0ff;
-  --white:  #ffffff;
-  --teal:   #00cfc0;
-  --teal2:  #00a898;
-  --blue:   #3182ff;
-  --blue2:  #1a60e8;
-  --navy:   #07213a;
-  --navy2:  #0b2d50;
-  --text:   #0a1e34;
-  --text2:  #1e3a58;
-  --muted:  #6a8aaa;
-  --green:  #00c47a;
-  --amber:  #f5a000;
-  --red:    #f03060;
-  --brd:    rgba(0,207,192,.16);
-  --brd2:   rgba(49,130,255,.18);
-  --shadow: 0 2px 16px rgba(7,33,58,.07);
-  --shadowM:0 4px 28px rgba(7,33,58,.11);
-  --gT:     0 0 22px rgba(0,207,192,.28);
-  --gB:     0 0 22px rgba(49,130,255,.25);
+:root{
+  --teal1:#0d9488;--teal2:#14b8a6;--teal-bg:#f0fdfa;
+  --amber:#f59e0b;--rose:#e11d48;--slate:#64748b;--slate-d:#334155;
+  --bg:#f8fafc;--card:#ffffff;--brd:#e2e8f0;--text:#0f172a;
+  --green:#10b981;--lock:#94a3b8;--edit-brd:#0891b2;
+  --shadow:0 4px 20px rgba(15,23,42,.08);
+  --shadow-lg:0 20px 60px rgba(15,23,42,.12);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{font-size:16px;}
-html,body{height:100%;overflow:hidden;}
-body{font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--bg);display:flex;flex-direction:column;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Noto Sans KR','Inter',-apple-system,sans-serif;color:var(--text);background:var(--bg);font-size:14.5px;line-height:1.55}
+body{min-height:100vh;padding:20px}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+textarea,input{font-family:inherit;font-size:inherit;color:inherit}
 
-/* 배경 */
-.gbg{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 70% 50% at 10% 0%,  rgba(49,130,255,.07), transparent 55%),
-    radial-gradient(ellipse 60% 45% at 90% 100%,rgba(0,207,192,.09),  transparent 55%),
-    linear-gradient(160deg,#f4f7ff 0%,#edf3ff 100%);}
-.ggrid{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(0,207,192,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,207,192,.05) 1px,transparent 1px);
-  background-size:52px 52px;
-  mask-image:radial-gradient(ellipse 90% 90% at 50% 50%,black 20%,transparent 78%);}
+/* ━━━ 공통 레이아웃 ━━━ */
+.app{max-width:1280px;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px}
+.brand-ico{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal1),var(--teal2));display:grid;place-items:center;color:#fff;font-size:20px}
+.brand-sub{font-size:11px;color:var(--slate);font-weight:500}
+.badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--teal-bg);color:var(--teal1)}
 
-/* ━━━ HEADER ━━━ */
-.hdr{flex-shrink:0;height:54px;position:relative;z-index:100;
-  display:flex;align-items:center;gap:12px;padding:0 20px;
-  background:rgba(255,255,255,.92);border-bottom:1px solid var(--brd);
-  backdrop-filter:blur(20px);box-shadow:0 1px 12px rgba(7,33,58,.06);}
-.hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--teal) 35%,var(--blue) 65%,transparent);
-  animation:hl 3s ease-in-out infinite;}
-@keyframes hl{0%,100%{opacity:.3;}50%{opacity:.8;}}
-.hlogo{width:34px;height:34px;border-radius:9px;overflow:hidden;flex-shrink:0;
-  background:linear-gradient(135deg,var(--navy2),var(--teal));
-  border:1.5px solid var(--brd);display:flex;align-items:center;justify-content:center;font-size:1.1em;}
-.hlogo img{width:100%;height:100%;object-fit:cover;display:none;}
-.hlogo img.show{display:block;}
-.hname{font-family:'Orbitron',monospace;font-size:.86em;font-weight:900;color:var(--navy);letter-spacing:.07em;}
-.horg{font-size:.62em;color:var(--muted);font-family:'Share Tech Mono',monospace;margin-top:1px;}
-.honline{display:flex;align-items:center;gap:6px;background:rgba(0,207,192,.07);border:1px solid var(--brd);border-radius:999px;padding:4px 11px;font-size:.68em;font-family:'Share Tech Mono',monospace;color:var(--teal2);}
-.hdot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:dp 1.5s infinite;}
-@keyframes dp{0%,100%{box-shadow:0 0 4px var(--teal);}50%{box-shadow:0 0 14px var(--teal),0 0 26px rgba(0,207,192,.25);}}
-.hr{margin-left:auto;display:flex;align-items:center;gap:7px;}
-.spill{display:flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(0,207,192,.07);border:1.5px solid var(--brd);border-radius:10px;}
-.sl{font-size:.62em;color:var(--muted);}
-.sv{font-size:1.2em;font-weight:900;color:var(--teal2);font-family:'Orbitron',monospace;line-height:1;}
-.su{font-size:.68em;color:var(--teal2);}
-.fctr{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--brd);border-radius:7px;padding:3px;}
-.fb{width:26px;height:24px;border:none;background:transparent;cursor:pointer;border-radius:4px;color:var(--muted);font-weight:800;font-size:.78em;transition:all .15s;}
-.fb:hover{background:rgba(0,207,192,.1);color:var(--teal2);}
-.hrst{padding:8px 18px;border-radius:10px;background:linear-gradient(135deg,rgba(240,48,96,.12),rgba(240,48,96,.06));border:2px solid rgba(240,48,96,.4);font-size:.82em;font-weight:800;color:#d02050;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px;box-shadow:0 2px 10px rgba(240,48,96,.12);}
-.hrst:hover{background:linear-gradient(135deg,rgba(240,48,96,.22),rgba(240,48,96,.12));border-color:rgba(240,48,96,.65);box-shadow:0 4px 16px rgba(240,48,96,.22);transform:translateY(-1px);}
-.hrst:active{transform:translateY(0);}
+/* ━━━ 스크린 전환 ━━━ */
+.screen{display:none;animation:fadeIn .4s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
-/* ━━━ STEP BAR ━━━ — 글씨 크기 개선 */
-.sbar{flex-shrink:0;height:40px;display:flex;align-items:center;padding:0 14px;
-  background:rgba(255,255,255,.85);border-bottom:1px solid rgba(0,207,192,.08);z-index:99;overflow-x:auto;backdrop-filter:blur(8px);}
-.sbar::-webkit-scrollbar{display:none;}
-.si{display:flex;align-items:center;gap:6px;padding:0 7px;height:100%;font-size:.82em;font-weight:700;font-family:'Noto Sans KR',sans-serif;color:rgba(7,33,58,.3);white-space:nowrap;transition:color .3s;}
-.si.on{color:var(--teal2);}
-.si.done{color:rgba(0,207,192,.55);}
-.si-n{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.75em;font-weight:800;background:var(--bg2);border:1.5px solid rgba(0,207,192,.15);transition:all .3s;}
-.si.on .si-n{background:rgba(0,207,192,.15);border-color:var(--teal);color:var(--teal2);box-shadow:0 0 8px rgba(0,207,192,.25);}
-.si.done .si-n{background:rgba(0,207,192,.1);border-color:rgba(0,207,192,.3);color:var(--teal2);}
-.si-label{font-size:.82em;}
-.sarr{color:rgba(7,33,58,.15);font-size:.7em;margin:0 1px;}
+/* ━━━ 스텝 인디케이터 ━━━ */
+.steps{display:flex;gap:8px;margin-bottom:20px;background:var(--card);padding:16px;border-radius:14px;box-shadow:var(--shadow);flex-wrap:wrap}
+.step-item{flex:1;min-width:120px;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--bg);color:var(--slate);font-size:12px;font-weight:600;transition:.3s}
+.step-item.active{background:linear-gradient(135deg,var(--teal1),var(--teal2));color:#fff;box-shadow:0 4px 14px rgba(13,148,136,.3)}
+.step-item.done{background:var(--teal-bg);color:var(--teal1)}
+.step-num{width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.1);display:grid;place-items:center;font-size:11px;font-weight:800;flex-shrink:0}
+.step-item.active .step-num{background:rgba(255,255,255,.3)}
 
-/* ━━━ SCREENS ━━━ */
-.screens{position:absolute;top:94px;bottom:0;left:0;right:0;z-index:1;pointer-events:none;}
-.scr{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;opacity:0;pointer-events:none;
-  transition:opacity .36s cubic-bezier(.22,1,.36,1),transform .36s cubic-bezier(.22,1,.36,1);transform:translateX(36px);}
-.scr::-webkit-scrollbar{width:4px;}
-.scr::-webkit-scrollbar-thumb{background:rgba(0,207,192,.18);border-radius:4px;}
-.scr.show{opacity:1;pointer-events:all;transform:none;}
-.scr.out{opacity:0;transform:translateX(-36px);}
-.split3{position:absolute;top:94px;bottom:0;left:0;right:0;display:flex;overflow:hidden;
-  opacity:0;pointer-events:none;z-index:2;
-  transition:opacity .36s cubic-bezier(.22,1,.36,1),transform .36s cubic-bezier(.22,1,.36,1);transform:translateX(36px);}
-.split3.show{opacity:1;pointer-events:all;transform:none;}
-.split3.out{opacity:0;pointer-events:none;transform:translateX(-36px);}
-.col-score{width:330px;flex-shrink:0;overflow-y:auto;padding:14px;border-right:1px solid var(--brd);background:rgba(255,255,255,.88);backdrop-filter:blur(16px);}
-.col-score::-webkit-scrollbar{width:3px;}
-.col-center{width:278px;flex-shrink:0;overflow-y:auto;padding:14px;border-right:1px solid var(--brd);background:rgba(244,249,255,.9);backdrop-filter:blur(16px);}
-.col-result{flex:1;min-width:0;overflow:hidden;padding:14px 16px;display:flex;flex-direction:column;background:rgba(255,255,255,.97);}
-@media(max-width:960px){
-  .split3{flex-direction:column;overflow-y:auto;}
-  .col-score,.col-center{width:100%;border-right:none;border-bottom:1px solid var(--brd);}
-  .col-score{max-height:400px;}.col-center{max-height:440px;}
-  .col-result{flex:1;min-height:400px;}
-}
+/* ━━━ 스텝 카드 ━━━ */
+.step-card{background:var(--card);border-radius:18px;padding:32px 28px;box-shadow:var(--shadow);margin-bottom:20px}
+.step-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:var(--teal-bg);color:var(--teal1);font-size:11px;font-weight:700;margin-bottom:12px}
+.step-title{font-size:24px;font-weight:800;margin-bottom:8px}
+.step-title em{color:var(--teal1);font-style:normal;font-weight:900}
+.step-sub{color:var(--slate);font-size:13px;margin-bottom:20px}
+.step-body{margin:20px 0}
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   INTRO — 깔끔 SF 스플래시
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-#s0{overflow:hidden;}
-.stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+/* ━━━ 입력 필드 ━━━ */
+.field{margin-bottom:14px}
+.field-label{display:block;font-size:12px;font-weight:700;color:var(--slate-d);margin-bottom:6px}
+.field-hint{font-size:11px;color:var(--slate);margin-top:4px}
+.input, .textarea{width:100%;padding:12px 14px;border:1.5px solid var(--brd);border-radius:10px;background:#fff;font-size:14px;transition:.2s}
+.input:focus, .textarea:focus{outline:none;border-color:var(--teal1);box-shadow:0 0 0 3px rgba(13,148,136,.12)}
+.textarea{min-height:180px;resize:vertical;line-height:1.6}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:600px){.grid-2{grid-template-columns:1fr}}
 
-/* 배경 펄스 링 */
-.orbs{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1;}
-.orb{position:absolute;border-radius:50%;animation:orbP 4s ease-out infinite;}
-.o1{width:320px;height:320px;border:1px solid rgba(0,207,192,.2);animation-delay:0s;}
-.o2{width:460px;height:460px;border:1px solid rgba(49,130,255,.13);animation-delay:.8s;}
-.o3{width:600px;height:600px;border:1px solid rgba(0,207,192,.08);animation-delay:1.6s;}
-.o4{width:740px;height:740px;border:1px solid rgba(49,130,255,.05);animation-delay:2.4s;}
-@keyframes orbP{0%{opacity:0;transform:scale(.85);}40%{opacity:1;}100%{opacity:0;transform:scale(1.15);}}
+/* ━━━ 선택 카드 ━━━ */
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.pick{padding:18px;border:2px solid var(--brd);border-radius:14px;background:#fff;cursor:pointer;transition:.2s;text-align:left;position:relative}
+.pick:hover{border-color:var(--teal2);transform:translateY(-2px)}
+.pick.sel{border-color:var(--teal1);background:var(--teal-bg)}
+.pick.sel::after{content:'✓';position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:var(--teal1);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800}
+.pick-ico{font-size:28px;margin-bottom:8px}
+.pick-title{font-weight:800;font-size:15px;margin-bottom:4px}
+.pick-desc{font-size:11px;color:var(--slate);line-height:1.5}
 
-/* 인트로 컨텐츠 */
-.ic{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px;}
+/* ━━━ 체크박스 ━━━ */
+.check{display:flex;align-items:flex-start;gap:10px;padding:14px;border:2px solid var(--brd);border-radius:10px;cursor:pointer;transition:.2s}
+.check:hover{border-color:var(--teal2)}
+.check.sel{border-color:var(--teal1);background:var(--teal-bg)}
+.check input[type=checkbox]{width:18px;height:18px;accent-color:var(--teal1);flex-shrink:0;margin-top:2px}
+.check-body{flex:1}
+.check-title{font-weight:700;font-size:13px}
+.check-desc{font-size:11px;color:var(--slate);margin-top:3px}
 
-/* 마스코트 */
-.mzone{position:relative;width:240px;height:240px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;animation:fu .9s .05s both;}
-.mglow{position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(ellipse 65% 65% at 50% 50%,rgba(0,207,192,.18),rgba(49,130,255,.1) 45%,transparent 68%);animation:gP 3s ease-in-out infinite;filter:blur(6px);}
-@keyframes gP{0%,100%{transform:scale(1);opacity:.6;}50%{transform:scale(1.1);opacity:1;}}
-.mspin{position:absolute;inset:-6px;border-radius:42px;border:2px solid transparent;
-  background:linear-gradient(white,white) padding-box,
-    conic-gradient(from 0deg,rgba(0,207,192,.05),rgba(0,207,192,.85) 35%,rgba(49,130,255,.85) 65%,rgba(0,207,192,.05)) border-box;
-  animation:spinR 5s linear infinite;}
-@keyframes spinR{to{transform:rotate(360deg);}}
-.mbox{width:228px;height:228px;border-radius:40px;overflow:hidden;flex-shrink:0;
-  background:linear-gradient(145deg,#c8e8ff,#aaf0e8,#d2eaff);
-  display:flex;align-items:center;justify-content:center;position:relative;z-index:1;
-  animation:mF 4s ease-in-out infinite;
-  box-shadow:0 0 0 1px rgba(0,207,192,.28),0 12px 48px rgba(7,33,58,.16),var(--gT);}
-@keyframes mF{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
-.mimg{width:100%;height:100%;object-fit:cover;display:none;}
-.mimg.show{display:block;}
-.memoji{font-size:7em;line-height:1;display:flex;align-items:center;justify-content:center;height:100%;filter:drop-shadow(0 3px 16px rgba(0,207,192,.3));}
-.mscan{position:absolute;inset:0;border-radius:40px;overflow:hidden;z-index:2;pointer-events:none;}
-.sbeam{position:absolute;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent 0%,rgba(0,207,192,.25) 20%,rgba(255,255,255,.75) 50%,rgba(0,207,192,.25) 80%,transparent 100%);box-shadow:0 0 10px rgba(0,207,192,.4);animation:sb 2.8s ease-in-out infinite;opacity:0;}
-@keyframes sb{0%{top:0;opacity:0;}4%{opacity:1;}96%{opacity:1;}100%{top:100%;opacity:0;}}
-.hc{position:absolute;inset:0;pointer-events:none;z-index:3;}
-.hc::before{content:'';position:absolute;top:0;left:0;width:24px;height:24px;border-top:2.5px solid var(--teal);border-left:2.5px solid var(--teal);border-radius:40px 0 0 0;opacity:.8;}
-.hc::after{content:'';position:absolute;top:0;right:0;width:24px;height:24px;border-top:2.5px solid var(--teal);border-right:2.5px solid var(--teal);border-radius:0 40px 0 0;opacity:.8;}
-.hc2{position:absolute;inset:0;pointer-events:none;z-index:3;}
-.hc2::before{content:'';position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:2.5px solid var(--blue);border-left:2.5px solid var(--blue);border-radius:0 0 0 40px;opacity:.8;}
-.hc2::after{content:'';position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:2.5px solid var(--blue);border-right:2.5px solid var(--blue);border-radius:0 0 40px 0;opacity:.8;}
+/* ━━━ 버튼 ━━━ */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:700;transition:.2s;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--teal1),var(--teal2));color:#fff;box-shadow:0 4px 14px rgba(13,148,136,.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(13,148,136,.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-ghost{background:var(--bg);color:var(--slate-d);border:1.5px solid var(--brd)}
+.btn-ghost:hover{background:var(--card);border-color:var(--slate)}
+.btn-danger{background:#fee2e2;color:var(--rose)}
+.btn-row{display:flex;gap:10px;justify-content:space-between;margin-top:20px;flex-wrap:wrap}
 
-/* ★ AI 뱃지 제거됨 */
+/* ━━━ 결과 화면 레이아웃 ━━━ */
+.result-wrap{display:grid;grid-template-columns:1fr 380px;gap:20px}
+@media (max-width:1100px){.result-wrap{grid-template-columns:1fr}}
 
-/* 인트로 텍스트 */
-.ibadge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,207,192,.07);border:1.5px solid var(--brd);border-radius:999px;padding:5px 14px;font-size:.73em;font-weight:700;font-family:'Share Tech Mono',monospace;color:var(--teal2);margin-bottom:18px;animation:fu .8s .15s both;}
-.idot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:dp 1.5s infinite;}
-.ih{font-size:clamp(1.85em,4.5vw,2.6em);font-weight:900;color:var(--navy);line-height:1.2;margin-bottom:12px;animation:fu .8s .2s both;letter-spacing:-.02em;}
-.ih span{background:linear-gradient(135deg,var(--teal2),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.isub{font-size:1.05em;color:var(--text2);line-height:1.85;margin-bottom:30px;font-weight:500;animation:fu .8s .3s both;}
-.isub strong{color:var(--navy);font-weight:800;}
-.istart{
-  position:relative;overflow:hidden;width:100%;max-width:290px;
-  padding:17px;border:none;border-radius:16px;cursor:pointer;
-  font-family:inherit;font-size:1.08em;font-weight:900;color:#fff;
-  background:linear-gradient(135deg,var(--navy2) 0%,var(--teal2) 100%);
-  border:1.5px solid rgba(0,207,192,.38);
-  box-shadow:0 6px 28px rgba(7,33,58,.18),var(--gT);
-  transition:all .22s;display:flex;align-items:center;justify-content:center;gap:10px;
-  animation:fu .8s .4s both;
-}
-.istart:hover{transform:translateY(-4px);box-shadow:0 12px 42px rgba(7,33,58,.22),var(--gT);}
-.istart:active{transform:translateY(0);}
-.isweep{position:absolute;top:-100%;left:0;right:0;height:50%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.06),transparent);animation:sw 3s ease-in-out infinite;}
-@keyframes sw{0%{top:-100%;}100%{top:220%;}}
-@keyframes fu{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
+.result-main{background:var(--card);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.result-aside{background:var(--card);border-radius:18px;padding:20px;box-shadow:var(--shadow);height:fit-content;position:sticky;top:20px}
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   내부 화면 — 토스 스타일
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.sw{max-width:640px;margin:0 auto;padding:24px 20px 70px;}
+/* ━━━ 탭 ━━━ */
+.tabs{display:flex;border-bottom:1.5px solid var(--brd);background:#fafbfc}
+.tab{flex:1;padding:14px;font-size:13px;font-weight:700;color:var(--slate);border-bottom:3px solid transparent;cursor:pointer;transition:.2s;text-align:center}
+.tab:hover{color:var(--teal1)}
+.tab.active{color:var(--teal1);border-bottom-color:var(--teal1);background:#fff}
+.tab-badge{display:inline-block;margin-left:5px;padding:1px 7px;border-radius:10px;background:var(--teal1);color:#fff;font-size:10px;font-weight:800}
+.tab-content{display:none;padding:24px}
+.tab-content.active{display:block;animation:fadeIn .3s ease}
 
-/* 스텝 헤더 */
-.step-hd{margin-bottom:22px;}
-.step-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(0,207,192,.07);border:1px solid var(--brd);border-radius:999px;padding:4px 12px;font-size:.7em;font-weight:700;font-family:'Share Tech Mono',monospace;color:var(--teal2);margin-bottom:10px;}
-.stag-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:dp 1.5s infinite;}
-.step-title{font-size:1.5em;font-weight:900;color:var(--navy);letter-spacing:-.02em;line-height:1.3;}
-.step-title span{color:var(--teal2);}
-.step-sub{font-size:.92em;color:var(--muted);margin-top:5px;font-weight:500;}
+/* ━━━ 답변 영역 (고정/편집 구획) ━━━ */
+.answer-doc{font-size:14px;line-height:1.8;color:var(--text)}
+.region-locked{background:#f8fafc;border-left:3px solid var(--lock);padding:16px 18px;margin-bottom:14px;border-radius:8px;position:relative;white-space:pre-wrap}
+.region-locked::before{content:'🔒 자동 생성';position:absolute;top:-8px;left:14px;padding:2px 8px;background:var(--lock);color:#fff;border-radius:8px;font-size:9px;font-weight:800;letter-spacing:.3px}
 
-/* 카드 */
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
-.cards.four{grid-template-columns:1fr 1fr;}
-@media(max-width:460px){.cards,.cards.four{grid-template-columns:1fr;}}
-.hcard{
-  position:relative;overflow:hidden;border-radius:18px;padding:22px 18px;cursor:pointer;
-  background:var(--white);border:2px solid rgba(0,207,192,.12);
-  box-shadow:var(--shadow);transition:all .22s;
-}
-.hcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--blue));opacity:0;transition:opacity .22s;}
-.hcard:hover{border-color:rgba(0,207,192,.28);transform:translateY(-3px);box-shadow:var(--shadowM);}
-.hcard.sel{border-color:var(--teal2);background:rgba(0,207,192,.03);box-shadow:0 4px 22px rgba(0,207,192,.15);}
-.hcard.sel::before{opacity:1;}
-.hcard.sel .ctitle{color:var(--teal2);}
-.hcard.cprv.sel{border-color:var(--blue2);}
-.hcard.cprv.sel::before{background:linear-gradient(90deg,var(--blue),var(--teal));}
-.hcard.csp.sel{border-color:var(--amber);}.hcard.csp.sel::before{background:linear-gradient(90deg,var(--amber),var(--teal));}
-.hcard.csy.sel{border-color:var(--amber);}.hcard.csn.sel{border-color:var(--muted);}
-.ccheck{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78em;font-weight:900;opacity:0;transition:opacity .22s;box-shadow:0 0 10px rgba(0,207,192,.35);}
-.hcard.sel .ccheck{opacity:1;}
-.cico{font-size:2.2em;margin-bottom:10px;display:block;}
-.ctitle{font-size:1.05em;font-weight:800;color:var(--navy);margin-bottom:4px;}
-.cdesc{font-size:.9em;color:var(--muted);line-height:1.6;font-weight:500;}
+.region-edit{background:#fff;border:2px solid var(--edit-brd);padding:18px 20px;margin-bottom:14px;border-radius:10px;position:relative;box-shadow:0 0 0 3px rgba(8,145,178,.08)}
+.region-edit::before{content:'✏️ 편집 가능';position:absolute;top:-10px;left:14px;padding:3px 10px;background:var(--edit-brd);color:#fff;border-radius:8px;font-size:10px;font-weight:800}
 
-/* 확장 필드 */
-.xf{max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.22,1,.36,1),opacity .22s;opacity:0;}
-.xf.open{max-height:520px;opacity:1;margin-top:12px;}
-.xf-in{padding:16px 18px;background:var(--white);border:1.5px solid var(--brd);border-radius:14px;box-shadow:var(--shadow);}
-.fl{font-size:.76em;font-weight:800;color:var(--teal2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px;font-family:'Share Tech Mono',monospace;}
-input[type="text"]{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid rgba(0,207,192,.16);border-radius:11px;color:var(--text);font-family:inherit;font-size:1em;outline:none;transition:border-color .2s,box-shadow .2s;caret-color:var(--teal);}
-input::placeholder{color:rgba(7,33,58,.25);}
-input:focus{border-color:var(--teal);background:var(--white);box-shadow:0 0 0 3px rgba(0,207,192,.1);}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-@media(max-width:480px){.row2{grid-template-columns:1fr;}}
-.field{margin-bottom:12px;}.field:last-child{margin-bottom:0;}
+.summary-inline{display:inline-block;min-width:100px;padding:3px 10px;border-radius:6px;background:#cffafe;border:1.5px dashed var(--edit-brd);font-weight:700;color:var(--teal1);outline:none}
+.summary-inline:focus{background:#a5f3fc}
 
-/* 터미널 */
-.terminal{position:relative;overflow:hidden;border-radius:16px;margin-top:4px;
-  background:var(--white);border:1.5px solid rgba(0,207,192,.18);box-shadow:var(--shadowM);}
-.terminal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--blue));}
-.tbar{display:flex;align-items:center;gap:9px;padding:12px 18px;background:var(--bg);border-bottom:1px solid rgba(0,207,192,.09);}
-.tdots{display:flex;gap:6px;}
-.td{width:10px;height:10px;border-radius:50%;}
-.td1{background:#ff5f56;}.td2{background:#febc2e;}.td3{background:var(--teal);box-shadow:0 0 5px var(--teal);}
-.ttitle{font-size:.7em;font-family:'Share Tech Mono',monospace;color:var(--muted);flex:1;text-align:center;letter-spacing:.06em;text-transform:uppercase;}
-.tscan{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,207,192,.3),transparent);animation:tsc 4s ease-in-out infinite;opacity:0;pointer-events:none;z-index:2;top:44px;}
-@keyframes tsc{0%{top:44px;opacity:0;}3%{opacity:1;}97%{opacity:1;}100%{top:100%;opacity:0;}}
-.tbody{padding:18px 20px;display:flex;gap:12px;align-items:flex-start;}
-.tcur{font-size:1em;font-family:'Share Tech Mono',monospace;color:var(--teal2);margin-top:12px;flex-shrink:0;animation:blk 1.2s infinite;font-weight:900;}
-@keyframes blk{0%,100%{opacity:1;}50%{opacity:0;}}
-textarea.ttxt{flex:1;background:transparent;border:none;outline:none;resize:none;font-family:'Noto Sans KR',sans-serif;font-size:1em;line-height:1.9;color:var(--text);min-height:160px;width:100%;caret-color:var(--teal);}
-textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
+.body-editor{width:100%;min-height:220px;padding:16px;border:none;background:#fff;font-size:14px;line-height:1.8;resize:vertical;outline:none;font-family:inherit}
 
-/* 경고 */
-.wbar{display:flex;align-items:center;gap:12px;background:rgba(245,160,0,.06);border:1.5px solid rgba(245,160,0,.22);border-radius:14px;padding:13px 17px;margin-bottom:12px;}
-.wico{font-size:1.2em;flex-shrink:0;}
-.wtxt{font-size:.94em;color:var(--text2);line-height:1.6;font-weight:500;}
-.wtxt strong{color:#8a5000;font-weight:800;}
+.live-score{display:flex;gap:12px;padding:12px 16px;margin-top:12px;background:var(--teal-bg);border-radius:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--teal2)}
+.live-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:14px;background:#fff;font-size:11px;font-weight:700}
+.live-chip.ok{color:var(--green)}
+.live-chip.bad{color:var(--rose)}
+.live-chip.loading{color:var(--amber)}
 
-/* 기본정보 패널 */
-.infop{position:relative;overflow:hidden;border-radius:16px;margin-top:4px;background:var(--white);border:1.5px solid rgba(0,207,192,.16);box-shadow:var(--shadowM);}
-.infop::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--blue));}
-.ip-h{padding:16px 20px 12px;border-bottom:1px solid rgba(0,207,192,.08);}
-.ip-t{font-size:1em;font-weight:800;color:var(--navy);}
-.ip-s{font-size:.86em;color:var(--muted);margin-top:3px;}
-.ip-b{padding:16px 20px;}
+/* ━━━ 점수판 ━━━ */
+.score-head{text-align:center;padding:20px;background:linear-gradient(135deg,var(--teal-bg),#ecfeff);border-radius:14px;margin-bottom:16px}
+.score-num{font-size:52px;font-weight:900;color:var(--teal1);line-height:1;letter-spacing:-2px}
+.score-max{font-size:20px;color:var(--slate);font-weight:700}
+.score-grade{margin-top:6px;font-size:12px;color:var(--slate-d);font-weight:700}
 
-/* 버튼 */
-.nbtn{width:100%;padding:16px;border:none;border-radius:14px;cursor:pointer;
-  font-family:inherit;font-size:1.05em;font-weight:800;
-  background:linear-gradient(135deg,var(--navy2),var(--teal2));
-  color:#fff;border:1.5px solid rgba(0,207,192,.28);
-  box-shadow:0 4px 20px rgba(7,33,58,.15);transition:all .2s;
-  display:flex;align-items:center;justify-content:center;gap:9px;margin-top:16px;
-  position:relative;overflow:hidden;}
-.nbtn::before{content:'';position:absolute;top:-100%;left:0;right:0;height:40%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.06),transparent);animation:sw 3s ease-in-out infinite;}
-.nbtn:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(7,33,58,.2),var(--gT);}
-.gbtn{width:100%;padding:12px;border:1.5px solid var(--brd);border-radius:12px;background:rgba(255,255,255,.8);color:var(--muted);cursor:pointer;font-family:inherit;font-size:.95em;font-weight:700;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:9px;}
-.gbtn:hover{border-color:rgba(0,207,192,.28);color:var(--text2);}
+.rubric-list{display:flex;flex-direction:column;gap:8px}
+.rubric-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:8px;background:var(--bg);font-size:12px;transition:.2s}
+.rubric-item.ok{background:#ecfdf5;border-left:3px solid var(--green)}
+.rubric-item.bad{background:#fef2f2;border-left:3px solid var(--rose)}
+.rubric-item.na{opacity:.5}
+.rubric-lbl{font-weight:600;color:var(--slate-d)}
+.rubric-pts{font-weight:800;font-size:13px}
+.rubric-pts.ok{color:var(--green)}
+.rubric-pts.bad{color:var(--rose)}
 
-/* ━━━ 기본정보 버튼 2개 — 완전 개선 ━━━ */
-.bbrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
-@media(max-width:400px){.bbrow{grid-template-columns:1fr;}}
+.deduct-list{margin-top:8px;padding:10px 12px;background:#fff7ed;border-radius:8px;border-left:3px solid var(--amber)}
+.deduct-item{font-size:11px;color:var(--slate-d);margin-bottom:4px}
+.deduct-item b{color:var(--amber)}
+.deduct-evidence{font-style:italic;color:var(--slate);margin-left:8px}
 
-/* 왼쪽: 입력완료 버튼 */
-.bbp{
-  padding:20px 14px;border:none;border-radius:16px;cursor:pointer;font-family:inherit;
-  color:#fff;
-  background:linear-gradient(145deg,var(--navy2) 0%,var(--teal2) 100%);
-  border:1.5px solid rgba(0,207,192,.35);
-  box-shadow:0 6px 24px rgba(7,33,58,.2),0 0 0 0 rgba(0,207,192,.0);
-  transition:all .25s;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-  position:relative;overflow:hidden;
-}
-.bbp::before{content:'';position:absolute;top:-100%;left:0;right:0;height:40%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.08),transparent);animation:sw 3s ease-in-out infinite;}
-.bbp:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(7,33,58,.24),0 0 20px rgba(0,207,192,.2);}
-.bbp:active{transform:translateY(0);}
-.bbp-top{display:flex;align-items:center;gap:8px;}
-.bbp-ico{font-size:1.4em;}
-.bbp-title{font-size:1.05em;font-weight:900;letter-spacing:-.01em;}
-.bbp-sub{font-size:.78em;opacity:.75;font-weight:500;font-family:'Share Tech Mono',monospace;letter-spacing:.03em;}
+/* ━━━ 법령 카드 ━━━ */
+.law-list{display:flex;flex-direction:column;gap:14px}
+.law-card{border:1.5px solid var(--brd);border-radius:14px;padding:18px;background:#fff;transition:.2s}
+.law-card:hover{border-color:var(--teal2);box-shadow:var(--shadow)}
+.law-card.excluded{opacity:.4}
+.law-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:12px}
+.law-name{font-weight:800;font-size:15px;color:var(--teal1)}
+.law-meta{font-size:10px;color:var(--slate);margin-top:3px}
+.law-article{margin:12px 0;padding:12px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.7}
+.law-article b{color:var(--teal1)}
+.law-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.law-btn{padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;background:var(--bg);color:var(--slate-d);transition:.2s;border:1px solid var(--brd)}
+.law-btn:hover{background:var(--teal-bg);color:var(--teal1);border-color:var(--teal2)}
+.law-btn.exclude:hover{background:#fee2e2;color:var(--rose);border-color:var(--rose)}
 
-/* 오른쪽: 나중에 입력 버튼 — 진한 색상으로 */
-.bbl{
-  padding:20px 14px;border-radius:16px;cursor:pointer;font-family:inherit;
-  background:linear-gradient(145deg,#0e3a62 0%,#006f68 100%);
-  border:2px solid rgba(0,207,192,.5);
-  box-shadow:0 6px 24px rgba(0,168,152,.3),inset 0 1px 0 rgba(255,255,255,.08);
-  transition:all .25s;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-  position:relative;overflow:hidden;
-}
-.bbl::before{content:'';position:absolute;top:-100%;left:0;right:0;height:40%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.06),transparent);animation:sw 3s ease-in-out infinite 1.5s;}
-.bbl:hover{
-  background:linear-gradient(145deg,#154d80 0%,#008a82 100%);
-  border-color:var(--teal);
-  transform:translateY(-3px);
-  box-shadow:0 12px 32px rgba(0,168,152,.38),inset 0 1px 0 rgba(255,255,255,.12);
-}
-.bbl:active{transform:translateY(0);}
-.bbl-top{display:flex;align-items:center;gap:8px;}
-.bbl-ico{font-size:1.4em;}
-.bbl-title{font-size:1.05em;font-weight:900;color:#fff;letter-spacing:-.01em;}
-.bbl-sub{font-size:.75em;color:rgba(255,255,255,.7);font-weight:500;font-family:'Share Tech Mono',monospace;letter-spacing:.02em;}
-.bbl-note{font-size:.68em;color:rgba(180,255,248,.55);font-family:'Share Tech Mono',monospace;margin-top:2px;}
+/* ━━━ 자가 체크리스트 ━━━ */
+.checklist{margin-top:20px;padding:18px;border:2px solid var(--amber);border-radius:12px;background:#fffbeb}
+.checklist-title{display:flex;align-items:center;gap:8px;font-weight:800;color:#92400e;margin-bottom:10px;font-size:14px}
+.checklist-desc{font-size:11px;color:var(--slate-d);margin-bottom:14px;line-height:1.6}
+.checklist-item{display:flex;gap:10px;padding:10px;background:#fff;border-radius:8px;margin-bottom:6px;cursor:pointer}
+.checklist-item input[type=checkbox]{accent-color:var(--amber);width:18px;height:18px;flex-shrink:0;margin-top:1px}
+.checklist-item-text{font-size:12px;color:var(--slate-d)}
+.checklist-foot{margin-top:10px;text-align:center;font-size:11px;color:var(--slate-d)}
+.checklist-foot b{color:var(--rose)}
 
-@keyframes spin{to{transform:rotate(360deg);}}
+/* ━━━ 도구 모음 ━━━ */
+.toolbar{display:flex;gap:8px;padding:14px 20px;background:#fff;border-bottom:1.5px solid var(--brd);align-items:center;flex-wrap:wrap}
+.toolbar-score{margin-right:auto;font-size:13px;font-weight:700;color:var(--slate-d)}
+.toolbar-score b{font-size:18px;color:var(--teal1);margin:0 4px}
 
-/* ━━━ AI 분석화면 ━━━ */
-.ai-screen-wrap{display:flex;flex-direction:column;align-items:center;padding:28px 20px 40px;max-width:560px;margin:0 auto;width:100%;}
+/* ━━━ 토스트 ━━━ */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);padding:12px 24px;background:var(--text);color:#fff;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:1000;box-shadow:var(--shadow-lg);pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-.ai-icon{
-  width:80px;height:80px;border-radius:22px;
-  background:linear-gradient(135deg,var(--navy2),var(--teal2));
-  border:2px solid rgba(0,207,192,.3);
-  display:flex;align-items:center;justify-content:center;font-size:2.2em;
-  box-shadow:0 0 28px rgba(0,207,192,.25),0 6px 24px rgba(7,33,58,.2);
-  animation:spin .9s linear infinite;
-  margin-bottom:20px;flex-shrink:0;
-  position:relative;overflow:hidden;
-}
-.ai-icon::after{content:'';position:absolute;inset:0;background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,.1) 50%,transparent 60%);animation:shimAI 1.5s ease-in-out infinite;}
-@keyframes shimAI{0%{transform:translateX(-100%);}100%{transform:translateX(200%);}}
+/* ━━━ 모달 ━━━ */
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px)}
+.modal.show{display:flex;animation:fadeIn .2s ease}
+.modal-box{background:#fff;border-radius:18px;padding:28px;max-width:420px;width:90%;box-shadow:var(--shadow-lg)}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:8px}
+.modal-desc{font-size:13px;color:var(--slate);line-height:1.6;margin-bottom:18px}
 
-.ai-title{font-size:1.5em;font-weight:900;color:var(--navy);margin-bottom:6px;text-align:center;}
-.ai-title span{color:var(--teal2);}
-.ai-sub{font-size:.92em;color:var(--muted);margin-bottom:28px;text-align:center;}
+/* ━━━ 로딩 ━━━ */
+.loading-screen{display:none;text-align:center;padding:60px 20px}
+.loading-screen.show{display:block}
+.spinner{width:48px;height:48px;border:4px solid var(--teal-bg);border-top-color:var(--teal1);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-weight:700;color:var(--slate-d);margin-bottom:6px;font-size:15px}
+.loading-sub{font-size:12px;color:var(--slate)}
+.loading-stages{display:flex;gap:16px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.stage{padding:8px 14px;border-radius:20px;background:var(--bg);color:var(--slate);font-size:11px;font-weight:600}
+.stage.active{background:var(--teal1);color:#fff}
+.stage.done{background:var(--teal-bg);color:var(--teal1)}
 
-.prog-cards{width:100%;display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
-.pcard{
-  display:flex;align-items:center;gap:14px;
-  padding:14px 18px;border-radius:14px;
-  background:var(--white);border:1.5px solid rgba(0,207,192,.1);
-  box-shadow:var(--shadow);
-  transition:all .4s cubic-bezier(.22,1,.36,1);
-  opacity:.45;transform:translateX(-4px);
-}
-.pcard.on{
-  opacity:1;transform:translateX(0);
-  border-color:rgba(0,207,192,.3);
-  background:rgba(0,207,192,.04);
-  box-shadow:0 4px 20px rgba(0,207,192,.12);
-}
-.pcard.done{opacity:1;transform:translateX(0);border-color:rgba(0,196,122,.22);background:rgba(0,196,122,.04);}
-.pcico{
-  width:36px;height:36px;border-radius:10px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:1em;
-  background:var(--bg2);border:1.5px solid var(--brd);transition:all .4s;
-}
-.pcard.on .pcico{background:rgba(0,207,192,.12);border-color:var(--teal);animation:spin .7s linear infinite;}
-.pcard.done .pcico{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.28);color:var(--green);}
-.pctext{flex:1;}
-.pclbl{font-size:.96em;font-weight:700;color:var(--text2);transition:color .4s;}
-.pcard.on .pclbl{color:var(--teal2);font-weight:800;}
-.pcard.done .pclbl{color:var(--green);}
-.pcsub{font-size:.8em;color:var(--muted);margin-top:2px;}
-.pclive{font-size:.72em;font-family:'Share Tech Mono',monospace;color:var(--teal);margin-top:3px;min-height:1em;overflow:hidden;white-space:nowrap;}
-
-.pbwrap{width:100%;height:6px;background:rgba(0,207,192,.1);border-radius:999px;overflow:hidden;}
-.pbfill{height:100%;background:linear-gradient(90deg,var(--navy2),var(--teal));border-radius:999px;width:0;transition:width .5s cubic-bezier(.22,1,.36,1);box-shadow:0 0 8px rgba(0,207,192,.35);}
-
-/* ━━━ 채점 화면 ━━━ */
-#s-score{overflow-y:auto;}
-.sshow{max-width:520px;margin:0 auto;padding:22px 18px 70px;}
-.shead{text-align:center;margin-bottom:18px;}
-.sface{font-size:3.2em;margin-bottom:8px;}
-.slbl{font-size:.86em;font-weight:700;color:var(--muted);font-family:'Share Tech Mono',monospace;}
-.sgrade{font-size:1.2em;font-weight:900;min-height:28px;margin-top:5px;color:var(--teal2);}
-.bringw{display:flex;justify-content:center;margin:0 0 22px;}
-.bring{position:relative;width:140px;height:140px;}
-.bring svg{width:140px;height:140px;transform:rotate(-90deg);}
-.brt{fill:none;stroke:rgba(0,207,192,.1);stroke-width:8;}
-.brf{fill:none;stroke-width:8;stroke-linecap:round;stroke-dasharray:376;stroke-dashoffset:376;transition:stroke-dashoffset 1s cubic-bezier(.22,1,.36,1),stroke .5s;}
-.brc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.brn{font-size:2.5em;font-weight:900;font-family:'Orbitron',monospace;color:var(--teal2);line-height:1;}
-.brm{font-size:.76em;color:var(--muted);font-family:'Share Tech Mono',monospace;}
-.scsec{margin-bottom:14px;}
-.schd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.scnm{font-size:.8em;font-weight:800;font-family:'Share Tech Mono',monospace;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;}
-.scpts{font-size:.8em;font-weight:700;font-family:'Share Tech Mono',monospace;padding:3px 10px;border-radius:6px;background:rgba(0,207,192,.06);border:1px solid var(--brd);color:var(--muted);transition:all .4s;}
-.scpts.full{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.25);color:var(--green);}
-.sci{display:flex;align-items:center;gap:11px;padding:12px 16px;border-radius:13px;background:var(--white);border:1.5px solid rgba(0,207,192,.1);margin-bottom:7px;opacity:0;transform:translateX(-8px);transition:opacity .3s,transform .3s,background .35s,border-color .35s;box-shadow:0 2px 8px rgba(7,33,58,.05);}
-.sci:last-child{margin-bottom:0;}
-.sci.vis{opacity:1;transform:none;}
-.sci.pass{background:rgba(0,196,122,.05);border-color:rgba(0,196,122,.18);}
-.sci.fail{background:rgba(240,48,96,.05);border-color:rgba(240,48,96,.16);}
-.sci.bonus{background:rgba(245,160,0,.05);border-color:rgba(245,160,0,.18);}
-.sci.scan{animation:sscan .3s ease;}
-@keyframes sscan{0%,100%{}50%{background:rgba(0,207,192,.08);border-color:rgba(0,207,192,.3);}}
-.sciic{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.95em;background:var(--bg);border:1.5px solid var(--brd);transition:all .3s;}
-.sci.pass .sciic{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.26);color:var(--green);}
-.sci.fail .sciic{background:rgba(240,48,96,.08);border-color:rgba(240,48,96,.2);color:var(--red);}
-.sci.bonus .sciic{background:rgba(245,160,0,.1);border-color:rgba(245,160,0,.24);color:var(--amber);}
-.scibody{flex:1;min-width:0;}
-.scilbl{font-size:.92em;font-weight:800;color:var(--text);transition:color .3s;}
-.scidesc{font-size:.8em;color:var(--muted);margin-top:2px;}
-.sci.pass .scilbl{color:var(--green);}
-.sci.fail .scilbl{color:var(--red);}
-.sci.bonus .scilbl{color:var(--amber);}
-.scir{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.scipts{font-size:.8em;font-weight:800;font-family:'Share Tech Mono',monospace;padding:3px 9px;border-radius:7px;background:var(--bg);border:1px solid var(--brd);color:var(--muted);transition:all .3s;}
-.sci.pass .scipts{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);}
-.sci.fail .scipts{background:rgba(240,48,96,.07);border-color:rgba(240,48,96,.17);color:var(--red);}
-.sci.bonus .scipts{background:rgba(245,160,0,.08);border-color:rgba(245,160,0,.2);color:var(--amber);}
-.nabdg{font-size:.7em;font-weight:700;padding:3px 9px;border-radius:5px;font-family:'Share Tech Mono',monospace;background:rgba(0,207,192,.09);border:1px solid var(--brd);color:var(--teal2);}
-
-/* 결과 3-col */
-.rptitle{font-size:1em;font-weight:900;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
-.rescanbtn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;background:rgba(0,207,192,.08);border:1.5px solid var(--brd);color:var(--teal2);font-size:.76em;font-weight:700;cursor:pointer;font-family:'Share Tech Mono',monospace;}
-.rescanbtn:hover{background:rgba(0,207,192,.14);}
-.mringw{display:flex;align-items:center;gap:12px;background:rgba(0,207,192,.06);border:1.5px solid var(--brd);border-radius:14px;padding:12px;margin-bottom:10px;}
-.mring{position:relative;width:66px;height:66px;flex-shrink:0;}
-.mring svg{width:66px;height:66px;transform:rotate(-90deg);}
-.mrt2{fill:none;stroke:rgba(0,207,192,.1);stroke-width:6;}
-.mrf2{fill:none;stroke-width:6;stroke-linecap:round;stroke-dasharray:170;stroke-dashoffset:170;transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1),stroke .4s;}
-.mrc2{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.mrn2{font-size:1.2em;font-weight:900;font-family:'Orbitron',monospace;color:var(--teal2);line-height:1;}
-.mrm2{font-size:.6em;color:var(--muted);font-family:'Share Tech Mono',monospace;}
-.minfo2{flex:1;min-width:0;}
-.mgr2{font-size:.9em;font-weight:800;margin-bottom:3px;color:var(--navy);}
-.msub2{font-size:.8em;color:var(--muted);line-height:1.6;}
-.sblock{background:var(--white);border:1.5px solid rgba(0,207,192,.1);border-radius:13px;padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow);}
-.sbtitle{font-size:.76em;font-weight:800;font-family:'Share Tech Mono',monospace;color:var(--muted);letter-spacing:.03em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
-.mcpts{font-size:.76em;font-weight:700;font-family:'Share Tech Mono',monospace;padding:2px 9px;border-radius:5px;background:var(--bg);border:1px solid var(--brd);color:var(--muted);transition:all .4s;}
-.mcpts.full{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.22);color:var(--green);}
-.mci{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--bg);border:1.5px solid rgba(0,207,192,.09);transition:all .35s;margin-bottom:6px;}
-.mci:last-child{margin-bottom:0;}
-.mci.pass{background:rgba(0,196,122,.05);border-color:rgba(0,196,122,.16);}
-.mci.fail{background:rgba(240,48,96,.04);border-color:rgba(240,48,96,.14);}
-.mci.bonus{background:rgba(245,160,0,.05);border-color:rgba(245,160,0,.16);}
-
-/* ★ 입력될 때까지 지속 깜빡이는 클래스 */
-.mci.blink-pending{animation:mciB 1.4s ease-in-out infinite !important;}
-@keyframes mciB{0%,100%{background:rgba(240,48,96,.04);border-color:rgba(240,48,96,.14);}50%{background:rgba(240,48,96,.14);border-color:var(--red);box-shadow:0 0 8px rgba(240,48,96,.2);}}
-.di input.fi-pending{animation:finp 1.4s ease-in-out infinite !important;}
-@keyframes finp{0%,100%{border-color:rgba(240,48,96,.4);box-shadow:none;}50%{border-color:var(--red);box-shadow:0 0 8px rgba(240,48,96,.22);}}
-
-.mciic{width:22px;height:22px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.78em;background:var(--white);border:1.5px solid var(--brd);transition:all .3s;}
-.mci.pass .mciic{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.25);color:var(--green);}
-.mci.fail .mciic{background:rgba(240,48,96,.08);border-color:rgba(240,48,96,.2);color:var(--red);}
-.mci.bonus .mciic{background:rgba(245,160,0,.09);border-color:rgba(245,160,0,.22);color:var(--amber);}
-.mcibody{flex:1;min-width:0;}
-.mcilbl{font-size:.86em;font-weight:700;color:var(--text2);transition:color .3s;white-space:normal;word-break:keep-all;overflow:visible;text-overflow:unset;line-height:1.35;}
-.mcidesc{font-size:.74em;color:var(--muted);margin-top:1px;}
-.mci.pass .mcilbl{color:var(--green);}
-.mci.fail .mcilbl{color:var(--red);}
-.mci.bonus .mcilbl{color:var(--amber);}
-.mcir{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-direction:row-reverse;}
-.mcipts{font-size:.76em;font-weight:700;font-family:'Share Tech Mono',monospace;padding:2px 8px;border-radius:5px;background:var(--bg);border:1px solid var(--brd);color:var(--muted);transition:all .3s;}
-.mci.pass .mcipts{background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);}
-.mci.fail .mcipts{background:rgba(240,48,96,.07);border-color:rgba(240,48,96,.16);color:var(--red);}
-.mci.bonus .mcipts{background:rgba(245,160,0,.08);border-color:rgba(245,160,0,.18);color:var(--amber);}
-.mna{font-size:.7em;font-weight:700;padding:2px 9px;border-radius:5px;font-family:'Share Tech Mono',monospace;background:rgba(0,207,192,.08);border:1px solid var(--brd);color:var(--teal2);white-space:nowrap;}
-
-.hblock{background:var(--white);border:1.5px solid rgba(0,207,192,.1);border-radius:13px;padding:14px 16px;margin-bottom:13px;box-shadow:var(--shadow);}
-.hblock.warn{border-color:rgba(240,48,96,.22);background:rgba(240,48,96,.03);}
-.hblock.ok{border-color:rgba(0,196,122,.2);background:rgba(0,196,122,.03);}
-.hbtitle{font-size:.82em;font-weight:800;font-family:'Share Tech Mono',monospace;display:flex;align-items:center;gap:7px;letter-spacing:.03em;text-transform:uppercase;margin-bottom:9px;color:var(--muted);}
-.hbtitle.warn{color:var(--red);}
-.hbtitle.ok{color:var(--green);}
-.rdot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0;animation:rdot 1.2s ease-in-out infinite;}
-@keyframes rdot{0%,100%{box-shadow:0 0 3px var(--red);}50%{box-shadow:0 0 10px var(--red);opacity:.5;}}
-.hline{font-size:.92em;color:var(--text2);margin-bottom:5px;line-height:1.7;font-weight:500;}
-.hline:last-child{margin-bottom:0;}
-.wtx{color:var(--red);font-weight:800;}
-.oktx{color:var(--green);font-weight:800;}
-.dblock{background:var(--white);border:1.5px solid rgba(0,207,192,.1);border-radius:13px;padding:14px 16px;box-shadow:var(--shadow);}
-.dbtitle{font-size:.78em;font-weight:800;font-family:'Share Tech Mono',monospace;color:var(--teal2);letter-spacing:.04em;text-transform:uppercase;margin-bottom:11px;}
-.di{margin-bottom:10px;}.di:last-of-type{margin-bottom:0;}
-.dil{font-size:.84em;font-weight:700;color:var(--muted);font-family:'Share Tech Mono',monospace;margin-bottom:6px;}
-.di input{width:100%;padding:10px 13px;background:var(--bg);border:1.5px solid rgba(0,207,192,.14);border-radius:9px;color:var(--text);font-family:inherit;font-size:.95em;outline:none;transition:border-color .2s,box-shadow .2s;caret-color:var(--teal);}
-.di input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,207,192,.1);}
-.abtn{width:100%;padding:12px;border:1.5px solid rgba(0,207,192,.22);border-radius:10px;cursor:pointer;font-family:inherit;font-size:.95em;font-weight:800;margin-top:10px;background:linear-gradient(135deg,var(--navy2),var(--teal2));color:#fff;box-shadow:0 4px 14px rgba(7,33,58,.13);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;}
-.abtn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(7,33,58,.16);}
-
-.resbox{flex:1;background:var(--bg);border:1.5px solid rgba(0,207,192,.13);border-radius:13px;padding:17px;font-size:.98em;line-height:2;color:var(--text);white-space:pre-wrap;font-family:'Noto Sans KR',sans-serif;resize:none;outline:none;cursor:text;min-height:300px;caret-color:var(--teal);}
-.resbox:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,207,192,.1);}
-.resfoot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-shrink:0;}
-.resct{font-size:.78em;color:var(--muted);font-family:'Share Tech Mono',monospace;}
-.rb{padding:6px 12px;border-radius:7px;font-size:.78em;font-weight:700;cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all .2s;background:var(--bg);border:1.5px solid var(--brd);color:var(--muted);}
-.rb:hover{border-color:rgba(0,207,192,.28);color:var(--text2);}
-.rb.copy{background:rgba(0,196,122,.08);border-color:rgba(0,196,122,.22);color:var(--green);}
-.rb.copy:hover{background:rgba(0,196,122,.14);}
-.ldot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal);animation:dp 1.5s infinite;}
-
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(14px);background:rgba(7,33,58,.95);border:1.5px solid rgba(0,207,192,.28);border-radius:999px;padding:12px 24px;display:flex;align-items:center;gap:9px;font-size:.9em;font-weight:700;font-family:'Share Tech Mono',monospace;opacity:0;pointer-events:none;z-index:9999;color:#fff;box-shadow:0 8px 28px rgba(7,33,58,.25);transition:opacity .22s,transform .32s cubic-bezier(.34,1.56,.64,1);}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
+/* ━━━ 경고·알림 ━━━ */
+.alert{padding:12px 16px;border-radius:10px;font-size:12px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start}
+.alert-warn{background:#fffbeb;color:#92400e;border-left:3px solid var(--amber)}
+.alert-info{background:#eff6ff;color:#1e40af;border-left:3px solid #3b82f6}
+.alert-err{background:#fef2f2;color:#991b1b;border-left:3px solid var(--rose)}
 </style>
 </head>
 <body>
-<div class="gbg"></div>
-<div class="ggrid"></div>
+<div class="app">
 
-<svg width="0" height="0" style="position:absolute">
-  <defs>
-    <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#3182ff"/><stop offset="50%" stop-color="#00cfc0"/><stop offset="100%" stop-color="#00c47a"/>
-    </linearGradient>
-  </defs>
-</svg>
-
-<!-- HEADER -->
-<div class="hdr">
-  <div class="hlogo"><img id="hdrImg" src="" alt=""/><span id="hdrE">🤖</span></div>
-  <div>
-    <div class="hname">MINWON-BOT</div>
-    <div class="horg">서울특별시교육청 · AI SYSTEM</div>
-  </div>
-  <div class="honline"><div class="hdot"></div>ONLINE</div>
-  <div class="hr">
-    <div class="spill" id="sPill" style="display:none;">
-      <span class="sl">충실도</span>
-      <div class="sv" id="sVal">-</div>
-      <span class="su">점</span>
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-ico">🤖</div>
+    <div>
+      민원봇 AI <span class="badge">v2</span>
+      <div class="brand-sub">서울특별시교육청 · 법령 근거 기반 답변 생성</div>
     </div>
-    <div class="fctr">
-      <button class="fb" onclick="adjustFont(-1)">A−</button>
-      <button class="fb" onclick="adjustFont(1)">A+</button>
-    </div>
-    <div class="hrst" id="restBtn" style="display:none;" onclick="restart()">↺ 처음으로</div>
   </div>
+  <div id="status-badge" class="badge" style="background:#dcfce7;color:#166534">● 준비됨</div>
 </div>
 
-<!-- STEP BAR — 개선됨 -->
-<div class="sbar">
-  <div class="si on" id="si0"><div class="si-n">1</div><span class="si-label">시작</span></div><div class="sarr">›</div>
-  <div class="si" id="si1"><div class="si-n">2</div><span class="si-label">원문</span></div><div class="sarr">›</div>
-  <div class="si" id="si2"><div class="si-n">3</div><span class="si-label">공개여부</span></div><div class="sarr">›</div>
-  <div class="si" id="si3"><div class="si-n">4</div><span class="si-label">유형</span></div><div class="sarr">›</div>
-  <div class="si" id="si4"><div class="si-n">5</div><span class="si-label">만족도</span></div><div class="sarr">›</div>
-  <div class="si" id="si5"><div class="si-n">6</div><span class="si-label">기본정보</span></div><div class="sarr">›</div>
-  <div class="si" id="si6"><div class="si-n">7</div><span class="si-label">분석</span></div><div class="sarr">›</div>
-  <div class="si" id="si7"><div class="si-n">8</div><span class="si-label">결과</span></div>
-</div>
+<!-- ═══ 화면 A: 폼 입력 ═══ -->
+<div id="screen-form" class="screen active">
+  <div class="steps">
+    <div class="step-item active" data-step="1"><div class="step-num">1</div>민원 원문</div>
+    <div class="step-item" data-step="2"><div class="step-num">2</div>민원 유형</div>
+    <div class="step-item" data-step="3"><div class="step-num">3</div>담당자 정보</div>
+    <div class="step-item" data-step="4"><div class="step-num">4</div>최종 확인</div>
+  </div>
 
-<div class="screens">
-
-<!-- S0 인트로 -->
-<div class="scr show" id="s0">
-  <div class="stage">
-    <div class="orbs">
-      <div class="orb o1"></div><div class="orb o2"></div>
-      <div class="orb o3"></div><div class="orb o4"></div>
+  <!-- Step 1 -->
+  <div id="s1" class="step-card">
+    <div class="step-tag">● STEP 1</div>
+    <div class="step-title">민원 <em>원문</em>을 붙여넣어 주세요</div>
+    <div class="step-sub">국민신문고에서 받은 민원 내용을 그대로 복사해서 넣으시면 됩니다.</div>
+    <div class="step-body">
+      <textarea id="complaint-text" class="textarea" placeholder="예) 안녕하세요, 저희 학교 급식실 위생이 걱정됩니다..."></textarea>
+      <div class="field-hint"><span id="char-count">0</span>자 입력됨 · 10자 이상 권장</div>
     </div>
-    <div class="ic">
-      <div class="ibadge"><div class="idot"></div>서울시교육청 · AI 민원봇</div>
-      <div class="mzone">
-        <div class="mglow"></div>
-        <div class="mspin"></div>
-        <div class="mbox">
-          <!-- ★ MASCOT: src="파일명.png" 으로 변경 -->
-          <img class="mimg" id="mascotImg" src="" alt=""/>
-          <div class="memoji" id="mascotE">🤖</div>
-          <div class="mscan"><div class="sbeam"></div></div>
-          <div class="hc"></div><div class="hc2"></div>
+    <div class="btn-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goStep(2)">다음 →</button>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div id="s2" class="step-card" style="display:none">
+    <div class="step-tag">● STEP 2</div>
+    <div class="step-title">민원 <em>유형</em>을 선택해 주세요</div>
+    <div class="step-sub">유형에 따라 답변 양식이 달라집니다.</div>
+    <div class="step-body">
+      <div class="pick-grid">
+        <div class="pick sel" data-mtype="normal" onclick="pickMType('normal')">
+          <div class="pick-ico">📄</div>
+          <div class="pick-title">일반 민원</div>
+          <div class="pick-desc">표준 답변 양식으로 처리</div>
         </div>
-        <!-- ★ AI 뱃지 박스 제거됨 -->
-      </div>
-      <div class="ih">민원답변,<br/><span>AI가 대신 써드려요</span></div>
-      <div class="isub">원문 붙여넣기 하나면<br/><strong>분석 → 채점 → 서식 완성</strong>까지 한 번에!</div>
-      <button class="istart" onclick="goTo(1)">
-        <div class="isweep"></div>
-        <span>시작하기 →</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- S1 원문 -->
-<div class="scr" id="s1">
-  <div class="sw">
-    <div class="step-hd">
-      <div class="step-tag"><div class="stag-dot"></div>STEP 2 · 민원 원문</div>
-      <div class="step-title">원문을 <span>붙여넣어</span> 주세요</div>
-      <div class="step-sub">AI가 핵심 내용을 분석해 답변 초안을 자동으로 작성해요</div>
-    </div>
-    <div class="wbar">
-      <div class="wico">⚠️</div>
-      <div class="wtxt"><strong>개인정보 입력 금지!</strong> — 이름·연락처·주민번호 등은 <strong>○○○으로 대체</strong>해주세요.</div>
-    </div>
-    <div class="terminal">
-      <div class="tbar">
-        <div class="tdots"><div class="td td1"></div><div class="td td2"></div><div class="td td3"></div></div>
-        <div class="ttitle">MINWON-BOT · 민원 원문 입력</div>
-      </div>
-      <div class="tscan"></div>
-      <div class="tbody">
-        <span class="tcur">▶</span>
-        <textarea class="ttxt" id="rawTxt" rows="8" placeholder="민원인이 제출한 원문을 여기에 붙여넣어 주세요.&#10;&#10;예) 저는 ○○○에 거주하는 주민입니다. ~에 대해 문의드립니다."></textarea>
-      </div>
-    </div>
-    <button class="nbtn" onclick="goTo(2)">다음 →</button>
-    <button class="gbtn" onclick="goTo(0)">← 이전</button>
-  </div>
-</div>
-
-<!-- S2 공개/비공개 -->
-<div class="scr" id="s2">
-  <div class="sw">
-    <div class="step-hd">
-      <div class="step-tag"><div class="stag-dot"></div>STEP 3 · 공개여부</div>
-      <div class="step-title"><span>공개</span> 또는 <span>비공개</span> 민원인가요?</div>
-      <div class="step-sub">공개/비공개에 따라 신청번호 기재 방식이 달라져요</div>
-    </div>
-    <div class="cards">
-      <div class="hcard cpub" id="cPub" onclick="pick1(true)"><div class="ccheck">✓</div><span class="cico">🌐</span><div class="ctitle">공개 민원</div><div class="cdesc">신청번호를 기재하지 않을게요</div></div>
-      <div class="hcard cprv" id="cPrv" onclick="pick1(false)"><div class="ccheck">✓</div><span class="cico">🔒</span><div class="ctitle">비공개 민원</div><div class="cdesc">신청번호를 기재할게요</div></div>
-    </div>
-    <button class="gbtn" onclick="goTo(1)">← 이전</button>
-  </div>
-</div>
-
-<!-- S3 민원유형 -->
-<div class="scr" id="s3">
-  <div class="sw">
-    <div class="step-hd">
-      <div class="step-tag"><div class="stag-dot"></div>STEP 4 · 민원유형</div>
-      <div class="step-title">민원 <span>유형</span>을 선택해주세요</div>
-      <div class="step-sub">유형에 따라 2번 문단 문구가 달라져요</div>
-    </div>
-    <div class="cards four">
-      <div class="hcard cn sel" id="cNorm" onclick="pick2('normal')"><div class="ccheck">✓</div><span class="cico">📄</span><div class="ctitle">일반 민원</div></div>
-      <div class="hcard csp" id="cTr" onclick="pick2('transfer')"><div class="ccheck">✓</div><span class="cico">🔀</span><div class="ctitle">이첩 민원</div></div>
-      <div class="hcard csp" id="cAv" onclick="pick2('avoid')"><div class="ccheck">✓</div><span class="cico">🚫</span><div class="ctitle">기피신청</div></div>
-      <div class="hcard csp" id="cPa" onclick="pick2('passive')"><div class="ccheck">✓</div><span class="cico">🔍</span><div class="ctitle">소극행정신고</div></div>
-    </div>
-    <div class="xf" id="xfTr"><div class="xf-in"><div class="field"><div class="fl">이첩된 최초 기관명</div><input type="text" id="fromOrg" placeholder="예) 대통령비서실"/></div></div></div>
-    <div class="xf" id="xfAv"><div class="xf-in"><div class="row2"><div class="field"><div class="fl">기피 대상 부서</div><input type="text" id="avoidDept" placeholder="예) OOO과"/></div><div class="field"><div class="fl">불수용 사유</div><input type="text" id="avoidReason" placeholder="예) 업무 연속성"/></div></div></div></div>
-    <div class="xf" id="xfPa"><div class="xf-in"><div class="field"><div class="fl">현업부서 답변 사유</div><input type="text" id="passReason" placeholder="예) 자체 종결 사안"/></div></div></div>
-    <button class="nbtn" onclick="goTo(4)">다음 →</button>
-    <button class="gbtn" onclick="goTo(2)">← 이전</button>
-  </div>
-</div>
-
-<!-- S4 만족도 -->
-<div class="scr" id="s4">
-  <div class="sw">
-    <div class="step-hd">
-      <div class="step-tag"><div class="stag-dot"></div>STEP 5 · 만족도</div>
-      <div class="step-title"><span>높은 만족도</span>가 기대되나요?</div>
-      <div class="step-sub">단순 절차 안내, 칭찬민원 등 해당 여부를 선택해주세요</div>
-    </div>
-    <div class="cards">
-      <div class="hcard csy" id="cSY" onclick="pick3(true)"><div class="ccheck">✓</div><span class="cico">⭐</span><div class="ctitle">네, 기대돼요</div><div class="cdesc">만족도 유도 문구 포함<br/>가점 +8점</div></div>
-      <div class="hcard csn" id="cSN" onclick="pick3(false)"><div class="ccheck">✓</div><span class="cico">➖</span><div class="ctitle">아니요</div><div class="cdesc">만족도 유도 문구 미포함</div></div>
-    </div>
-    <button class="gbtn" onclick="goTo(3)">← 이전</button>
-  </div>
-</div>
-
-<!-- S5 기본정보 -->
-<div class="scr" id="s5">
-  <div class="sw">
-    <div class="step-hd">
-      <div class="step-tag"><div class="stag-dot"></div>STEP 6 · 기본정보</div>
-      <div class="step-title">담당자 정보, <span>지금 입력할까요?</span></div>
-      <div class="step-sub">결과 화면에서도 언제든 수정 가능해요</div>
-    </div>
-    <div class="cards">
-      <div class="hcard csy" id="cNow" onclick="pickInfo(true)"><div class="ccheck">✓</div><span class="cico">✏️</span><div class="ctitle">지금 입력하기</div><div class="cdesc">신청번호·부서·이름·전화번호<br/>입력 시 점수 더 높아져요</div></div>
-      <div class="hcard csn" id="cSkip" onclick="pickInfo(false)"><div class="ccheck">✓</div><span class="cico">⏩</span><div class="ctitle">나중에 입력하기</div><div class="cdesc">결과 화면에서<br/>바로 수정 가능해요</div></div>
-    </div>
-    <!-- 지금입력 선택 시 펼쳐지는 폼 -->
-    <div class="xf" id="xfInfo">
-      <div class="xf-in" style="padding:20px;">
-        <div class="fl" style="margin-bottom:14px;font-size:.8em;">👤 담당자 기본정보 입력</div>
-        <div class="row2" style="margin-bottom:11px;">
-          <div class="field" style="margin-bottom:0;"><div class="fl">신청번호</div><input type="text" id="dCase" placeholder="1AA-2504-0000000"/></div>
-          <div class="field" style="margin-bottom:0;"><div class="fl">소속 기관</div><input type="text" id="dOrg" placeholder="서울특별시교육청"/></div>
+        <div class="pick" data-mtype="transfer" onclick="pickMType('transfer')">
+          <div class="pick-ico">📨</div>
+          <div class="pick-title">이첩 민원</div>
+          <div class="pick-desc">대통령비서실/규제신문고 이첩</div>
         </div>
-        <div class="row2" style="margin-bottom:11px;">
-          <div class="field" style="margin-bottom:0;"><div class="fl">소속 부서</div><input type="text" id="dDept" placeholder="OOO과"/></div>
-          <div class="field" style="margin-bottom:0;"><div class="fl">담당 주무관</div><input type="text" id="dName" placeholder="홍길동"/></div>
+        <div class="pick" data-mtype="avoid" onclick="pickMType('avoid')">
+          <div class="pick-ico">🚫</div>
+          <div class="pick-title">기피신청 민원</div>
+          <div class="pick-desc">기피 불수용 시 사유 안내</div>
         </div>
-        <div class="field"><div class="fl">전화번호</div><input type="text" id="dPhone" placeholder="02-0000-0000" inputmode="tel"/></div>
-        <button class="nbtn" onclick="goTo(6)" style="margin-top:18px;">AI 분석 시작 →</button>
-      </div>
-    </div>
-    <button class="gbtn" onclick="goTo(4)">← 이전</button>
-  </div>
-</div>
-
-<!-- S6 AI 분석 -->
-<div class="scr" id="s6">
-  <div class="ai-screen-wrap">
-    <div class="ai-icon" id="aiIco">⚙️</div>
-    <div class="ai-title">AI가 <span>분석</span>하고 있어요</div>
-    <div class="ai-sub">충실도 기준에 맞게 답변 초안을 작성하는 중이에요</div>
-    <div class="prog-cards">
-      <div class="pcard" id="pc1">
-        <div class="pcico" id="pci1">📥</div>
-        <div class="pctext">
-          <div class="pclbl">원문 수신 확인</div>
-          <div class="pclive" id="plv1"></div>
+        <div class="pick" data-mtype="passive" onclick="pickMType('passive')">
+          <div class="pick-ico">⚖️</div>
+          <div class="pick-title">소극행정 신고</div>
+          <div class="pick-desc">감사부서 미처리 시 사유 안내</div>
         </div>
       </div>
-      <div class="pcard" id="pc2">
-        <div class="pcico" id="pci2">🔍</div>
-        <div class="pctext">
-          <div class="pclbl">핵심 요지 추출</div>
-          <div class="pclive" id="plv2"></div>
+
+      <!-- 이첩 서브폼 -->
+      <div id="sub-transfer" style="display:none;margin-top:20px">
+        <div class="field">
+          <label class="field-label">이첩 경로</label>
+          <select id="from-org" class="input">
+            <option value="대통령비서실">대통령비서실</option>
+            <option value="규제신문고">규제신문고</option>
+          </select>
         </div>
       </div>
-      <div class="pcard" id="pc3">
-        <div class="pcico" id="pci3">⚖️</div>
-        <div class="pctext">
-          <div class="pclbl">충실도 기준 검토</div>
-          <div class="pclive" id="plv3"></div>
+
+      <!-- 기피 서브폼 -->
+      <div id="sub-avoid" style="display:none;margin-top:20px">
+        <div class="grid-2">
+          <div class="field">
+            <label class="field-label">기피신청 부서</label>
+            <input id="avoid-dept" class="input" placeholder="예) 감사관실">
+          </div>
+          <div class="field">
+            <label class="field-label">불수용 사유</label>
+            <input id="avoid-reason" class="input" placeholder="예) 업무 연속성">
+          </div>
         </div>
       </div>
-      <div class="pcard" id="pc4">
-        <div class="pcico" id="pci4">✍️</div>
-        <div class="pctext">
-          <div class="pclbl">답변 초안 작성</div>
-          <div class="pclive" id="plv4"></div>
+
+      <!-- 소극행정 서브폼 -->
+      <div id="sub-passive" style="display:none;margin-top:20px">
+        <div class="field">
+          <label class="field-label">감사부서 미처리 사유</label>
+          <input id="pass-reason" class="input" placeholder="예) 행정절차상의 사유로">
+        </div>
+      </div>
+
+      <!-- 협조민원 체크 -->
+      <div style="margin-top:20px">
+        <label class="check" id="coop-check-wrap">
+          <input type="checkbox" id="coop-check" onchange="toggleCoop()">
+          <div class="check-body">
+            <div class="check-title">🔗 협조민원입니다</div>
+            <div class="check-desc">다른 기관/부서의 답변을 포함해야 하는 민원</div>
+          </div>
+        </label>
+        <div class="alert alert-info" id="coop-info" style="display:none;margin-top:10px">
+          ℹ️ 체크하시면 결과 화면에 자가 체크리스트가 표시됩니다. 협조기관 답변을 종합정리 형태로 본문에 반영해 주세요. (단순 나열·복붙 시 -30점)
+        </div>
+      </div>
+
+      <!-- 만족도 유도 -->
+      <div style="margin-top:14px">
+        <label class="check">
+          <input type="checkbox" id="survey-check">
+          <div class="check-body">
+            <div class="check-title">⭐ 만족도 참여 유도 문구 추가</div>
+            <div class="check-desc">높은 만족도가 기대되는 단순 안내·칭찬 민원에 권장 (+8점 가점)</div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(1)">← 이전</button>
+      <button class="btn btn-primary" onclick="goStep(3)">다음 →</button>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div id="s3" class="step-card" style="display:none">
+    <div class="step-tag">● STEP 3</div>
+    <div class="step-title"><em>담당자 정보</em>를 입력해 주세요</div>
+    <div class="step-sub">답변 말미에 자동으로 들어가는 공무원 연락처입니다.</div>
+    <div class="step-body">
+      <div class="field">
+        <label class="field-label">민원 신청번호 <span style="color:var(--rose)">*</span></label>
+        <input id="case-num" class="input" placeholder="예) 1AA-2604-1234567" maxlength="15">
+        <div class="field-hint">형식: 1AA-YYYY-XXXXXXX (필수 · 미입력 시 -10점)</div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">소속 기관</label>
+          <input id="d-org" class="input" placeholder="서울특별시교육청" value="서울특별시교육청">
+        </div>
+        <div class="field">
+          <label class="field-label">소속 부서</label>
+          <input id="d-dept" class="input" placeholder="예) 학생건강정책과">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label class="field-label">성명·직위</label>
+          <input id="d-name" class="input" placeholder="예) 홍길동 주무관">
+        </div>
+        <div class="field">
+          <label class="field-label">전화번호</label>
+          <input id="d-phone" class="input" placeholder="예) 02-1234-5678">
+        </div>
+      </div>
+      <div class="alert alert-info" style="margin-top:8px">
+        ℹ️ 부서·성명·전화번호 3가지 모두 입력 시 <b>+20점</b> · 2가지 +14점 · 1가지 +8점
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(2)">← 이전</button>
+      <button class="btn btn-primary" onclick="generate()">🤖 초안 생성하기</button>
+    </div>
+  </div>
+
+  <!-- 로딩 -->
+  <div id="loading" class="step-card loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">법령 검토 중...</div>
+    <div class="loading-sub" id="loading-sub">AI가 민원에 관련된 법령을 찾고 있어요</div>
+    <div class="loading-stages">
+      <div class="stage" id="stage-1">① 법령 제안</div>
+      <div class="stage" id="stage-2">② 법제처 검증</div>
+      <div class="stage" id="stage-3">③ 본문 조회</div>
+      <div class="stage" id="stage-4">④ 답변 작성</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 화면 B: 결과 ═══ -->
+<div id="screen-result" class="screen">
+  <div class="result-wrap">
+    <div class="result-main">
+      <div class="toolbar">
+        <div class="toolbar-score">
+          📊 총점 <b id="tb-score">—</b>/100
+          <span id="tb-grade" style="color:var(--slate)"></span>
+        </div>
+        <button class="btn btn-ghost" onclick="copyAll()">📥 전체 복사</button>
+        <button class="btn btn-ghost" onclick="regenerate()">🔄 재생성</button>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('answer')">📝 답변 작성</div>
+        <div class="tab" onclick="switchTab('laws')">
+          ⚖️ 관련 법령 <span id="law-badge" class="tab-badge">0</span>
+        </div>
+        <div class="tab" onclick="switchTab('score')">📊 채점표</div>
+      </div>
+
+      <!-- 답변 탭 -->
+      <div id="tab-answer" class="tab-content active">
+        <div class="answer-doc" id="answer-doc">
+          <!-- 동적 렌더링 -->
+        </div>
+      </div>
+
+      <!-- 법령 탭 -->
+      <div id="tab-laws" class="tab-content">
+        <div id="laws-container">
+          <!-- 동적 렌더링 -->
+        </div>
+      </div>
+
+      <!-- 채점 탭 -->
+      <div id="tab-score" class="tab-content">
+        <div id="score-detail">
+          <!-- 동적 렌더링 -->
         </div>
       </div>
     </div>
-    <div class="pbwrap"><div class="pbfill" id="pBar"></div></div>
-  </div>
-</div>
 
-<!-- S-SCORE -->
-<div class="scr" id="s-score">
-  <div class="sshow">
-    <div class="shead">
-      <div class="sface" id="sFace">🔍</div>
-      <div class="slbl">충실도 실시간 분석중</div>
-      <div class="sgrade" id="sGrade"></div>
-    </div>
-    <div class="bringw">
-      <div class="bring">
-        <svg viewBox="0 0 140 140"><circle class="brt" cx="70" cy="70" r="60"/><circle class="brf" id="bRing" cx="70" cy="70" r="60"/></svg>
-        <div class="brc"><div class="brn" id="bNum">0</div><div class="brm">/ 100점</div></div>
+    <!-- 사이드 점수판 -->
+    <div class="result-aside">
+      <div class="score-head">
+        <div><span class="score-num" id="side-score">—</span><span class="score-max">/100</span></div>
+        <div class="score-grade" id="side-grade">채점 중...</div>
       </div>
-    </div>
-    <div class="scsec">
-      <div class="schd"><div class="scnm">🏁 도입부</div><div class="scpts" id="ss1">0/30점</div></div>
-      <div class="sci" id="sc1"><div class="sciic">⏳</div><div class="scibody"><div class="scilbl">인사말 포함</div><div class="scidesc">안녕하십니까? + 소속 안내</div></div><div class="scir"><div class="scipts" id="sp1">—</div></div></div>
-      <div class="sci" id="sc2"><div class="sciic">⏳</div><div class="scibody"><div class="scilbl" id="sl2">신청번호</div><div class="scidesc" id="sd2">—</div></div><div class="scir"><div class="scipts" id="sp2">—</div><div class="nabdg" id="sb2" style="display:none;">해당없음</div></div></div>
-      <div class="sci" id="sc3"><div class="sciic">⏳</div><div class="scibody"><div class="scilbl" id="sl3">특수유형</div><div class="scidesc" id="sd3">—</div></div><div class="scir"><div class="scipts" id="sp3">—</div><div class="nabdg" id="sb3" style="display:none;">해당없음</div></div></div>
-    </div>
-    <div class="scsec">
-      <div class="schd"><div class="scnm">📋 전개부</div><div class="scpts" id="ss2">0/50점</div></div>
-      <div class="sci" id="sc4"><div class="sciic">⏳</div><div class="scibody"><div class="scilbl">민원 요지</div><div class="scidesc">자동 포함됨</div></div><div class="scir"><div class="scipts" id="sp4">—</div></div></div>
-      <div class="sci" id="sc5"><div class="sciic">⏳</div><div class="scibody"><div class="scilbl">답변 가독성</div><div class="scidesc">구조화 자동 적용</div></div><div class="scir"><div class="scipts" id="sp5">—</div></div></div>
-      <div class="sci" id="sc6"><div class="sciic">⏳</div><div class="scibody"><div class="scilbl">성실한 답변</div><div class="scidesc">AI 초안 작성됨</div></div><div class="scir"><div class="scipts" id="sp6">—</div></div></div>
-    </div>
-    <div class="scsec">
-      <div class="schd"><div class="scnm">🏷️ 종결부</div><div class="scpts" id="ss3">0/20점</div></div>
-      <div class="sci" id="sc7"><div class="sciic">⏳</div><div class="scibody"><div class="scilbl">담당자 정보</div><div class="scidesc">최대 +20점</div></div><div class="scir"><div class="scipts" id="sp7">—</div></div></div>
-    </div>
-    <div class="scsec">
-      <div class="schd"><div class="scnm">⭐ 가점</div><div class="scpts" id="ss4">+0점</div></div>
-      <div class="sci" id="sc8"><div class="sciic">⏳</div><div class="scibody"><div class="scilbl">만족도 유도</div><div class="scidesc" id="sd8">선택 여부</div></div><div class="scir"><div class="scipts" id="sp8">—</div></div></div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- RESULT 3-COL -->
-<div class="split3" id="s-result">
-  <div class="col-score">
-    <div class="rptitle">📊 충실도 채점표<button class="rescanbtn" onclick="reScan()"><span id="rIco">↺</span> 재채점</button></div>
-    <div class="mringw">
-      <div class="mring"><svg viewBox="0 0 66 66"><circle class="mrt2" cx="33" cy="33" r="27"/><circle class="mrf2" id="mRing" cx="33" cy="33" r="27"/></svg><div class="mrc2"><div class="mrn2" id="mNum">0</div><div class="mrm2">/100점</div></div></div>
-      <div class="minfo2"><div class="mgr2" id="mGr">-</div><div class="msub2" id="mSub"></div></div>
-    </div>
-    <div class="sblock">
-      <div class="sbtitle"><span>🏁 도입부</span><span class="mcpts" id="mp1">0/30점</span></div>
-      <div class="mci pass" id="mi1"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">인사말</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
-      <div class="mci" id="mi2"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl" id="ml2">신청번호</div></div><div class="mcir"><div class="mcipts" id="mc2">—</div><div class="mna" id="mn2" style="display:none;">해당없음</div></div></div>
-      <div class="mci pass" id="mi3"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl" id="ml3">일반민원</div></div><div class="mcir"><div class="mcipts" id="mc3" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
-    </div>
-    <div class="sblock">
-      <div class="sbtitle"><span>📋 전개부</span><span class="mcpts full" id="mp2">50/50점</span></div>
-      <div class="mci pass"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">민원 요지</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+10점</div></div></div>
-      <div class="mci pass"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">가독성</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+20점</div></div></div>
-      <div class="mci pass"><div class="mciic">✓</div><div class="mcibody"><div class="mcilbl">성실 답변</div></div><div class="mcir"><div class="mcipts" style="background:rgba(0,196,122,.1);border-color:rgba(0,196,122,.2);color:var(--green);">+20점</div></div></div>
-    </div>
-    <div class="sblock">
-      <div class="sbtitle"><span>🏷️ 종결부</span><span class="mcpts" id="mp3">0/20점</span></div>
-      <div class="mci" id="mi7"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">담당자 정보</div><div class="mcidesc" id="ml7">대기중</div></div><div class="mcir"><div class="mcipts" id="mc7">0점</div></div></div>
-    </div>
-    <div class="sblock">
-      <div class="sbtitle"><span>⭐ 가점</span><span class="mcpts" id="mp4">+0점</span></div>
-      <div class="mci" id="mi8"><div class="mciic">⏳</div><div class="mcibody"><div class="mcilbl">만족도 유도</div></div><div class="mcir"><div class="mcipts" id="mc8">—</div></div></div>
-    </div>
-  </div>
-  <div class="col-center">
-    <div style="font-size:.98em;font-weight:900;color:var(--navy);margin-bottom:11px;">⚠️ 감점 분석</div>
-    <div class="hblock" id="hintBlock"><div class="hbtitle" id="hbTitle">분석중...</div><div id="hintLines"></div></div>
-    <div style="font-size:.98em;font-weight:900;color:var(--navy);margin:13px 0 9px;">📝 기본정보 수정</div>
-    <div class="dblock">
-      <div class="dbtitle">담당자 정보 입력</div>
-      <div class="di"><div class="dil">민원 신청번호</div><input type="text" id="rCase" placeholder="1AA-2504-0000000" oninput="onInfoInput('rCase')"/></div>
-      <div class="di"><div class="dil">소속 기관명</div><input type="text" id="rOrg" placeholder="서울특별시교육청" oninput="onInfoInput('rOrg')"/></div>
-      <div class="di"><div class="dil">소속 부서</div><input type="text" id="rDept" placeholder="OOO과" oninput="onInfoInput('rDept')"/></div>
-      <div class="di"><div class="dil">담당 주무관</div><input type="text" id="rName" placeholder="홍길동" oninput="onInfoInput('rName')"/></div>
-      <div class="di"><div class="dil">전화번호</div><input type="text" id="rPhone" placeholder="02-0000-0000" inputmode="tel" oninput="onInfoInput('rPhone')"/></div>
-      <button class="abtn" onclick="doApply()">✅ 반영 &amp; 재채점</button>
-    </div>
-  </div>
-  <div class="col-result">
-    <div style="font-size:.98em;font-weight:900;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;flex-shrink:0;">
-      <span style="display:flex;align-items:center;gap:7px;"><div class="ldot" id="liveDot" style="display:none;"></div>📋 민원답변 서식</span>
-      <div style="display:flex;gap:6px;">
-        <button class="rb" onclick="doReGen()">↺ 재생성</button>
-        <button class="rb copy" onclick="doCopy()">📋 복사</button>
+      <div class="rubric-list" id="side-rubric">
+        <!-- 동적 렌더링 -->
       </div>
+      <div id="side-deducts"></div>
     </div>
-    <div style="font-size:.8em;color:var(--muted);margin-bottom:8px;flex-shrink:0;font-family:'Share Tech Mono',monospace;">✏️ 직접 클릭해서 수정 가능</div>
-    <textarea class="resbox" id="resBox" oninput="onEdit()" spellcheck="false" placeholder="서식이 여기에 생성됩니다..."></textarea>
-    <div class="resfoot"><span class="resct" id="resCt">0자</span></div>
   </div>
 </div>
 
-<div class="toast" id="toast"><span id="tIco">✅</span> <span id="tMsg">완료</span></div>
+<!-- 재생성 확인 모달 -->
+<div id="modal-regen" class="modal">
+  <div class="modal-box">
+    <div class="modal-title">🔄 재생성 하시겠어요?</div>
+    <div class="modal-desc">편집 중인 본문과 민원요지가 <b>모두 사라집니다</b>. 계속하시겠어요?</div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('modal-regen')">취소</button>
+      <button class="btn btn-primary" onclick="confirmRegen()">재생성</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+</div>
 
 <script>
-const $=id=>document.getElementById(id);
-const WORKER='https://icy-art-4e14.hdh1231.workers.dev';
-const AI_EP=WORKER+'/api/generate';
-const MASCOT='';
+// ═══════════════════════════════════════════════════════════════
+// 설정 / 상태
+// ═══════════════════════════════════════════════════════════════
+const WORKER = 'https://epeople-ai-v2.hdh1231.workers.dev';
+const API = {
+  generate: WORKER + '/api/generate',
+  evaluate: WORKER + '/api/evaluate-edit',
+  laws: WORKER + '/api/laws',
+  health: WORKER + '/api/health',
+};
 
-let isPublic=null,mType='normal',wSurvey=null,aiSum='',aiDraft='',curResult='',curScr='s0',inSplit=false;
-let prefetchPromise=null;
+const state = {
+  step: 1,
+  mType: 'normal',
+  coopEnabled: false,
+  surveyEnabled: false,
+  summary: '',
+  draft: '',
+  laws: [],
+  excludedLawIds: new Set(),
+  unverifiedLaws: [],
+  scores: {
+    code: {},
+    ai: {
+      privacy: { triggered: false },
+      jurisdiction: { triggered: false },
+      passBuck: { triggered: false },
+      refOnly: { triggered: false },
+    },
+    sincerity: 20,
+    cooperation: { checked: { included: false, integrated: false, adapted: false } },
+  },
+  lastEvalText: '',
+  evalTimer: null,
+};
 
-(function(){
-  if(!MASCOT)return;
-  function si(iId,eId){const i=$(iId),e=$(eId);if(!i)return;i.src=MASCOT;i.onload=()=>{i.classList.add('show');if(e)e.style.display='none';}}
-  si('mascotImg','mascotE');si('hdrImg','hdrE');
-})();
+// ═══════════════════════════════════════════════════════════════
+// 유틸
+// ═══════════════════════════════════════════════════════════════
+const $ = (id) => document.getElementById(id);
+const toast = (msg, ms = 2200) => {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+};
+const showModal = (id) => $(id).classList.add('show');
+const closeModal = (id) => $(id).classList.remove('show');
 
-/* 폰트 */
-let curFont=parseInt(localStorage.getItem('mb-font')||'16');
-document.documentElement.style.fontSize=curFont+'px';
-function adjustFont(d){curFont=Math.min(24,Math.max(13,curFont+d));document.documentElement.style.fontSize=curFont+'px';localStorage.setItem('mb-font',curFont);toast('글씨 크기 '+curFont+'px',d>0?'🔠':'🔡');}
-
-function josa(w,t='은는'){if(!w)return t==='은는'?'은':'이';const c=w[w.length-1].charCodeAt(0);if(c<0xAC00||c>0xD7A3)return t==='은는'?'은':'이';const j=(c-0xAC00)%28;if(t==='은는')return j>0?'은':'는';return j>0?'을':'를';}
-
-let tT;
-function toast(msg,ico='✅'){$('tIco').textContent=ico;$('tMsg').textContent=msg;$('toast').classList.add('show');clearTimeout(tT);tT=setTimeout(()=>$('toast').classList.remove('show'),2700);}
-
-/* ★ 스텝바: 결과탭이면 7번(인덱스)을 on으로 */
-function setStep(n){
-  for(let i=0;i<8;i++){
-    const e=$('si'+i);
-    e.classList.remove('on','done');
-    if(i<n)e.classList.add('done');
-    if(i===n)e.classList.add('on');
-  }
-}
-
-function trans(fId,tId,sN){
-  const f=$(fId),t=$(tId);if(!f||!t)return;
-  f.classList.remove('show');f.classList.add('out');
-  setTimeout(()=>{f.classList.remove('out');t.classList.add('show');if(t.scrollTop!==undefined)t.scrollTop=0;curScr=tId;if(sN!==undefined)setStep(sN);},340);
-}
-function goTo(n){
-  if(n===2&&!$('rawTxt').value.trim()){toast('원문을 먼저 입력해주세요','⚠️');return;}
-  if(n===3&&isPublic===null){toast('공개/비공개를 선택해주세요','⚠️');return;}
-  if(n===5&&wSurvey===null){toast('만족도 여부를 선택해주세요','⚠️');return;}
-  if(n===6){startAnalysis();return;}
-  /* ★ 원문 넘어갈 때 AI 프리페치 시작 */
-  if(n===2&&!prefetchPromise){
-    const raw=$('rawTxt').value.trim();
-    if(raw) prefetchPromise=fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw})}).then(r=>r.ok?r.json():null).catch(()=>null);
-  }
-  const m={0:'s0',1:'s1',2:'s2',3:'s3',4:'s4',5:'s5'};if(m[n])trans(curScr,m[n],n);
-}
-function showScore(){trans(curScr,'s-score',6);}
-
-/* ★ 결과 화면 진입 시 step 7(결과)를 on으로 설정 */
-function showSplit(){
-  $('s-score').classList.remove('show');
-  $('s-score').classList.add('out');
-  setTimeout(()=>{
-    $('s-score').classList.remove('out');
-    $('s-result').classList.add('show');
-    inSplit=true;
-    curScr='s-result';
-    setStep(7); /* ★ 결과탭 = 인덱스 7 */
-  },340);
-}
-
-function pick1(v){isPublic=v;$('cPub').classList.toggle('sel',v);$('cPrv').classList.toggle('sel',!v);$('sl2').textContent=v?'신청번호(해당없음)':'신청번호 명시';$('sd2').textContent=v?'공개용 — 기재 안 함':'비공개 — 기재 필요';$('ml2').textContent=v?'신청번호(해당없음)':'신청번호 명시';setTimeout(()=>goTo(3),280);}
-function pick2(t){
-  mType=t;
-  [{id:'cNorm',k:'normal'},{id:'cTr',k:'transfer'},{id:'cAv',k:'avoid'},{id:'cPa',k:'passive'}].forEach(o=>$(o.id).classList.toggle('sel',o.k===t));
-  $('xfTr').classList.toggle('open',t==='transfer');$('xfAv').classList.toggle('open',t==='avoid');$('xfPa').classList.toggle('open',t==='passive');
-  const typeLabel={normal:'일반민원',transfer:'이첩민원',avoid:'기피신청',passive:'소극행정신고'}[t];
-  $('sl3').textContent=typeLabel;$('sd3').textContent=t==='normal'?'일반 민원':typeLabel+' 문구 자동포함';
-  $('ml3').textContent=typeLabel;
-  if(t==='normal')setTimeout(()=>goTo(4),280);
-}
-function pickInfo(v){
-  $('cNow').classList.toggle('sel',v);
-  $('cSkip').classList.toggle('sel',!v);
-  $('xfInfo').classList.toggle('open',v);
-  if(!v){
-    // 나중에 입력 → 바로 분석 시작
-    setTimeout(()=>goTo(6),280);
-  }
-}
-function pick3(v){wSurvey=v;$('cSY').classList.toggle('sel',v);$('cSN').classList.toggle('sel',!v);setTimeout(()=>trans(curScr,'s5',5),280);}
-
-/* 라이브 텍스트 타이핑 */
-const liveTexts=[
-  ['데이터 수신 확인 중...','원문 길이 측정 중...','수신 완료 ✓'],
-  ['문장 구조 파악 중...','핵심 키워드 추출 중...','요지 추출 완료 ✓'],
-  ['충실도 항목 매칭 중...','기준 검토 완료 ✓'],
-  ['서식 구조 생성 중...','문단 배치 중...','초안 작성 완료 ✓'],
-];
-async function typeLive(el,texts){
-  for(const txt of texts){
-    el.textContent='';
-    for(const ch of txt){el.textContent+=ch;await delay(28+Math.random()*14);}
-    await delay(320);
-  }
-}
-
-function startAnalysis(){
-  ['Case','Org','Dept','Name','Phone'].forEach(k=>{const s=$('d'+k),r=$('r'+k);if(s&&r)r.value=s.value;});
-  trans(curScr,'s6',6);runAnalysis();
-}
-async function runAnalysis(){
-  const raw=$('rawTxt').value.trim()||'';
-  const pp=runProg();
-  try{
-    if(!raw)throw new Error('no raw');
-    /* ★ 프리페치가 있으면 재사용, 없으면 새로 호출 */
-    let d;
-    if(prefetchPromise){
-      d=await prefetchPromise;
-      prefetchPromise=null;
-      if(!d)throw new Error('프리페치 실패');
-    }else{
-      const res=await fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw})});
-      if(!res.ok)throw new Error('서버오류');d=await res.json();
+// ═══════════════════════════════════════════════════════════════
+// Step 이동
+// ═══════════════════════════════════════════════════════════════
+function goStep(n) {
+  if (n === 2) {
+    const txt = $('complaint-text').value.trim();
+    if (txt.length < 10) {
+      toast('⚠️ 민원 원문을 10자 이상 입력해주세요');
+      return;
     }
-    if(d.error)throw new Error(d.error);
-    await pp;aiSum=d.summary||'';aiDraft=typeof d.draft==='string'?d.draft:'';
-  }catch(e){await pp.catch(()=>{});aiSum='';aiDraft='';toast('AI 실패 → 빈 초안으로 진행','⚠️');}
-  showScore();await delay(200);await runScoreShow();
-}
-
-async function runProg(){
-  const ids=['pc1','pc2','pc3','pc4'];
-  const liveIds=['plv1','plv2','plv3','plv4'];
-  const icoIds=['pci1','pci2','pci3','pci4'];
-  for(let i=0;i<4;i++){
-    ids.forEach((id,j)=>{const e=$(id);if(!e)return;e.classList.remove('on','done');if(j<i)e.classList.add('done');if(j===i)e.classList.add('on');});
-    const ico=$(icoIds[i]);if(ico)ico.textContent='⟳';
-    const lv=$(liveIds[i]);
-    if(lv) typeLive(lv,liveTexts[i]);
-    $('pBar').style.width=((i+1)/4*100)+'%';
-    await delay(500+Math.random()*320);
-    if(ico)ico.textContent='✓';
   }
-  ids.forEach((id,j)=>{const e=$(id);if(e){e.classList.remove('on');e.classList.add('done');}});
-  $('pBar').style.width='100%';
-  liveIds.forEach((id,i)=>{const e=$(id);if(e&&i<4)e.textContent='완료 ✓';});
-}
-
-async function runScoreShow(){
-  $('sFace').textContent='🔍';$('sGrade').textContent='';
-  $('bNum').textContent='0';$('bRing').style.strokeDashoffset='376';$('bRing').style.stroke='url(#sg)';
-  for(let i=1;i<=8;i++){const e=$('sc'+i);if(!e)continue;e.classList.remove('pass','fail','bonus','vis','scan');e.querySelector('.sciic').textContent='⏳';$('sp'+i).textContent='—';}
-  ['ss1','ss2','ss3','ss4'].forEach(id=>{const e=$(id);if(e){e.textContent='...';e.classList.remove('full');}});
-  ['sb2','sb3'].forEach(id=>{const e=$(id);if(e)e.style.display='none';});
-  const sc=calcScore();let run=0;
-  async function rev(idx,pass,pts,na,bonus,lbl,desc,sna){
-    const e=$('sc'+idx);if(!e)return;e.classList.add('vis','scan');await delay(180);e.classList.remove('scan');
-    const lb=e.querySelector('.scilbl');if(lb&&lbl)lb.textContent=lbl;
-    const db=e.querySelector('.scidesc');if(db&&desc)db.textContent=desc;
-    const ic=e.querySelector('.sciic');const na2=$('sb'+idx);
-    if(na){e.classList.add('pass');ic.textContent='✓';$('sp'+idx).textContent='+'+pts+'점';if(na2&&sna)na2.style.display='flex';}
-    else if(bonus){e.classList.add('bonus');ic.textContent='⭐';$('sp'+idx).textContent='+'+pts+'점';}
-    else if(pass && idx===7){
-      // 종결부(담당자)는 만점(20점)일 때만 초록, 부분점수면 amber
-      if(pts===20){e.classList.add('pass');ic.textContent='✓';}
-      else{e.classList.add('bonus');ic.textContent='△';}
-      $('sp'+idx).textContent='+'+pts+'점';
+  if (n === 3) {
+    // mType별 검증
+    if (state.mType === 'transfer' && !$('from-org').value.trim()) {
+      toast('⚠️ 이첩 경로를 선택해주세요');
+      return;
     }
-    else if(pass){e.classList.add('pass');ic.textContent='✓';$('sp'+idx).textContent='+'+pts+'점';}
-    else{e.classList.add('fail');ic.textContent='✕';$('sp'+idx).textContent='0점';}
-    if(pass||na)run+=pts;animBig(run);await delay(80);
+    if (state.mType === 'avoid' && (!$('avoid-dept').value.trim() || !$('avoid-reason').value.trim())) {
+      toast('⚠️ 기피신청 부서와 사유를 입력해주세요');
+      return;
+    }
+    if (state.mType === 'passive' && !$('pass-reason').value.trim()) {
+      toast('⚠️ 감사부서 미처리 사유를 입력해주세요');
+      return;
+    }
+    state.coopEnabled = $('coop-check').checked;
+    state.surveyEnabled = $('survey-check').checked;
   }
-  $('sGrade').textContent='도입부 검토 중...';
-  await rev(1,true,10,false,false,'인사말 포함','안녕하십니까? + 소속 안내');
-  await rev(2,sc.case2.pass,10,sc.case2.na,false,sc.case2.na?'신청번호(해당없음)':'신청번호 명시',sc.case2.na?'공개용 — 기재 안 함':sc.case2.pass?'번호 확인됨':'⚠️ 미입력',true);
-  await rev(3,true,10,mType==='normal',false,mType==='normal'?'특수유형(일반)':'특수유형 안내',mType==='normal'?'일반 민원 — 해당없음':'문구 자동포함',true);
-  $('ss1').textContent=sc.s1+'/30점';$('ss1').classList.toggle('full',sc.s1===30);await delay(80);
-  $('sGrade').textContent='전개부 검토 중...';
-  await rev(4,true,10,false,false,'민원 요지','자동 포함됨');await rev(5,true,20,false,false,'답변 가독성','구조화 자동 적용');await rev(6,true,20,false,false,'성실한 답변','AI 초안 작성됨');
-  $('ss2').textContent='50/50점';$('ss2').classList.add('full');await delay(80);
-  $('sGrade').textContent='종결부 검토 중...';
-  await rev(7,sc.contact.pts>0,sc.contact.pts,false,false,'담당자 정보',sc.contact.pts>0?sc.contact.label:'기본정보 입력 시 최대 +20점');
-  $('ss3').textContent=sc.s3+'/20점';$('ss3').classList.toggle('full',sc.s3===20);await delay(80);
-  $('sGrade').textContent='가점 확인 중...';
-  await rev(8,wSurvey,sc.bonus,false,wSurvey,'만족도 유도',wSurvey?'포함 (+'+sc.bonus+'점)':'미선택');
-  $('ss4').textContent=sc.bonus>0?'+'+sc.bonus+'점':'0점';await delay(150);
-  const t=sc.total;$('sGrade').textContent=(t>=100?'🏆 만점!':t>=90?'🏆 최우수':t>=80?'🥇 우수':t>=65?'🥈 양호':'🔧 보완')+' · '+t+'점';
-  $('sFace').textContent=t>=95?'🤩':t>=80?'😊':'😅';
-  $('sPill').style.display='flex';$('sVal').textContent=t;
-  await delay(700);const tpl=buildTpl();curResult=tpl;showSplit();$('restBtn').style.display='';
-  syncMini(sc);updateHint(sc);await delay(300);$('liveDot').style.display='inline-block';await typeIn($('resBox'),tpl);$('liveDot').style.display='none';
-  /* ★ 입력될 때까지 지속 깜빡이기 */
-  blinkFailsPersistent(sc);
+  state.step = n;
+  for (let i = 1; i <= 3; i++) {
+    $(`s${i}`).style.display = i === n ? 'block' : 'none';
+  }
+  document.querySelectorAll('.step-item').forEach((el, idx) => {
+    el.classList.remove('active', 'done');
+    if (idx + 1 === n) el.classList.add('active');
+    else if (idx + 1 < n) el.classList.add('done');
+  });
 }
 
-function animBig(v){$('bRing').style.strokeDashoffset=376-(376*(v/100));$('bRing').style.stroke=v>=80?'#00cfc0':v>=60?'url(#sg)':'#f5a000';cntUp('bNum',parseInt($('bNum').textContent)||0,v,400);}
+function pickMType(t) {
+  state.mType = t;
+  document.querySelectorAll('.pick[data-mtype]').forEach((el) => {
+    el.classList.toggle('sel', el.dataset.mtype === t);
+  });
+  ['transfer', 'avoid', 'passive'].forEach((k) => {
+    $(`sub-${k}`).style.display = k === t ? 'block' : 'none';
+  });
+}
 
-function calcScore(){
-  const cV=($('rCase')?.value||'').trim();
-  const orgV=($('rOrg')?.value||'').trim();
-  const dV=($('rDept')?.value||'').trim();
-  const nV=($('rName')?.value||'').trim();
-  const pV=($('rPhone')?.value||'').trim();
+function toggleCoop() {
+  state.coopEnabled = $('coop-check').checked;
+  $('coop-info').style.display = state.coopEnabled ? 'flex' : 'none';
+  $('coop-check-wrap').classList.toggle('sel', state.coopEnabled);
+}
 
-  const na=!!isPublic, cp=na?true:cV.length>0;
-
-  // 부서 = 소속기관 AND 소속부서 둘 다 있어야 1개로 인정
-  const deptOk = orgV.length>0 && dV.length>0;
-  const nameOk = nV.length>0;
-  const phoneOk = pV.length>0;
-
-  // 채워진 항목 수 (부서1+성명1+전화1, 최대3)
-  const rc = [deptOk, nameOk, phoneOk].filter(Boolean).length;
-
-  // 규정: 2가지=14점, 1가지=8점, 0=0점 (3가지도 14점 — 규정 최대 14점)
-  // ※ 실제로 3가지 모두면 20점 주는 게 맞는지 확인 필요하나,
-  //   규정 원문 "2가지=14, 1가지=8" 기준으로 최대 20점은 3가지일 때만
-  //   실제 규정엔 3가지 케이스가 명시되어 있을 수 있으므로 아래처럼 처리
-  const cPts = rc>=3 ? 20 : rc===2 ? 14 : rc===1 ? 8 : 0;
-
-  // 라벨 — 항목별로 뭐가 빠졌는지 표시
-  let missingParts = [];
-  if(!deptOk){
-    if(!orgV && !dV) missingParts.push('부서(기관+부서명)');
-    else if(!orgV) missingParts.push('소속기관명');
-    else missingParts.push('소속부서명');
+// ═══════════════════════════════════════════════════════════════
+// 초안 생성
+// ═══════════════════════════════════════════════════════════════
+async function generate() {
+  const caseNum = $('case-num').value.trim();
+  if (!caseNum) {
+    toast('⚠️ 민원 신청번호를 입력해주세요 (필수)');
+    return;
   }
-  if(!nameOk) missingParts.push('성명');
-  if(!phoneOk) missingParts.push('전화번호');
+  if (!/^1[A-Z]{2}-\d{4}-\d{7}$/.test(caseNum)) {
+    toast('⚠️ 민원번호 형식 확인 (예: 1AA-2604-1234567)');
+    return;
+  }
 
-  const cLbl = rc===0
-    ? '부서·성명·전화 미입력 (0점)'
-    : rc===1
-    ? `1가지 안내 (+8점)${missingParts.length?' — '+missingParts.join(', ')+' 미입력':''}`
-    : rc===2
-    ? `2가지 안내 (+14점)${missingParts.length?' — '+missingParts.join(', ')+' 미입력':''}`
-    : '3가지 모두 안내 (+20점)';
+  // 로딩 화면
+  $('s3').style.display = 'none';
+  $('loading').classList.add('show');
+  runLoadingStages();
 
-  const bonus=wSurvey?8:0;
-  return{
-    case2:{pass:cp,na},
-    contact:{pass:cPts>0,pts:cPts,label:cLbl,rc,deptOk,nameOk,phoneOk},
-    s1:10+(cp?10:0)+10, s2:50, s3:cPts, bonus,
-    total:Math.min(100, 10+(cp?10:0)+10+50+cPts+bonus)
+  const payload = {
+    text: $('complaint-text').value.trim(),
+    mType: state.mType,
+    cooperation: { enabled: state.coopEnabled },
   };
+
+  try {
+    const res = await fetch(API.generate, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `서버 오류 ${res.status}`);
+    }
+    const data = await res.json();
+
+    state.summary = data.summary || '';
+    state.draft = data.draft || '';
+    state.laws = data.laws || [];
+    state.unverifiedLaws = data.unverifiedLaws || [];
+    state.excludedLawIds.clear();
+
+    // 결과 화면으로
+    $('loading').classList.remove('show');
+    $('screen-form').classList.remove('active');
+    $('screen-result').classList.add('active');
+    renderResult();
+    toast('✅ 초안 생성 완료!');
+  } catch (e) {
+    $('loading').classList.remove('show');
+    $('s3').style.display = 'block';
+    toast('❌ ' + (e.message || '생성 실패'));
+    console.error(e);
+  }
 }
 
-function buildTpl(){
-  const cN=($('rCase')?.value||'').trim()||'1AA-0000-0000000';
-  const org=($('rOrg')?.value||'').trim(),dept=($('rDept')?.value||'').trim()||'OOO과';
-  const name=($('rName')?.value||'').trim()||'OOO 주무관',phone=($('rPhone')?.value||'').trim()||'02-0000-0000';
-  const sum=aiSum||'OOO';const od=org?`${org} ${dept}`:dept;const on=org||'우리 기관';const oen=josa(on,'은는');
-  let p2='';
-  if(mType==='normal')p2=`2. 귀하께서 국민신문고를 통해 신청하신 민원(${cN})에 대하여 다음과 같이 답변드립니다.`;
-  else if(mType==='transfer'){const f=($('fromOrg')?.value||'').trim()||'대통령비서실';p2=`2. 귀하께서 ${f}에 제출하여 이첩된 민원(${cN})에 대한 검토 결과를 다음과 같이 알려드립니다.`;}
-  else if(mType==='avoid'){const ad=($('avoidDept')?.value||'').trim()||'해당 부서';const ar=($('avoidReason')?.value||'').trim()||'업무 연속성';p2=`2. 귀하께서 ${ad}를 기피신청하셨으나, ${ar} 등을 고려할 때 부득이 ${ad}에서 답변드립니다.`;}
-  else if(mType==='passive'){const pr=($('passReason')?.value||'').trim()||'규정상 절차';p2=`2. 소극행정 신고민원에 대하여 ${pr} 등의 사유로 ${od}에서 답변드립니다.`;}
-  const body=aiDraft||'가. \n나. ';
-  let cl=`5. 추가 설명이 필요한 경우 ${od} ${name}(☏${phone})에게 연락주시면 친절히 안내해 드리겠습니다.`;
-  if(wSurvey)cl+=` 아울러 ${on}${oen} 민원서비스 품질 향상을 위해 노력하고 있습니다. 답변에 만족하셨다면 아래 만족도 평가에 참여해 주시기 바랍니다.`;
-  cl+=` 감사합니다.`;
-  return `제목 : 민원(${cN}) 처리결과 안내\n\n1. 안녕하십니까? ${od}에 근무하는 ${name}입니다. 먼저 민원행정에 관심을 가져주신 데에 깊은 감사의 말씀을 드립니다.\n\n${p2}\n\n3. 귀하의 민원 내용은 "${sum}"에 관한 것으로 이해(또는 판단)됩니다.\n\n4. 귀하의 문의 사항에 대해 검토한 의견은 다음과 같습니다.\n${body}\n\n${cl}`;
+function runLoadingStages() {
+  const stages = ['stage-1', 'stage-2', 'stage-3', 'stage-4'];
+  const texts = [
+    '관련 법령 검토 중...',
+    '법제처 API로 법령 검증 중...',
+    '법령 본문 조회 중...',
+    'AI가 답변을 작성하고 있어요...',
+  ];
+  let idx = 0;
+  const tick = () => {
+    if (idx >= stages.length) return;
+    if (idx > 0) {
+      $(stages[idx - 1]).classList.remove('active');
+      $(stages[idx - 1]).classList.add('done');
+    }
+    $(stages[idx]).classList.add('active');
+    $('loading-text').textContent = texts[idx];
+    idx++;
+  };
+  tick();
+  const interval = setInterval(() => {
+    if (idx >= stages.length || !$('loading').classList.contains('show')) {
+      clearInterval(interval);
+      return;
+    }
+    tick();
+  }, 1500);
 }
 
-function syncMini(sc){
-  const m2=$('mi2');m2.classList.remove('pass','fail');
-  if(sc.case2.na){m2.classList.add('pass');m2.querySelector('.mciic').textContent='✓';$('mc2').textContent='+10점';$('ml2').textContent='신청번호(해당없음)';$('mn2').style.display='flex';}
-  else if(sc.case2.pass){m2.classList.add('pass');m2.querySelector('.mciic').textContent='✓';$('mc2').textContent='+10점';$('ml2').textContent='신청번호 명시';$('mn2').style.display='none';}
-  else{m2.classList.add('fail');m2.querySelector('.mciic').textContent='✕';$('mc2').textContent='0점';$('ml2').textContent='신청번호 없음';$('mn2').style.display='none';}
-  $('mp1').textContent=sc.s1+'/30점';$('mp1').classList.toggle('full',sc.s1===30);
-  const typeLabel={normal:'일반민원',transfer:'이첩민원',avoid:'기피신청',passive:'소극행정신고'}[mType]||'일반민원';
-  $('mi3').querySelector('.mciic').textContent='✓';$('mc3').textContent='+10점';$('ml3').textContent=typeLabel;
-  const m7=$('mi7');m7.classList.remove('pass','fail','bonus');
-  if(sc.contact.pts===20){m7.classList.add('pass');m7.querySelector('.mciic').textContent='✓';}
-  else if(sc.contact.pts>0){m7.classList.add('bonus');m7.querySelector('.mciic').textContent='△';}
-  else{m7.classList.add('fail');m7.querySelector('.mciic').textContent='✕';}
-  $('mc7').textContent=sc.contact.pts>0?'+'+sc.contact.pts+'점':'0점';$('ml7').textContent=sc.contact.label;$('mp3').textContent=sc.s3+'/20점';$('mp3').classList.toggle('full',sc.s3===20);
-  const m8=$('mi8');m8.classList.remove('pass','fail','bonus');
-  if(wSurvey){m8.classList.add('bonus');m8.querySelector('.mciic').textContent='⭐';}else{m8.classList.add('fail');m8.querySelector('.mciic').textContent='✕';}
-  $('mc8').textContent=wSurvey?'+'+sc.bonus+'점':'0점';$('mp4').textContent=sc.bonus>0?'+'+sc.bonus+'점':'0점';
-  const t=sc.total;$('mRing').style.strokeDashoffset=170-(170*(t/100));$('mRing').style.stroke=t>=80?'#00cfc0':t>=60?'url(#sg)':'#f5a000';
-  cntUp('mNum',parseInt($('mNum').textContent)||0,t,400);
-  $('mGr').textContent=(t>=100?'🏆 만점!':t>=90?'🏆 최우수':t>=80?'🥇 우수':t>=65?'🥈 양호':'🔧 보완')+' · '+t+'점';
-  $('sPill').style.display='flex';$('sVal').textContent=t;
+// ═══════════════════════════════════════════════════════════════
+// 결과 렌더링
+// ═══════════════════════════════════════════════════════════════
+function renderResult() {
+  renderAnswer();
+  renderLaws();
+  renderScore();
+  computeAllScores();
 }
 
-function updateHint(sc){
-  const hints=[];
-  if(!sc.case2.na&&!sc.case2.pass)
-    hints.push('<div class="hline"><span class="wtx">⚠ 민원번호 미입력</span> — -10점 감점</div>');
-  if(!sc.contact.deptOk)
-    hints.push('<div class="hline"><span class="wtx">⚠ 부서 미입력</span> — 소속기관명+소속부서 모두 필요</div>');
-  if(!sc.contact.nameOk)
-    hints.push('<div class="hline"><span class="wtx">⚠ 성명 미입력</span></div>');
-  if(!sc.contact.phoneOk)
-    hints.push('<div class="hline"><span class="wtx">⚠ 전화번호 미입력</span></div>');
-  if(sc.contact.rc===1)
-    hints.push('<div class="hline" style="color:var(--amber);">💡 1가지 안내(+8점) → 추가 입력 시 점수 상승</div>');
-  if(sc.contact.rc===2)
-    hints.push('<div class="hline" style="color:var(--amber);">💡 2가지 안내(+14점) → 1가지 더 입력하면 만점</div>');
+function renderAnswer() {
+  const caseNum = $('case-num').value.trim();
+  const org = $('d-org').value.trim() || '서울특별시교육청';
+  const dept = $('d-dept').value.trim() || 'OOO과';
+  const name = $('d-name').value.trim() || 'OOO 주무관';
+  const phone = $('d-phone').value.trim() || '02-0000-0000';
+  const od = `${org} ${dept}`;
 
-  const hb=$('hintBlock'),ht=$('hbTitle');
-  const hasWarn=!sc.case2.pass&&!sc.case2.na || !sc.contact.deptOk || !sc.contact.nameOk || !sc.contact.phoneOk;
-  if(hints.length&&hasWarn){hb.className='hblock warn';ht.className='hbtitle warn';ht.innerHTML='<div class="rdot"></div>감점 항목 발견';$('hintLines').innerHTML=hints.join('');}
-  else if(hints.length){hb.className='hblock';ht.className='hbtitle';ht.innerHTML='💡 추가 입력 가능';$('hintLines').innerHTML=hints.join('');}
-  else{hb.className='hblock ok';ht.className='hbtitle ok';ht.innerHTML='✅ 감점 없음';$('hintLines').innerHTML='<div class="hline"><span class="oktx">모든 항목 충족!</span></div>';}
-  $('mSub').textContent=hasWarn?'💡 보완 항목 있음':sc.contact.rc<3?'💡 추가 입력 가능':'✅ 모든 항목 충족';
-}
-
-/* ★ 감점된 모든 항목 깜빡임 — 진입 시, 반영 시, 재채점 시 항상 동일하게 적용 */
-function blinkFailsPersistent(sc){
-  // 신청번호 (비공개 민원이고 미입력일 때)
-  if(!sc.case2.na && !sc.case2.pass){
-    $('mi2')?.classList.add('blink-pending');
-    $('rCase')?.classList.add('fi-pending');
-  } else {
-    $('mi2')?.classList.remove('blink-pending');
-    $('rCase')?.classList.remove('fi-pending');
+  // Section 2 (mType별)
+  let sec2 = '';
+  if (state.mType === 'normal') {
+    sec2 = `2. 귀하께서 국민신문고를 통해 신청하신 민원(${caseNum})에 대하여 다음과 같이 답변드립니다.`;
+  } else if (state.mType === 'transfer') {
+    const f = $('from-org').value;
+    sec2 = `2. 귀하께서 ${f}에 제출하여 우리 서울시교육청으로 이첩된 민원(${caseNum})에 대한 검토 결과를 다음과 같이 알려드립니다.`;
+  } else if (state.mType === 'avoid') {
+    const ad = $('avoid-dept').value.trim();
+    const ar = $('avoid-reason').value.trim();
+    sec2 = `2. 귀하께서 국민신문고를 통해 신청하신 민원(${caseNum})에 대하여 답변드립니다. 귀하께서 민원을 제기하실 때 ${ad}을(를) 기피신청하셨으나, ${ar} 등의 사정을 감안할 경우 부득이 ${ad}에서 답변을 드릴 수밖에 없음을 양해하여 주시기 바랍니다.`;
+  } else if (state.mType === 'passive') {
+    const pr = $('pass-reason').value.trim();
+    sec2 = `2. 귀하께서 제기하신 소극행정 신고민원(${caseNum})에 대하여 ${pr} 등의 사유로 부득이 감사부서가 아닌 ${dept}에서 답변을 드리는 것이 적절하다고 판단하였음을 양해하여 주시기 바랍니다.`;
   }
 
-  // 담당자 — 부서 (기관+부서 둘다 있어야 OK)
-  if(!sc.contact.deptOk){
-    $('rOrg')?.classList.add('fi-pending');
-    $('rDept')?.classList.add('fi-pending');
-  } else {
-    $('rOrg')?.classList.remove('fi-pending');
-    $('rDept')?.classList.remove('fi-pending');
+  // Section 5 (종결)
+  let sec5 = `5. 답변내용에 대한 추가 설명이 필요한 경우 ${od} ${name}(☏${phone})에게 연락주시면 친절히 안내해 드리도록 하겠습니다.`;
+  if (state.surveyEnabled) {
+    sec5 += ` 아울러 우리 교육청에서는 민원서비스 품질 향상을 위해 노력하고 있습니다. 답변 내용에 만족하셨을 경우 아래 만족도 평가에 참여해 주시면 더 나은 민원서비스를 위한 소중한 자료로 활용하겠습니다.`;
   }
-  // 성명
-  if(!sc.contact.nameOk) $('rName')?.classList.add('fi-pending');
-  else $('rName')?.classList.remove('fi-pending');
-  // 전화번호
-  if(!sc.contact.phoneOk) $('rPhone')?.classList.add('fi-pending');
-  else $('rPhone')?.classList.remove('fi-pending');
+  sec5 += ` 감사합니다.`;
 
-  // mi7: 만점 미만이면 깜빡임
-  if(sc.contact.pts < 20) $('mi7')?.classList.add('blink-pending');
-  else $('mi7')?.classList.remove('blink-pending');
+  const html = `
+<div class="region-locked">제목 : 민원(${caseNum}) 처리결과 안내
+
+1. 안녕하십니까? ${od}에 근무하는 ${name}입니다. 먼저 서울교육에 관심을 가져주신 데에 깊은 감사의 말씀 드립니다.
+
+${sec2}
+
+3. 귀하의 민원 내용은 "</div>
+
+<div class="region-edit">
+  <span style="font-size:13px;color:var(--slate)">민원 요지 (따옴표 안만 편집 가능)</span>
+  <div style="margin-top:8px;font-size:15px">
+    <span class="summary-inline" id="summary-edit" contenteditable="true" spellcheck="false">${escapeHtml(state.summary || '민원 요지 입력')}</span>
+  </div>
+</div>
+
+<div class="region-locked">"에 관한 것으로 이해(또는 판단)됩니다.
+
+4. 귀하의 문의 사항에 대해 검토한 의견은 다음과 같습니다.</div>
+
+<div class="region-edit">
+  <span style="font-size:13px;color:var(--slate)">검토 의견 본문 (편집 가능 · 가-나-다 구조 권장)</span>
+  <textarea class="body-editor" id="body-edit" spellcheck="false">${escapeHtml(state.draft || '')}</textarea>
+  <div class="live-score" id="live-score">
+    <span class="live-chip loading" id="chip-structure">🔄 구조화</span>
+    <span class="live-chip loading" id="chip-sincerity">🔄 성실답변</span>
+    <span class="live-chip loading" id="chip-summary">🔄 민원요지</span>
+  </div>
+</div>
+
+<div class="region-locked">${sec5}</div>
+
+${state.coopEnabled ? renderChecklist() : ''}
+  `;
+  $('answer-doc').innerHTML = html;
+
+  // 이벤트 바인딩
+  const bodyEl = $('body-edit');
+  bodyEl.addEventListener('input', onBodyChange);
+  $('summary-edit').addEventListener('input', onSummaryChange);
+
+  if (state.coopEnabled) {
+    ['included', 'integrated', 'adapted'].forEach((k) => {
+      const el = $(`coop-${k}`);
+      if (el) el.addEventListener('change', onCoopChange);
+    });
+  }
 }
 
-/* ★ 입력 시 깜빡임 실시간 재평가 */
-function onInfoInput(fieldId){
-  autoRescore();
-  const sc=calcScore();
-  blinkFailsPersistent(sc);
+function renderChecklist() {
+  return `
+<div class="checklist">
+  <div class="checklist-title">⚠️ 협조민원 자가 확인</div>
+  <div class="checklist-desc">협조기관 답변의 처리 여부는 작성자만 알 수 있습니다. 아래 항목을 확인하신 후 체크해 주세요.</div>
+  <label class="checklist-item"><input type="checkbox" id="coop-included"><span class="checklist-item-text">① 협조기관의 답변을 본문에 포함하였습니다</span></label>
+  <label class="checklist-item"><input type="checkbox" id="coop-integrated"><span class="checklist-item-text">② 단순 나열이나 복붙이 아닌 종합정리 형태로 재구성하였습니다</span></label>
+  <label class="checklist-item"><input type="checkbox" id="coop-adapted"><span class="checklist-item-text">③ 민원인의 질문에 맞추어 자연스럽게 녹여냈습니다</span></label>
+  <div class="checklist-foot">3개 모두 체크: <b>감점 없음</b> · 하나라도 미체크: <b>-30점</b></div>
+</div>`;
 }
 
-let debT=null;
-function autoRescore(){clearTimeout(debT);debT=setTimeout(()=>{const sc=calcScore();syncMini(sc);updateHint(sc);const tpl=buildTpl();curResult=tpl;const box=$('resBox');if(box){box.value=tpl;$('resCt').textContent=tpl.length+'자';}$('sVal')&&($('sVal').textContent=sc.total);},200);}
-
-function doApply(){
-  ['rCase','rOrg','rDept','rName','rPhone'].forEach(id=>$(id)?.classList.remove('fi-pending'));
-  ['mi2','mi7'].forEach(id=>$(id)?.classList.remove('blink-pending'));
-  const sc=calcScore();const tpl=buildTpl();curResult=tpl;const box=$('resBox');if(box){box.value=tpl;$('resCt').textContent=tpl.length+'자';}
-  syncMini(sc);updateHint(sc);$('sVal')&&($('sVal').textContent=sc.total);
-  toast('반영 완료! '+sc.total+'점 ✅','✅');
-  blinkFailsPersistent(sc);
+function escapeHtml(s) {
+  return (s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-let rsR=false;
-async function reScan(){if(rsR)return;rsR=true;const ico=$('rIco');if(ico)ico.style.animation='spin .5s linear infinite';const sc=calcScore();for(let i=1;i<=8;i++){const e=$('mi'+i);if(!e)continue;e.classList.add('blink-pending');await delay(80);e.classList.remove('blink-pending');}syncMini(sc);updateHint(sc);$('sVal')&&($('sVal').textContent=sc.total);if(ico)ico.style.animation='';rsR=false;toast('재채점 완료! '+sc.total+'점','📊');blinkFailsPersistent(sc);}
+function renderLaws() {
+  const container = $('laws-container');
+  const lawBadge = $('law-badge');
 
-async function doReGen(){const sc=calcScore();const tpl=buildTpl();curResult=tpl;$('liveDot').style.display='inline-block';await typeIn($('resBox'),tpl);$('liveDot').style.display='none';syncMini(sc);updateHint(sc);}
-function onEdit(){const b=$('resBox');if(!b)return;curResult=b.value;$('resCt').textContent=b.value.length+'자';}
-function doCopy(){const b=$('resBox');const t=b?b.value:curResult;if(!t?.trim()){toast('먼저 서식을 생성해주세요','⚠️');return;}if(navigator.clipboard?.writeText){navigator.clipboard.writeText(t).then(()=>toast('복사됐어요! 📋','📋')).catch(()=>lcp(t));return;}lcp(t);}
-function lcp(t){const b=$('resBox');if(b){b.focus();b.select();try{if(document.execCommand('copy')){toast('복사됐어요! 📋','📋');return;}}catch(e){}}const ta=document.createElement('textarea');Object.assign(ta.style,{position:'fixed',top:'0',left:'0',width:'2px',height:'2px',opacity:'0'});ta.value=t;document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');toast('복사됐어요! 📋','📋');}catch{toast('Ctrl+C로 복사해주세요','⚠️');}document.body.removeChild(ta);}
-async function typeIn(el,tpl){el.value='';$('resCt').textContent='0자';const chars=[...tpl];let i=0;await new Promise(res=>{const go=()=>{if(i<chars.length){el.value+=chars[i++];$('resCt').textContent=el.value.length+'자';setTimeout(go,i<80?4:1);}else res();};go();});curResult=el.value;}
-function cntUp(id,from,to,dur){const el=$(id);if(!el)return;let t=0;const iv=16;const tid=setInterval(()=>{t+=iv;el.textContent=Math.min(Math.round(from+(to-from)*(t/dur)),to);if(t>=dur){el.textContent=to;clearInterval(tid);}},iv);}
+  if (state.laws.length === 0) {
+    const unverifiedHtml =
+      state.unverifiedLaws.length > 0
+        ? `<div class="alert alert-warn">⚠️ AI가 제안했으나 법제처에서 찾지 못한 법령: ${state.unverifiedLaws.join(', ')}</div>`
+        : '';
+    container.innerHTML = `
+${unverifiedHtml}
+<div class="alert alert-info">📎 이 민원은 법령 근거가 필요하지 않거나, 관련 법령을 찾지 못했습니다. 일반적인 행정 답변으로 생성되었습니다.</div>`;
+    lawBadge.textContent = '0';
+    return;
+  }
 
-function restart(){
-  isPublic=null;mType='normal';wSurvey=null;aiSum='';aiDraft='';curResult='';inSplit=false;prefetchPromise=null;
-  $('rawTxt').value='';
-  ['dCase','dOrg','dDept','dName','dPhone','rCase','rOrg','rDept','rName','rPhone'].forEach(id=>{const e=$(id);if(e)e.value='';});
-  /* 깜빡임 클래스 전부 제거 */
-  ['mi2','mi7'].forEach(id=>{const e=$(id);if(e)e.classList.remove('blink-pending');});
-  ['rCase','rDept','rName','rPhone'].forEach(id=>{const e=$(id);if(e)e.classList.remove('fi-pending');});
-  ['cPub','cPrv','cNorm','cTr','cAv','cPa','cSY','cSN','cNow','cSkip'].forEach(id=>$(id)?.classList.remove('sel'));
-  $('xfInfo')?.classList.remove('open');
-  $('cNorm')?.classList.add('sel');
-  $('sPill').style.display='none';$('restBtn').style.display='none';
-  $('bNum').textContent='0';$('bRing').style.strokeDashoffset='376';
-  $('mNum').textContent='0';$('mRing').style.strokeDashoffset='170';
-  const mg=$('mGr');if(mg)mg.textContent='-';
-  const ms=$('mSub');if(ms)ms.textContent='';
-  $('resBox').value='';$('resCt').textContent='0자';
-  $('s-result').classList.remove('show');$('s-result').classList.add('out');
-  setTimeout(()=>{$('s-result').classList.remove('out');$('s0').classList.add('show');curScr='s0';setStep(0);},340);
+  lawBadge.textContent = String(state.laws.length);
+  const unverifiedHtml =
+    state.unverifiedLaws.length > 0
+      ? `<div class="alert alert-warn">⚠️ AI가 제안했으나 법제처에서 찾지 못한 법령: ${state.unverifiedLaws.join(', ')}</div>`
+      : '';
+
+  const cards = state.laws
+    .map((l) => {
+      const excluded = state.excludedLawIds.has(l.lawId);
+      const label = l.shortName ? `${l.name} (${l.shortName})` : l.name;
+      const allArts = (l.allArticles || []).slice(0, 5);
+      const artsHtml = allArts
+        .map(
+          (a) => `<div class="law-article"><b>제${a.no}조 (${a.title})</b><br>${escapeHtml(a.content.slice(0, 300))}${a.content.length > 300 ? '...' : ''}</div>`,
+        )
+        .join('');
+      return `
+<div class="law-card ${excluded ? 'excluded' : ''}">
+  <div class="law-head">
+    <div>
+      <div class="law-name">⚖️ ${label}</div>
+      <div class="law-meta">${l.kind} · ${l.ministry} · 시행일 ${l.effectiveDate}</div>
+    </div>
+  </div>
+  ${artsHtml}
+  <div class="law-actions">
+    ${l.link ? `<a class="law-btn" href="${l.link}" target="_blank">🔗 법제처 전문보기</a>` : ''}
+    <button class="law-btn" onclick="copyLaw('${l.lawId}')">📋 조문 복사</button>
+    <button class="law-btn exclude" onclick="toggleLaw('${l.lawId}')">${excluded ? '✓ 포함' : '❌ 제외'}</button>
+  </div>
+</div>`;
+    })
+    .join('');
+
+  container.innerHTML = unverifiedHtml + `<div class="law-list">${cards}</div>`;
 }
-const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+function toggleLaw(id) {
+  if (state.excludedLawIds.has(id)) state.excludedLawIds.delete(id);
+  else state.excludedLawIds.add(id);
+  renderLaws();
+}
+
+function copyLaw(id) {
+  const l = state.laws.find((x) => x.lawId === id);
+  if (!l) return;
+  const text = (l.allArticles || [])
+    .map((a) => `제${a.no}조 (${a.title})\n${a.content}`)
+    .join('\n\n');
+  navigator.clipboard.writeText(`${l.name}\n\n${text}`);
+  toast('📋 조문이 복사되었습니다');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 점수 계산
+// ═══════════════════════════════════════════════════════════════
+const RUBRIC_ITEMS = [
+  { id: 'greeting', label: '인사말', max: 10 },
+  { id: 'caseNumber', label: '민원신청번호', max: 10 },
+  { id: 'routingReason', label: '이첩/기피/소극 사유', max: 10 },
+  { id: 'summary', label: '민원 요지', max: 10 },
+  { id: 'structure', label: '가독성 (구조화)', max: 20 },
+  { id: 'sincerity', label: '성실 답변', max: 20 },
+  { id: 'contact', label: '담당자 정보', max: 20 },
+  { id: 'satisfaction', label: '만족도 유도', max: 8, bonus: true },
+  { id: 'cooperation', label: '협조민원', max: 0, penalty: -30 },
+];
+
+function computeAllScores() {
+  const caseNum = $('case-num').value.trim();
+  const summaryText = $('summary-edit')?.textContent?.trim() || '';
+  const bodyText = $('body-edit')?.value || '';
+
+  const checks = {};
+  // 인사말: 템플릿 고정
+  checks.greeting = { pass: true, pts: 10 };
+  // 민원번호
+  checks.caseNumber = /^1[A-Z]{2}-\d{4}-\d{7}$/.test(caseNum)
+    ? { pass: true, pts: 10 }
+    : { pass: false, pts: 0 };
+  // 이첩/기피/소극 사유
+  checks.routingReason = (() => {
+    if (state.mType === 'normal') return { pass: true, pts: 10 };
+    if (state.mType === 'transfer') return { pass: !!$('from-org').value.trim(), pts: $('from-org').value.trim() ? 10 : 0 };
+    if (state.mType === 'avoid')
+      return {
+        pass: !!($('avoid-dept').value.trim() && $('avoid-reason').value.trim()),
+        pts: $('avoid-dept').value.trim() && $('avoid-reason').value.trim() ? 10 : 0,
+      };
+    if (state.mType === 'passive') return { pass: !!$('pass-reason').value.trim(), pts: $('pass-reason').value.trim() ? 10 : 0 };
+    return { pass: true, pts: 10 };
+  })();
+  // 민원요지: 빈칸만 아니면 만점
+  checks.summary = summaryText.length > 0 && summaryText !== '민원 요지 입력' ? { pass: true, pts: 10 } : { pass: false, pts: 0 };
+  // 가독성: 정규식
+  const markerMatches = bodyText.match(/(?:가\.|나\.|다\.|라\.|마\.|1\.|2\.|3\.|4\.|5\.|①|②|③|④|⑤|○|●)/g) || [];
+  const uniqMarkers = [...new Set(markerMatches)];
+  checks.structure = uniqMarkers.length >= 2 ? { pass: true, pts: 20 } : { pass: false, pts: 0 };
+  // 담당자 정보
+  const deptOk = !!($('d-org').value.trim() && $('d-dept').value.trim());
+  const nameOk = !!$('d-name').value.trim();
+  const phoneOk = !!$('d-phone').value.trim();
+  const contactCount = [deptOk, nameOk, phoneOk].filter(Boolean).length;
+  checks.contact = {
+    pass: contactCount > 0,
+    pts: contactCount >= 3 ? 20 : contactCount === 2 ? 14 : contactCount === 1 ? 8 : 0,
+    detail: { deptOk, nameOk, phoneOk, contactCount },
+  };
+  // 만족도
+  checks.satisfaction = state.surveyEnabled ? { pass: true, pts: 8 } : { pass: false, pts: 0 };
+
+  state.scores.code = checks;
+
+  // 성실답변 = 20 + AI 감점
+  let sincerity = 20;
+  const ai = state.scores.ai;
+  if (ai.privacy?.triggered) sincerity -= 20;
+  if (ai.jurisdiction?.triggered) sincerity -= 10;
+  if (ai.passBuck?.triggered) sincerity -= 10;
+  if (ai.refOnly?.triggered) sincerity -= 10;
+  sincerity = Math.max(0, sincerity);
+  state.scores.sincerity = sincerity;
+
+  // 협조민원 감점
+  let coopPts = 0;
+  if (state.coopEnabled) {
+    const c = state.scores.cooperation.checked;
+    const allChecked = c.included && c.integrated && c.adapted;
+    coopPts = allChecked ? 0 : -30;
+  }
+
+  // 총점
+  const total = Math.max(
+    0,
+    checks.greeting.pts +
+      checks.caseNumber.pts +
+      checks.routingReason.pts +
+      checks.summary.pts +
+      checks.structure.pts +
+      sincerity +
+      checks.contact.pts +
+      checks.satisfaction.pts +
+      coopPts,
+  );
+
+  state.scores.total = total;
+  state.scores.coopPts = coopPts;
+
+  renderScorePanel();
+  renderLiveChips();
+}
+
+function renderScorePanel() {
+  const total = state.scores.total;
+  $('tb-score').textContent = total;
+  $('side-score').textContent = total;
+
+  const grade =
+    total >= 100 ? '🏆 만점!'
+    : total >= 90 ? '🥇 우수'
+    : total >= 80 ? '🥈 양호'
+    : total >= 65 ? '🥉 보통'
+    : '🔧 보완 필요';
+  $('side-grade').textContent = grade;
+  $('tb-grade').textContent = '· ' + grade;
+
+  // 루브릭 리스트
+  const c = state.scores.code;
+  const items = [
+    { label: '인사말', pts: c.greeting.pts, max: 10, ok: c.greeting.pass },
+    { label: '민원신청번호', pts: c.caseNumber.pts, max: 10, ok: c.caseNumber.pass },
+    { label: '이첩/기피/소극 사유', pts: c.routingReason.pts, max: 10, ok: c.routingReason.pass },
+    { label: '민원 요지', pts: c.summary.pts, max: 10, ok: c.summary.pass },
+    { label: '가독성 (구조화)', pts: c.structure.pts, max: 20, ok: c.structure.pass },
+    { label: '성실 답변', pts: state.scores.sincerity, max: 20, ok: state.scores.sincerity === 20 },
+    { label: '담당자 정보', pts: c.contact.pts, max: 20, ok: c.contact.pts >= 14 },
+    { label: '만족도 유도', pts: c.satisfaction.pts, max: 8, ok: c.satisfaction.pass, bonus: true },
+  ];
+  if (state.coopEnabled) {
+    items.push({
+      label: '협조민원',
+      pts: state.scores.coopPts,
+      max: 0,
+      ok: state.scores.coopPts === 0,
+      penalty: true,
+    });
+  }
+
+  $('side-rubric').innerHTML = items
+    .map(
+      (it) => `
+<div class="rubric-item ${it.ok ? 'ok' : 'bad'}">
+  <div class="rubric-lbl">${it.label}</div>
+  <div class="rubric-pts ${it.ok ? 'ok' : 'bad'}">${it.bonus && it.pts > 0 ? '+' : ''}${it.pts}${it.max > 0 && !it.penalty ? '/' + it.max : ''}</div>
+</div>`,
+    )
+    .join('');
+
+  // 감점 세부
+  const deducts = [];
+  const ai = state.scores.ai;
+  if (ai.privacy?.triggered) deducts.push({ label: '제3자 개인정보', pen: -20, ev: ai.privacy.evidence });
+  if (ai.jurisdiction?.triggered) deducts.push({ label: '소관 아님 안내 누락', pen: -10, ev: ai.jurisdiction.evidence });
+  if (ai.passBuck?.triggered) deducts.push({ label: '떠넘기기', pen: -10, ev: ai.passBuck.evidence });
+  if (ai.refOnly?.triggered) deducts.push({ label: '기존 답변 참고', pen: -10, ev: ai.refOnly.evidence });
+
+  $('side-deducts').innerHTML = deducts.length
+    ? `<div class="deduct-list"><b style="font-size:11px;color:var(--amber)">⚠️ 감점 항목</b>${deducts
+        .map((d) => `<div class="deduct-item"><b>${d.label} ${d.pen}점</b>${d.ev ? `<div class="deduct-evidence">"${d.ev}"</div>` : ''}</div>`)
+        .join('')}</div>`
+    : '';
+
+  // 채점 탭 상세
+  renderScore();
+}
+
+function renderLiveChips() {
+  const c = state.scores.code;
+  const chipStructure = $('chip-structure');
+  const chipSincerity = $('chip-sincerity');
+  const chipSummary = $('chip-summary');
+  if (!chipStructure) return;
+
+  chipStructure.className = 'live-chip ' + (c.structure?.pass ? 'ok' : 'bad');
+  chipStructure.textContent = (c.structure?.pass ? '✓' : '✗') + ' 구조화 ' + (c.structure?.pts || 0) + '/20';
+
+  chipSincerity.className = 'live-chip ' + (state.scores.sincerity === 20 ? 'ok' : 'bad');
+  chipSincerity.textContent = (state.scores.sincerity === 20 ? '✓' : '⚠') + ' 성실답변 ' + state.scores.sincerity + '/20';
+
+  chipSummary.className = 'live-chip ' + (c.summary?.pass ? 'ok' : 'bad');
+  chipSummary.textContent = (c.summary?.pass ? '✓' : '✗') + ' 민원요지 ' + (c.summary?.pts || 0) + '/10';
+}
+
+function renderScore() {
+  const c = state.scores.code;
+  const ai = state.scores.ai;
+
+  const sec1 = c.greeting.pts + c.caseNumber.pts + c.routingReason.pts;
+  const sec2 = c.summary.pts + c.structure.pts + state.scores.sincerity;
+  const sec3 = c.contact.pts;
+  const bonus = c.satisfaction.pts;
+  const coop = state.scores.coopPts || 0;
+
+  const detail = `
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+  <div class="rubric-item ${sec1 >= 30 ? 'ok' : 'bad'}" style="flex-direction:column;align-items:flex-start;padding:14px">
+    <div class="rubric-lbl" style="font-size:13px">도입부</div>
+    <div class="rubric-pts ${sec1 >= 30 ? 'ok' : 'bad'}" style="font-size:24px;margin-top:4px">${sec1}/30</div>
+  </div>
+  <div class="rubric-item ${sec2 >= 45 ? 'ok' : 'bad'}" style="flex-direction:column;align-items:flex-start;padding:14px">
+    <div class="rubric-lbl" style="font-size:13px">전개부</div>
+    <div class="rubric-pts ${sec2 >= 45 ? 'ok' : 'bad'}" style="font-size:24px;margin-top:4px">${sec2}/50</div>
+  </div>
+  <div class="rubric-item ${sec3 >= 14 ? 'ok' : 'bad'}" style="flex-direction:column;align-items:flex-start;padding:14px">
+    <div class="rubric-lbl" style="font-size:13px">종결부</div>
+    <div class="rubric-pts ${sec3 >= 14 ? 'ok' : 'bad'}" style="font-size:24px;margin-top:4px">${sec3}/20</div>
+  </div>
+  <div class="rubric-item ok" style="flex-direction:column;align-items:flex-start;padding:14px">
+    <div class="rubric-lbl" style="font-size:13px">가점</div>
+    <div class="rubric-pts ok" style="font-size:24px;margin-top:4px">+${bonus}/8</div>
+  </div>
+</div>
+<div style="font-size:12px;color:var(--slate);margin-bottom:10px">
+  📋 평가 기준: 국민신문고 민원처리 답변 충실도 평가 기준 (2026. 4.)
+</div>
+<div class="rubric-list">
+  <div class="rubric-item ${c.greeting.pass ? 'ok' : 'bad'}"><div class="rubric-lbl">인사말 — 템플릿 자동 생성</div><div class="rubric-pts ${c.greeting.pass ? 'ok' : 'bad'}">${c.greeting.pts}/10</div></div>
+  <div class="rubric-item ${c.caseNumber.pass ? 'ok' : 'bad'}"><div class="rubric-lbl">민원신청번호 — ${c.caseNumber.pass ? '유효' : '미입력/형식오류'}</div><div class="rubric-pts ${c.caseNumber.pass ? 'ok' : 'bad'}">${c.caseNumber.pts}/10</div></div>
+  <div class="rubric-item ${c.routingReason.pass ? 'ok' : 'bad'}"><div class="rubric-lbl">이첩/기피/소극 사유 안내</div><div class="rubric-pts ${c.routingReason.pass ? 'ok' : 'bad'}">${c.routingReason.pts}/10</div></div>
+  <div class="rubric-item ${c.summary.pass ? 'ok' : 'bad'}"><div class="rubric-lbl">민원 요지 작성 (~판단됩니다 형식 자동)</div><div class="rubric-pts ${c.summary.pass ? 'ok' : 'bad'}">${c.summary.pts}/10</div></div>
+  <div class="rubric-item ${c.structure.pass ? 'ok' : 'bad'}"><div class="rubric-lbl">가독성 (가-나-다 구조화)</div><div class="rubric-pts ${c.structure.pass ? 'ok' : 'bad'}">${c.structure.pts}/20</div></div>
+  <div class="rubric-item ${state.scores.sincerity === 20 ? 'ok' : 'bad'}"><div class="rubric-lbl">성실 답변 (기본 20 − AI 감점)</div><div class="rubric-pts ${state.scores.sincerity === 20 ? 'ok' : 'bad'}">${state.scores.sincerity}/20</div></div>
+  <div class="rubric-item ${c.contact.pts >= 14 ? 'ok' : 'bad'}"><div class="rubric-lbl">담당자 정보 (${c.contact.detail?.contactCount || 0}개)</div><div class="rubric-pts ${c.contact.pts >= 14 ? 'ok' : 'bad'}">${c.contact.pts}/20</div></div>
+  <div class="rubric-item ${c.satisfaction.pass ? 'ok' : 'na'}"><div class="rubric-lbl">만족도 참여 유도 (가점)</div><div class="rubric-pts ok">+${c.satisfaction.pts}/8</div></div>
+  ${state.coopEnabled ? `<div class="rubric-item ${coop === 0 ? 'ok' : 'bad'}"><div class="rubric-lbl">협조민원 처리</div><div class="rubric-pts ${coop === 0 ? 'ok' : 'bad'}">${coop}/-30</div></div>` : ''}
+  <div class="rubric-item na"><div class="rubric-lbl">내부결재 문구 (본문만 평가, N/A)</div><div class="rubric-pts">—</div></div>
+</div>
+
+${Object.entries(ai).some(([k, v]) => v?.triggered) ? `
+<div style="margin-top:18px">
+  <h3 style="font-size:14px;margin-bottom:10px">⚠️ AI 판정 감점 사유</h3>
+  ${Object.entries(ai).filter(([k, v]) => v?.triggered).map(([k, v]) => {
+    const label = { privacy: '제3자 개인정보/영업비밀', jurisdiction: '소관 아님 안내 누락', passBuck: '떠넘기기 답변', refOnly: '기존 답변 참고 안내' }[k];
+    const pen = { privacy: -20, jurisdiction: -10, passBuck: -10, refOnly: -10 }[k];
+    return `<div class="deduct-list"><b>${label} (${pen}점)</b>${v.evidence ? `<div class="deduct-evidence" style="margin-top:4px">원문: "${escapeHtml(v.evidence)}"</div>` : ''}</div>`;
+  }).join('')}
+</div>` : ''}
+  `;
+  $('score-detail').innerHTML = detail;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 편집 이벤트 + Debounce 재채점
+// ═══════════════════════════════════════════════════════════════
+function onBodyChange() {
+  computeAllScores();
+  scheduleAiEvaluate();
+}
+
+function onSummaryChange() {
+  computeAllScores();
+}
+
+function onCoopChange() {
+  state.scores.cooperation.checked = {
+    included: $('coop-included')?.checked || false,
+    integrated: $('coop-integrated')?.checked || false,
+    adapted: $('coop-adapted')?.checked || false,
+  };
+  computeAllScores();
+}
+
+function scheduleAiEvaluate() {
+  clearTimeout(state.evalTimer);
+  state.evalTimer = setTimeout(aiEvaluate, 2000);
+}
+
+async function aiEvaluate() {
+  const bodyText = $('body-edit')?.value || '';
+  if (!bodyText.trim() || bodyText === state.lastEvalText) return;
+  state.lastEvalText = bodyText;
+
+  $('chip-sincerity').className = 'live-chip loading';
+  $('chip-sincerity').textContent = '🔄 AI 채점 중...';
+
+  try {
+    const res = await fetch(API.evaluate, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bodyText,
+        originalComplaint: $('complaint-text').value.trim(),
+        mType: state.mType,
+      }),
+    });
+    if (!res.ok) throw new Error('채점 API 오류');
+    const data = await res.json();
+    state.scores.ai = {
+      privacy: data.privacy || { triggered: false },
+      jurisdiction: data.jurisdiction || { triggered: false },
+      passBuck: data.passBuck || { triggered: false },
+      refOnly: data.refOnly || { triggered: false },
+    };
+    computeAllScores();
+    toast('✨ AI 채점 갱신됨', 1500);
+  } catch (e) {
+    console.error(e);
+    $('chip-sincerity').className = 'live-chip bad';
+    $('chip-sincerity').textContent = '✗ 채점 실패';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 전체 복사 / 재생성
+// ═══════════════════════════════════════════════════════════════
+function getFullText() {
+  const caseNum = $('case-num').value.trim();
+  const org = $('d-org').value.trim() || '서울특별시교육청';
+  const dept = $('d-dept').value.trim() || 'OOO과';
+  const name = $('d-name').value.trim() || 'OOO 주무관';
+  const phone = $('d-phone').value.trim() || '02-0000-0000';
+  const od = `${org} ${dept}`;
+  const summary = $('summary-edit')?.textContent?.trim() || '민원 요지';
+  const body = $('body-edit')?.value || '';
+
+  let sec2 = '';
+  if (state.mType === 'normal') {
+    sec2 = `2. 귀하께서 국민신문고를 통해 신청하신 민원(${caseNum})에 대하여 다음과 같이 답변드립니다.`;
+  } else if (state.mType === 'transfer') {
+    const f = $('from-org').value;
+    sec2 = `2. 귀하께서 ${f}에 제출하여 우리 서울시교육청으로 이첩된 민원(${caseNum})에 대한 검토 결과를 다음과 같이 알려드립니다.`;
+  } else if (state.mType === 'avoid') {
+    const ad = $('avoid-dept').value.trim();
+    const ar = $('avoid-reason').value.trim();
+    sec2 = `2. 귀하께서 국민신문고를 통해 신청하신 민원(${caseNum})에 대하여 답변드립니다. 귀하께서 민원을 제기하실 때 ${ad}을(를) 기피신청하셨으나, ${ar} 등의 사정을 감안할 경우 부득이 ${ad}에서 답변을 드릴 수밖에 없음을 양해하여 주시기 바랍니다.`;
+  } else if (state.mType === 'passive') {
+    const pr = $('pass-reason').value.trim();
+    sec2 = `2. 귀하께서 제기하신 소극행정 신고민원(${caseNum})에 대하여 ${pr} 등의 사유로 부득이 감사부서가 아닌 ${dept}에서 답변을 드리는 것이 적절하다고 판단하였음을 양해하여 주시기 바랍니다.`;
+  }
+
+  let sec5 = `5. 답변내용에 대한 추가 설명이 필요한 경우 ${od} ${name}(☏${phone})에게 연락주시면 친절히 안내해 드리도록 하겠습니다.`;
+  if (state.surveyEnabled) {
+    sec5 += ` 아울러 우리 교육청에서는 민원서비스 품질 향상을 위해 노력하고 있습니다. 답변 내용에 만족하셨을 경우 아래 만족도 평가에 참여해 주시면 더 나은 민원서비스를 위한 소중한 자료로 활용하겠습니다.`;
+  }
+  sec5 += ` 감사합니다.`;
+
+  return `제목 : 민원(${caseNum}) 처리결과 안내
+
+1. 안녕하십니까? ${od}에 근무하는 ${name}입니다. 먼저 서울교육에 관심을 가져주신 데에 깊은 감사의 말씀 드립니다.
+
+${sec2}
+
+3. 귀하의 민원 내용은 "${summary}"에 관한 것으로 이해(또는 판단)됩니다.
+
+4. 귀하의 문의 사항에 대해 검토한 의견은 다음과 같습니다.
+
+${body}
+
+${sec5}`;
+}
+
+function copyAll() {
+  const text = getFullText();
+  navigator.clipboard
+    .writeText(text)
+    .then(() => toast('📥 전체 답변이 복사되었습니다'))
+    .catch(() => toast('❌ 복사 실패 — 수동으로 선택해주세요'));
+}
+
+function regenerate() {
+  showModal('modal-regen');
+}
+
+function confirmRegen() {
+  closeModal('modal-regen');
+  state.summary = '';
+  state.draft = '';
+  state.laws = [];
+  state.excludedLawIds.clear();
+  state.scores.ai = {
+    privacy: { triggered: false },
+    jurisdiction: { triggered: false },
+    passBuck: { triggered: false },
+    refOnly: { triggered: false },
+  };
+  $('screen-result').classList.remove('active');
+  $('screen-form').classList.add('active');
+  goStep(3);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 탭 전환
+// ═══════════════════════════════════════════════════════════════
+function switchTab(name) {
+  ['answer', 'laws', 'score'].forEach((k) => {
+    $(`tab-${k}`).classList.toggle('active', k === name);
+  });
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    const keys = ['answer', 'laws', 'score'];
+    el.classList.toggle('active', keys[i] === name);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 초기화
+// ═══════════════════════════════════════════════════════════════
+$('complaint-text').addEventListener('input', (e) => {
+  $('char-count').textContent = e.target.value.length;
+});
+
+// 헬스체크 (시작 시)
+fetch(API.health)
+  .then((r) => r.json())
+  .then((d) => {
+    if (d.geminiKey) {
+      $('status-badge').innerHTML = '● 준비됨';
+      $('status-badge').style.background = '#dcfce7';
+      $('status-badge').style.color = '#166534';
+    } else {
+      $('status-badge').innerHTML = '⚠ GEMINI_API_KEY 없음';
+      $('status-badge').style.background = '#fee2e2';
+      $('status-badge').style.color = '#991b1b';
+    }
+  })
+  .catch(() => {
+    $('status-badge').innerHTML = '⚠ 워커 연결 실패';
+    $('status-badge').style.background = '#fef3c7';
+    $('status-badge').style.color = '#92400e';
+  });
 </script>
 </body>
 </html>

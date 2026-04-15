@@ -1,6 +1,6 @@
-name = "icy-art-4e14"
+name = "epeople-ai-v2"
 main = "worker.js"
 compatibility_date = "2024-12-01"
 
-[ai]
-binding = "AI"
+# v2는 Workers AI 바인딩 불필요 (Gemini 2.5 Flash-Lite만 사용)
+# 배포 전 환경변수 확인: wrangler secret put GEMINI_API_KEY
