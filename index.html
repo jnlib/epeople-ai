@@ -938,16 +938,18 @@ textarea.ttxt::placeholder{color:rgba(7,33,58,.28);}
 <script>
 const $=id=>document.getElementById(id);
 const WORKER='https://epeople-ai-v2.hdh1231.workers.dev';
-const AI_EP=WORKER+'/api/generate';
+const PROPOSE_EP=WORKER+'/api/propose';
+const DRAFT_EP=WORKER+'/api/generate-draft';
 const EVAL_EP=WORKER+'/api/evaluate-edit';
-const LAWS_EP=WORKER+'/api/laws';
+/* v2: 법제처 API는 브라우저가 직접 호출 (CORS 지원 확인됨) */
+const LAW_API='https://www.law.go.kr/DRF';
+const LAW_OC='hdh1231';
 const MASCOT='';
 
 let isPublic=false,mType='normal',wSurvey=null,aiSum='',aiDraft='',curResult='',curScr='s0',inSplit=false;
 let coopEnabled=false, coopChecks={included:false,integrated:false,adapted:false};
 let aiLaws=[], unverifiedLaws=[];
 let aiEvalDeducts={privacy:false,jurisdiction:false,passBuck:false,refOnly:false};
-let prefetchPromise=null;
 
 (function(){
   if(!MASCOT)return;
@@ -987,14 +989,6 @@ function goTo(n){
   if(n===2){ isPublic=false; n=3; }
   if(n===5&&wSurvey===null){toast('만족도 여부를 선택해주세요','⚠️');return;}
   if(n===6){startAnalysis();return;}
-  /* ★ S1에서 넘어갈 때 AI 프리페치 시작 (v2: mType + cooperation 포함) */
-  if(n===3&&!prefetchPromise){
-    const raw=$('rawTxt').value.trim();
-    if(raw){
-      const payload={text:raw, mType:mType||'normal', cooperation:{enabled: !!coopEnabled}};
-      prefetchPromise=fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.ok?r.json():null).catch(()=>null);
-    }
-  }
   const m={0:'s0',1:'s1',3:'s3',4:'s4',5:'s5'};if(m[n])trans(curScr,m[n],n);
 }
 function showScore(){trans(curScr,'s-score',6);}
@@ -1159,29 +1153,162 @@ function startAnalysis(){
   ['Case','Org','Dept','Name','Phone'].forEach(k=>{const s=$('d'+k),r=$('r'+k);if(s&&r)r.value=s.value;});
   trans(curScr,'s6',6);runAnalysis();
 }
+
+/* ═════ 법제처 직접 호출 (브라우저 → law.go.kr, Cloudflare 우회) ═════ */
+async function lawAiSearch(query){
+  const qs=new URLSearchParams({OC:LAW_OC,target:'aiSearch',type:'JSON',query,search:'0',display:'10'});
+  try{
+    const r=await fetch(`${LAW_API}/lawSearch.do?${qs}`, {signal:AbortSignal.timeout(10000)});
+    if(!r.ok) return [];
+    const d=await r.json();
+    const items=d?.aiSearch?.['법령조문']||[];
+    return Array.isArray(items)?items:[items].filter(Boolean);
+  }catch(e){
+    console.warn('aiSearch err',query,e.message);
+    return [];
+  }
+}
+
+async function lawGetBody(lawId){
+  const qs=new URLSearchParams({OC:LAW_OC,target:'law',type:'JSON',ID:lawId});
+  try{
+    const r=await fetch(`${LAW_API}/lawService.do?${qs}`, {signal:AbortSignal.timeout(10000)});
+    if(!r.ok) return null;
+    const d=await r.json();
+    const law=d?.['법령']; if(!law) return null;
+    const base=law['기본정보']||{};
+    const artsRaw=law['조문']?.['조문단위']||[];
+    const arts=(Array.isArray(artsRaw)?artsRaw:[artsRaw]).filter(a=>a?.['조문여부']==='조문'&&a?.['조문제목']&&a?.['조문내용']);
+    return {
+      shortName: base['법령명약칭']||'',
+      ministry: base['소관부처']?.content||'',
+      effectiveDate: String(base['시행일자']||'').slice(0,8),
+    };
+  }catch(e){
+    console.warn('lawGetBody err',lawId,e.message);
+    return null;
+  }
+}
+
+/* 민원원문 → 법령후보 수집 (병렬 호출, 가장 많은 결과 채택) */
+async function fetchLawCandidates(searchQueries){
+  const uniq=[...new Set(searchQueries)].slice(0,4);
+  const results=await Promise.all(uniq.map(async q => ({query:q, items:await lawAiSearch(q)})));
+  // 가장 많이 반환한 쿼리 선택
+  let best=null;
+  for(const r of results){ if(r.items.length>0 && (!best||r.items.length>best.items.length)) best=r; }
+  const items=best?.items||[];
+  const usedQuery=best?.query||'';
+  // 법령ID별 그룹화
+  const groups=new Map();
+  for(const it of items){
+    const id=it['법령ID']; if(!id) continue;
+    if(!groups.has(id)){
+      groups.set(id,{
+        lawId:id, mst:it['법령일련번호'], name:it['법령명'],
+        kind:it['법령종류명']||'', ministry:it['소관부처명']||'',
+        effectiveDate:String(it['시행일자']||'').slice(0,8),
+        shortName:'', articles:[],
+      });
+    }
+    const g=groups.get(id);
+    if(g && g.articles.length<5){
+      g.articles.push({
+        no:String(it['조문번호']||'').replace(/^0+/,'')||'0',
+        title:it['조문제목']||'',
+        content:it['조문내용']||'',
+      });
+    }
+  }
+  return {candidates:[...groups.values()].slice(0,8), usedQuery, searchQueries:uniq};
+}
+
 async function runAnalysis(){
   const raw=$('rawTxt').value.trim()||'';
   const pp=runProg();
+  let proposeData=null, draftData=null, candidates=[], usedQuery='';
   try{
-    if(!raw)throw new Error('no raw');
-    /* ★ 프리페치가 있으면 재사용, 없으면 새로 호출 */
-    let d;
-    const payload={text:raw, mType:mType||'normal', cooperation:{enabled:coopEnabled}};
-    if(prefetchPromise){
-      d=await prefetchPromise;
-      prefetchPromise=null;
-      if(!d)throw new Error('프리페치 실패');
-    }else{
-      const res=await fetch(AI_EP,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      if(!res.ok)throw new Error('서버오류');d=await res.json();
+    if(!raw) throw new Error('no raw');
+
+    /* ─ 1) Gemini 제안: 요지 + 검색어 ─ */
+    const propRes=await fetch(PROPOSE_EP,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:raw, mType:mType||'normal'})
+    });
+    if(!propRes.ok) throw new Error('propose 서버오류');
+    proposeData=await propRes.json();
+    if(proposeData.error) throw new Error(proposeData.error);
+
+    const preSummary=proposeData.summary||'';
+    const qs=Array.isArray(proposeData.searchQueries)?proposeData.searchQueries:[];
+    const isLawRelated=proposeData.isLawRelated!==false;
+
+    /* ─ 2) 브라우저 → 법제처 직접 (CORS 허용, 빠름) ─ */
+    if(isLawRelated && qs.length>0){
+      const result=await fetchLawCandidates(qs);
+      candidates=result.candidates;
+      usedQuery=result.usedQuery;
+      /* 각 법령 약칭 등 상세 메타 보강 (병렬, 실패 허용) */
+      await Promise.allSettled(candidates.map(async l=>{
+        const m=await lawGetBody(l.lawId);
+        if(m){
+          l.shortName=m.shortName||'';
+          if(!l.ministry) l.ministry=m.ministry||'';
+        }
+      }));
     }
-    if(d.error)throw new Error(d.error);
+
+    /* ─ 3) Gemini 답변 생성: 민원 + 법령후보 → draft ─ */
+    const draftRes=await fetch(DRAFT_EP,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        text:raw,
+        mType:mType||'normal',
+        cooperation:{enabled:coopEnabled},
+        candidateLaws:candidates,
+        preSummary,
+      })
+    });
+    if(!draftRes.ok) throw new Error('draft 서버오류');
+    draftData=await draftRes.json();
+    if(draftData.error) throw new Error(draftData.error);
+
     await pp;
-    aiSum=d.summary||'';
-    aiDraft=typeof d.draft==='string'?d.draft:'';
-    aiLaws=Array.isArray(d.laws)?d.laws:[];
-    unverifiedLaws=Array.isArray(d.unverifiedLaws)?d.unverifiedLaws:[];
-  }catch(e){await pp.catch(()=>{});aiSum='';aiDraft='';aiLaws=[];unverifiedLaws=[];toast('AI 실패 → 빈 초안으로 진행','⚠️');}
+
+    aiSum=draftData.summary||preSummary||'';
+    aiDraft=typeof draftData.draft==='string'?draftData.draft:'';
+
+    /* Gemini가 선별한 법령만 UI에 표시 */
+    const selected=Array.isArray(draftData.selectedLawIds)?draftData.selectedLawIds:[];
+    const byId=new Map(candidates.map(l=>[String(l.lawId),l]));
+    const picked = selected.length>0
+      ? selected.map(id=>byId.get(String(id))).filter(Boolean)
+      : candidates.slice(0,3);
+    aiLaws=picked.map(l=>{
+      const main=l.articles?.[0];
+      return {
+        lawId:l.lawId, mst:l.mst, name:l.name, shortName:l.shortName,
+        kind:l.kind, ministry:l.ministry,
+        effectiveDate: l.effectiveDate&&l.effectiveDate.length>=8
+          ? `${l.effectiveDate.slice(0,4)}-${l.effectiveDate.slice(4,6)}-${l.effectiveDate.slice(6,8)}`
+          : l.effectiveDate,
+        articleNo:main?.no||'',
+        articleTitle:main?.title||'',
+        content:main?.content||'',
+        allArticles:l.articles,
+        link: l.mst ? `https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=${l.mst}` : '',
+      };
+    });
+    unverifiedLaws=[];
+    console.log(`[v2] 검색어 사용: ${usedQuery}, 후보 ${candidates.length}개, 선별 ${aiLaws.length}개`);
+  }catch(e){
+    await pp.catch(()=>{});
+    console.error('runAnalysis 실패',e);
+    aiSum='';aiDraft='';aiLaws=[];unverifiedLaws=[];
+    toast('AI 실패 → 빈 초안으로 진행: '+(e.message||''),'⚠️');
+  }
   showScore();await delay(200);await runScoreShow();
 }
 
@@ -1587,7 +1714,7 @@ async function typeIn(el,tpl){return typeInBody(aiDraft || tpl || '');}
 function cntUp(id,from,to,dur){const el=$(id);if(!el)return;let t=0;const iv=16;const tid=setInterval(()=>{t+=iv;el.textContent=Math.min(Math.round(from+(to-from)*(t/dur)),to);if(t>=dur){el.textContent=to;clearInterval(tid);}},iv);}
 
 function restart(){
-  isPublic=false;mType='normal';wSurvey=null;aiSum='';aiDraft='';curResult='';inSplit=false;prefetchPromise=null;
+  isPublic=false;mType='normal';wSurvey=null;aiSum='';aiDraft='';curResult='';inSplit=false;
   coopEnabled=false;coopChecks={included:false,integrated:false,adapted:false};
   aiLaws=[];unverifiedLaws=[];aiEvalDeducts={privacy:false,jurisdiction:false,passBuck:false,refOnly:false};
   $('rawTxt').value='';

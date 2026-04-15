@@ -99,26 +99,26 @@ export default {
         return json({ error: 'Forbidden origin' }, 403, cors);
       }
 
-      // Gemini를 쓰는 엔드포인트에 레이트 리밋 적용
-      if (path === '/api/generate' || path === '/api/evaluate-edit') {
+      // Gemini 쓰는 엔드포인트에 레이트 리밋
+      if (path === '/api/propose' || path === '/api/generate-draft' || path === '/api/evaluate-edit') {
         if (!checkRateLimit(request)) {
           return json({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' }, 429, cors);
         }
       }
 
-      if (path === '/api/generate' && request.method === 'POST') {
+      if (path === '/api/propose' && request.method === 'POST') {
         const body = await request.json();
-        return await handleGenerate(body, env, cors);
+        return await handlePropose(body, env, cors);
+      }
+
+      if (path === '/api/generate-draft' && request.method === 'POST') {
+        const body = await request.json();
+        return await handleGenerateDraft(body, env, cors);
       }
 
       if (path === '/api/evaluate-edit' && request.method === 'POST') {
         const body = await request.json();
         return await handleEvaluateEdit(body, env, cors);
-      }
-
-      if (path === '/api/laws' && request.method === 'GET') {
-        const query = url.searchParams.get('query') || '';
-        return await handleLawsSearch(query, cors);
       }
 
       return json({ error: 'Not Found' }, 404, cors);
@@ -197,13 +197,16 @@ function safeParseLaw(text) {
   }
 }
 
-// 법제처 fetch with retry — 빠른 실패 전략 (전체 요청 30초 제한 고려)
-async function lawFetchWithRetry(url, timeoutMs = 14000, maxRetries = 1) {
+// 법제처 fetch with retry — 병렬 호출 시 개별 재시도
+async function lawFetchWithRetry(url, timeoutMs = 10000, maxRetries = 2) {
   let lastErr = null;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const res = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; EpeopleBot/1.0)' },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; EpeopleBot/1.0)',
+          'Accept': 'application/json, text/plain, */*',
+        },
         signal: AbortSignal.timeout(timeoutMs),
         cf: { cacheTtl: 300, cacheEverything: true },
       });
@@ -216,7 +219,7 @@ async function lawFetchWithRetry(url, timeoutMs = 14000, maxRetries = 1) {
       ) {
         lastErr = new Error('법제처 응답 오류: ' + text.slice(0, 80));
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 300));
+          await new Promise((r) => setTimeout(r, 200 + attempt * 150));
           continue;
         }
         return null;
@@ -225,7 +228,7 @@ async function lawFetchWithRetry(url, timeoutMs = 14000, maxRetries = 1) {
     } catch (e) {
       lastErr = e;
       if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 200 + attempt * 150));
         continue;
       }
     }
@@ -424,16 +427,17 @@ function filterArticlesByTopics(articles, topics) {
 // ─────────────────────────────────────────────
 // /api/generate — 초안 생성 플로우
 // ─────────────────────────────────────────────
-async function handleGenerate(body, env, cors) {
-  const { text, mType, cooperation } = body;
+// ─────────────────────────────────────────────
+// /api/propose — 민원 원문 → Gemini → {요지, 검색어}
+// (법제처는 브라우저가 직접 호출하므로 Worker는 Gemini만 담당)
+// ─────────────────────────────────────────────
+async function handlePropose(body, env, cors) {
+  const { text, mType } = body;
   if (!text || typeof text !== 'string') {
     return json({ error: '민원 원문이 필요합니다' }, 400, cors);
   }
-
-  const cache = typeof caches !== 'undefined' ? caches.default : null;
   const complaint = text.slice(0, 3000);
 
-  // ═════ Gemini #1: 민원요지 + 검색어 추출 (맥락 이해) ═════
   const proposal = await callGemini(
     env.GEMINI_API_KEY,
     buildProposalPrompt(complaint, mType),
@@ -445,113 +449,47 @@ async function handleGenerate(body, env, cors) {
   const queries = Array.isArray(proposal?.searchQueries)
     ? proposal.searchQueries.filter((q) => typeof q === 'string' && q.trim().length > 0)
     : [];
-  // 폴백: 요지도 추가 (중복 제거)
   if (preSummary && !queries.includes(preSummary)) queries.push(preSummary);
   const isLawRelated = proposal?.isLawRelated !== false;
 
-  // ═════ 법령 후보 검색 (Gemini가 준 검색어 순서대로 시도, 첫 성공 채택) ═════
-  let candidateLaws = [];
-  let usedQuery = '';
-  const unverifiedLaws = [];
+  return json(
+    {
+      summary: preSummary,
+      searchQueries: queries,
+      isLawRelated,
+      source: `gemini:${GEMINI_MODEL}`,
+    },
+    200,
+    cors,
+  );
+}
 
-  async function tryFetch(q) {
-    try {
-      const r = await fetchAiSearch(q, cache);
-      const items = Array.isArray(r.법령조문) ? r.법령조문 : [r.법령조문].filter(Boolean);
-      return items;
-    } catch (e) {
-      console.log('aiSearch 실패:', q, e.message);
-      return [];
-    }
+// ─────────────────────────────────────────────
+// /api/generate-draft — 민원 원문 + 법령 후보 → Gemini → 답변 초안
+// 브라우저가 직접 법제처에서 수집한 후보를 전달
+// ─────────────────────────────────────────────
+async function handleGenerateDraft(body, env, cors) {
+  const { text, mType, cooperation, candidateLaws, preSummary } = body;
+  if (!text || typeof text !== 'string') {
+    return json({ error: '민원 원문이 필요합니다' }, 400, cors);
   }
+  const complaint = text.slice(0, 3000);
+  const safeCandidates = Array.isArray(candidateLaws) ? candidateLaws.slice(0, 8) : [];
 
-  if (isLawRelated && queries.length > 0) {
-    let items = [];
-    for (const q of queries) {
-      items = await tryFetch(q);
-      if (items.length > 0) {
-        usedQuery = q;
-        break;
-      }
-    }
-
-    // 법령ID별로 그룹화 — 순서 보존
-    const groups = new Map();
-    for (const it of items) {
-      const id = it.법령ID;
-      if (!id) continue;
-      if (!groups.has(id)) {
-        groups.set(id, {
-          lawId: id,
-          mst: it.법령일련번호,
-          name: it.법령명,
-          kind: it.법령종류명 || '',
-          ministry: it.소관부처명 || '',
-          effectiveDate: formatYmd(it.시행일자),
-          shortName: '',
-          articles: [],
-        });
-      }
-      const g = groups.get(id);
-      if (g && g.articles.length < 5) {
-        g.articles.push({
-          no: String(it.조문번호 || '').replace(/^0+/, '') || '0',
-          title: it.조문제목 || '',
-          content: it.조문내용 || '',
-        });
-      }
-    }
-    candidateLaws = [...groups.values()].slice(0, 8);
-  }
-
-  // ═════ Gemini #2: 후보 중 선별 + 답변 생성 ═════
   const generation = await callGemini(
     env.GEMINI_API_KEY,
-    buildGenerationPrompt(complaint, candidateLaws, mType, !!cooperation?.enabled, preSummary),
+    buildGenerationPrompt(complaint, safeCandidates, mType, !!cooperation?.enabled, preSummary || ''),
     GENERATION_SCHEMA,
     0.3,
   );
 
-  // Gemini가 선별한 법령 ID만 verifiedLaws로 (없으면 상위 3개 기본)
   const selected = Array.isArray(generation?.selectedLawIds) ? generation.selectedLawIds : [];
-  let verifiedLaws;
-  if (selected.length > 0) {
-    const byId = new Map(candidateLaws.map((l) => [String(l.lawId), l]));
-    verifiedLaws = selected
-      .map((id) => byId.get(String(id)))
-      .filter(Boolean);
-  } else {
-    verifiedLaws = candidateLaws.slice(0, 3);
-  }
-
-  // ═════ 응답 조립 ═════
-  const lawsForUi = verifiedLaws.map((l) => {
-    const mainArticle = l.articles?.[0];
-    return {
-      lawId: l.lawId,
-      mst: l.mst,
-      name: l.name,
-      shortName: l.shortName,
-      kind: l.kind,
-      ministry: l.ministry,
-      effectiveDate: l.effectiveDate,
-      articleNo: mainArticle?.no || '',
-      articleTitle: mainArticle?.title || '',
-      content: mainArticle?.content || '',
-      allArticles: l.articles,
-      link: l.mst ? `https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=${l.mst}` : '',
-    };
-  });
 
   return json(
     {
       summary: generation?.summary || preSummary || '',
       draft: generation?.draft || '',
-      laws: lawsForUi,
-      unverifiedLaws,
-      isLawRelated,
-      searchQueries: queries,
-      usedQuery,
+      selectedLawIds: selected,
       source: `gemini:${GEMINI_MODEL}`,
     },
     200,
